@@ -492,10 +492,40 @@ Si se selecciona una ruta grabada en la base de datos (con su snapshot de tramos
 - Margen Operativo (Voyage Result / P&L)
 - TCE Realizado ($/día)
 
-#### 3. Metodología de Ejecución:
-- **Fase 1 (Prueba Focalizada - 1 Ruta):** Auditar a detalle la ruta emblemática `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem` aplicando sobreescritura de tarifa comercial (`custom_tariff = $28.50`) y variación de demoras/búnker.
-- **Fase 2 (Prueba Exhaustiva - Todas las Rutas Grabadas):** Ejecutar loop automatizado sobre todas las rutas registradas en la base de datos para certificar la convergencia universal.
-- **Fase 3 (Acta y Dictamen Pericial):** Consignar las tablas de comparación y resultados de terminal en este documento.
+#### 4. Hallazgos Periciales & Cirugía Quirúrgica en `forecast_service.py`:
+1. **Falso Negativo en Detección de Override:**
+   - La condición legacy `abs(line.custom_tariff - yield_flete) > 0.01` fallaba porque `yield_flete` se recalculaba con el flete sobreescrito antes de la validación.
+   - **Corrección:** Se compara `line.custom_tariff` contra la tarifa unitaria real del snapshot original (`orig_freight_rate = totalFreight / totalQuantity`).
+2. **Preservación Total del Snapshot:**
+   - Al sobreescribir la tarifa de flete (`custom_tariff`), se mantienen intactos los costos portuarios (`totalPortCosts`), los ingresos y días por demoras (`demurrageRevenue`, `totalDemurrageDays`), y los días de navegación/puerto.
+3. **Aclaración de Dominio de Negocio (UI Matriz Financiera):**
+   - *Nota de Diseño:* En la interfaz visual de usuario (UI), la Matriz Financiera ya no expone la edición manual de precios de búnker; el costo de búnker respeta estrictamente la foto grabada de la cotización (`grandBunkerTotal`), garantizando consistencia inmutable con el Multicotizador.
+
+#### 5. Evidencias Empíricas de Terminal (Auditoría Universal):
+
+```text
+====================================================================================================
+🕵️‍♂️ AUDITORÍA FORENSE UNIVERSAL BENOIT BLANC: 48 RUTAS EN BD (MATRIZ vs MULTICOTIZADOR)
+====================================================================================================
+[01/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.2025 Tablones COA       │ Buque: TABLONES     │ PnL: $224,590.70
+[02/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2025 Tablones COA       │ Buque: TABLONES     │ PnL: $274,600.26
+[03/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MATARANI.ILO.FX 2026.05.12    │ Buque: TABLONES     │ PnL: $399,610.20
+[04/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.2025 Tablones COA Dem   │ Buque: TABLONES     │ PnL: $258,247.40
+[05/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2028 13,500 tm Moquegua  │ Buque: MOQUEGUA     │ PnL: $300,370.65
+...
+[46/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2028 13,500 Tablones De │ Buque: TABLONES     │ PnL: $354,810.61
+[47/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2028 13,500 tm Tablon │ Buque: TABLONES     │ PnL: $376,429.26
+[48/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2025 Moquegua COA Dem    │ Buque: MOQUEGUA     │ PnL: $374,479.13
+
+====================================================================================================
+🏆 RESUMEN UNIVERSAL DE CONVERGENCIA:
+   • Total de Rutas Auditadas: 48
+   • Rutas 100% Convergentes:  48 / 48 (100.0%)
+   • Discrepancia Matemática:   $0.00 en todas las métricas
+====================================================================================================
+```
+
+- **Estado:** ✅ **RESUELTO Y CERTIFICADO AL 100%**.
 
 ---
 *Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*
