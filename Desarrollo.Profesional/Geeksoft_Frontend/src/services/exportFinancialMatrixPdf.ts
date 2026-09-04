@@ -237,10 +237,10 @@ export function generateFinancialMatrixPdfHtml(
         if (!upperMetric.includes('HIRE') && (upperMetric.includes('DÍA') || upperMetric.includes('DAYS') || upperMetric.includes('DURACIÓN'))) {
             return Number.isInteger(parsedNum) ? String(parsedNum) : parsedNum.toFixed(1);
         }
-        if (upperMetric.includes('TONELADA') || upperMetric.includes('TONS') || upperMetric.includes('MT') || upperMetric.includes('CARGA')) {
-            return Math.round(parsedNum).toLocaleString('en-US');
+        if (parsedNum < 0) {
+            return '-' + Math.round(Math.abs(parsedNum)).toLocaleString('en-US');
         }
-        return '$' + Math.round(parsedNum).toLocaleString('en-US');
+        return Math.round(parsedNum).toLocaleString('en-US');
     };
 
     const parseNum = (valStr: string): number => {
@@ -599,7 +599,10 @@ export function generateFinancialMatrixPdfHtml(
         }
         * {
             box-sizing: border-box;
-            font-family: 'Consolas', 'Courier New', 'Lucida Console', ui-monospace, monospace !important;
+            font-family: 'Segoe UI', Arial, 'DejaVu Sans', sans-serif !important;
+            font-variant-numeric: tabular-nums;
+            -webkit-font-feature-settings: "tnum";
+            font-feature-settings: "tnum";
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
@@ -730,31 +733,31 @@ export function generateFinancialMatrixPdfHtml(
             min-width: 129px !important;
             max-width: 129px !important;
             text-align: left !important;
-            font-weight: normal !important;
+            font-weight: 500 !important;
             color: #0f172a;
             padding-left: 4px;
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 8.5px !important;
+            font-size: 9px !important;
         }
         .pl-subrow {
             padding-left: 10px !important;
             color: #475569 !important;
-            font-size: 8px !important;
+            font-size: 8.5px !important;
         }
 
-        /* Columnas de Datos (Meses a 63px, Fuente 8.5px) */
+        /* Columnas de Datos (Meses a 63px, Fuente 9.5px) */
         td.td-num {
             width: 63px !important;
             max-width: 63px !important;
             text-align: right !important;
-            font-size: 8.5px !important;
-            font-weight: normal !important;
+            font-size: 9.5px !important;
+            font-weight: 500 !important;
             color: #1e293b;
             padding-right: 2px;
             padding-left: 2px;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.1px;
         }
         td.td-empty {
             width: 63px !important;
@@ -767,12 +770,12 @@ export function generateFinancialMatrixPdfHtml(
             width: 70px !important;
             max-width: 70px !important;
             min-width: 70px !important;
-            font-size: 8.5px !important;
+            font-size: 9.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
             padding-right: 2px;
             padding-left: 2px;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.1px;
         }
 
         /* Filas Especiales */

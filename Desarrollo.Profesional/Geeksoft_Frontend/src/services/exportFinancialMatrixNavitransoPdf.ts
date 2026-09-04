@@ -241,9 +241,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             return Math.round(parsedNum).toLocaleString('en-US');
         }
         if (parsedNum < 0) {
-            return '-$' + Math.round(Math.abs(parsedNum)).toLocaleString('en-US');
+            return '-' + Math.round(Math.abs(parsedNum)).toLocaleString('en-US');
         }
-        return '$' + Math.round(parsedNum).toLocaleString('en-US');
+        return Math.round(parsedNum).toLocaleString('en-US');
     };
 
     // 4. Agrupación Atómica en Orden Contable Canónico (Los subtotales van inmediatamente tras sus buques)
@@ -551,7 +551,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         }
         * {
             box-sizing: border-box;
-            font-family: 'Consolas', 'Courier New', 'Lucida Console', ui-monospace, monospace !important;
+            font-family: 'Segoe UI', Arial, 'DejaVu Sans', sans-serif !important;
+            font-variant-numeric: tabular-nums;
+            -webkit-font-feature-settings: "tnum";
+            font-feature-settings: "tnum";
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
@@ -560,7 +563,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             padding: 0 !important;
             background-color: #ffffff !important;
             color: #0f172a;
-            font-size: 8.5px !important;
+            font-size: 9px !important;
             font-weight: normal !important;
             line-height: 1.15;
         }
@@ -681,18 +684,18 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             min-width: 125px !important;
             max-width: 125px !important;
             text-align: left !important;
-            font-weight: normal !important;
+            font-weight: 500 !important;
             color: #0f172a;
             padding-left: 4px;
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 8px !important;
+            font-size: 9px !important;
         }
         .pl-subrow {
             padding-left: 10px !important;
             color: #475569 !important;
-            font-size: 7.5px !important;
+            font-size: 8.5px !important;
         }
 
         /* Columnas de Datos */
@@ -700,12 +703,12 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             width: 63px !important;
             max-width: 63px !important;
             text-align: right !important;
-            font-size: 8px !important;
-            font-weight: normal !important;
+            font-size: 9.5px !important;
+            font-weight: 500 !important;
             color: #1e293b;
             padding-right: 2px;
             padding-left: 2px;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.1px;
         }
         td.td-empty {
             width: 63px !important;
@@ -718,10 +721,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             width: 70px !important;
             max-width: 70px !important;
             min-width: 70px !important;
-            font-size: 8px !important;
+            font-size: 9.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.1px;
             padding-right: 2px;
             padding-left: 2px;
         }

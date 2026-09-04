@@ -209,10 +209,10 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                             cell.numFmt = '#,##0';
                         } else if (currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || currentMetricName.includes('TCE') || currentMetricName.includes('$/D')) {
                             cell.value = parsedNum;
-                            cell.numFmt = '$#,##0.00';
+                            cell.numFmt = '#,##0.00';
                         } else {
                             cell.value = parsedNum;
-                            cell.numFmt = '$#,##0';
+                            cell.numFmt = '#,##0';
                         }
                     } else {
                         cell.value = '';
@@ -278,16 +278,14 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                 if (typeof cell.value === 'number') {
                     const num = cell.value;
                     const fmt = cell.numFmt || '';
-                    if (fmt.includes('$') && fmt.includes('.00')) {
-                        visualLen = `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.length;
-                    } else if (fmt.includes('$')) {
-                        visualLen = `$${Math.round(num).toLocaleString('en-US')}`.length;
+                    if (fmt.includes('.00')) {
+                        visualLen = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).length;
                     } else if (fmt.includes('%')) {
                         visualLen = `${(num * 100).toFixed(1)}%`.length;
                     } else if (fmt.includes('.0')) {
                         visualLen = num.toFixed(1).length;
                     } else {
-                        visualLen = `${Math.round(num).toLocaleString('en-US')}`.length;
+                        visualLen = Math.round(num).toLocaleString('en-US').length;
                     }
                 } else {
                     const str = String(cell.value || '').trim();
