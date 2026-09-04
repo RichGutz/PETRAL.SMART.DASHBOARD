@@ -41,16 +41,48 @@
 
 ---
 
-### 3. Falta de Cuadre / Consistencia en INFORME MEC (Futuro "Informe Consolidado") vs Matriz Petral y Multicotizador
-- **Ubicación:** Reporte / Resumen Ejecutivo ("Informe MEC" / "Informe Consolidado" - ej. Escenarios con/sin demoras `2027 PB Base Jose de los Heros`).
-- **Problema Detectado:**
-  - Los totales agregados en el informe (Margen Operativo Total, P/L por ruta, días de ocupación, etc.) no cuadran con los valores modelados en la **Matriz Petral** ni con los cálculos base del **Multicotizador**.
-- **Acción requerida:** Realizar auditoría de fórmulas de agregación y flujo de datos de extremo a extremo:
-  1. **Multicotizador** (Fuente / Lógica base de viaje).
-  2. **Matriz Petral** (Modelación matricial mensual/anual).
-  3. **Informe Consolidado** (Agregador final de escenarios).
-  Garantizar consistencia matemática 100% estricta en los tres niveles.
-- **Estado:** 📝 Anotado para auditoría y corrección (Siguiente en turno: P3).
+### 3. Protocolo de Control de Calidad E2E (Loop QC Triangular): Multicotizador ➔ Matriz Petral ➔ Grabación de Escenario ➔ Informe Consolidado (MEC)
+- **Ubicación:** Flujo de integración y agregación entre los 3 vértices del sistema comercial y el informe ejecutivo.
+- **Objetivo Pericial:** Auditar y certificar la cuadratura matemática exacta al centavo entre los 3 niveles:
+  1. **Vértice 1 (Multicotizador / Rutas Grabadas en DB):** Cotizaciones y presupuestos reales con tramos, fletes, búnker y demoras calculadas.
+  2. **Vértice 2 (Matriz Petral / Engine de Forecast):** Carga multi-ruta de un escenario completo (Cabotaje + Exportación) con asignación de buques y frecuencias anuales.
+  3. **Vértice 3 (Grabación y Persistencia del Escenario):** Payload serializado en Supabase (`scenarios` / `projection_lines`).
+  4. **Vértice 4 (Informe Consolidado / MEC):** Agregación ejecutiva en dos cuadros oficiales:
+     - **Cuadro 1 (Distribución Macro de Tráfico):** N° Viajes, Volumen TM, % Cabotaje vs Exportación.
+     - **Cuadro 2 (Rutas & Margen Operativo):** TM Anual, Full Load, N° Viajes, P/L por viaje, Margen Operativo Total ($), % y Días de ocupación vs disponibles.
+
+#### 🔬 Matriz Forense de Cuadratura E2E (Plan del Script QC Headless):
+
+```mermaid
+flowchart LR
+    subgraph V1["Vértice 1: Multicotizador"]
+        R1["Ruta A (Cabotaje)"]
+        R2["Ruta B (Exportación)"]
+    end
+    subgraph V2["Vértice 2: Matriz Petral"]
+        M["run_forecast_simulation()<br/>Meses 1-12, Frecuencias, Buques"]
+    end
+    subgraph V3["Vértice 3: Persistencia"]
+        S["Escenario Grabado (JSON/DB)"]
+    end
+    subgraph V4["Vértice 4: Informe Consolidado"]
+        MEC1["Cuadro 1: Macro Tráfico"]
+        MEC2["Cuadro 2: Rutas & Margen Operativo"]
+    end
+
+    V1 --> V2 --> V3 --> V4
+```
+
+| Métrica Forense | Multicotizador (Snapshot Base) | Matriz Petral (Anualizado) | Informe Consolidado (MEC) | Tolerancia | Estado Auditado |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **N° Total de Viajes** | Unitario | $\sum \text{Frecuencias}$ | $\sum \text{Viajes Cuadro 1 & 2}$ | 0 | ⏳ Por Auditar |
+| **Volumen Total (TM)** | $\text{Carga} \times \text{Viajes}$ | $\sum \text{TM Mensuales}$ | $\text{TM Cabotaje} + \text{TM Expo}$ | 0 TM | ⏳ Por Auditar |
+| **P/L Unitario por Ruta** | `voyageResultPnl` | `voyage_result / trips` | Columna `P/L x Viaje` | $0.00 | ⏳ Por Auditar |
+| **Margen Operativo Total** | $\sum (\text{P/L} \times \text{Viajes})$ | $\sum \text{P/L Anual}$ | $\sum \text{Total Margen Operativo}$ | $0.00 | ⏳ Por Auditar |
+| **Días-Buque Ocupados** | $\text{Días Viaje} \times \text{Viajes}$ | $\sum \text{Días-Buque}$ | Columna `Días ocupación` | 0.00 d | ⏳ Por Auditar |
+| **Demurrage Total ($)** | `demurrageRevenue` | $\sum \text{Demurrage Revenue}$ | Integrado en Margen / P&L | $0.00 | ⏳ Por Auditar |
+
+- **Estado:** 📝 Protocolo Documentado (Listo para armar y ejecutar el script `run_qc_e2e_mec_consolidado_loop.py`).
 
 ---
 
