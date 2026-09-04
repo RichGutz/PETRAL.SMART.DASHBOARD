@@ -553,3 +553,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-04 09:21] [Branding Login] - Incorporado favicon transparente de Delfos a la derecha del logo Petral en Login.tsx con misma altura (h-10 / 40px) y respaldo de captura en rutas Obsidian y Exceles Petral.
 [2026-09-04 09:38:40] Despliegue exitoso al VPS de Produccion (91.108.125.253 - https://forecast.geeksoft.tech) con nuevo branding de Login y Favicon Delfos transparente.
 [2026-09-04 09:50:38] Despliegue exitoso al VPS (91.108.125.253 - https://forecast.geeksoft.tech) con homologacion matematica 100% al centavo entre Matriz Navitranso y Matriz Petral.
+[2026-09-04 11:57:35] Despliegue exitoso al VPS de Produccion (91.108.125.253 - https://forecast.geeksoft.tech) con nuevo esquema de branding en Login (Petral centrado arriba, Delfos + Geeksoft alineados abajo).

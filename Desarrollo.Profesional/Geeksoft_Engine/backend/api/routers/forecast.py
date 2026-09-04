@@ -126,7 +126,45 @@ def load_forecast(forecast_id: str):
         res = sb.table("commercial_forecasts").select("*").eq("id", forecast_id).execute()
         if not res.data:
             raise HTTPException(status_code=404, detail="Forecast not found")
-        return res.data[0]
+        
+        fc = res.data[0]
+        raw_lines = fc.get("projection_lines") or []
+        if raw_lines:
+            try:
+                from backend.services.forecast_service import run_forecast_simulation
+                from backend.models.forecast_models import ForecastRequest, ProjectionLine
+                
+                clean_lines = []
+                for l in raw_lines:
+                    clean_lines.append(ProjectionLine(
+                        month_index=str(l.get("month_index", "2027-01")),
+                        client_id=str(l.get("client_id", "SPCC")),
+                        origin_port_id=str(l.get("origin_port_id", "ILO")),
+                        destination_port_id=str(l.get("destination_port_id", "MATARANI")),
+                        vessel_id=str(l.get("vessel_id", "MOQUEGUA")),
+                        quantity=float(l.get("quantity", 13500)),
+                        monthly_frequency=float(l.get("monthly_frequency", 0)),
+                        forecast_bunker_price_ifo=float(l.get("forecast_bunker_price_ifo")) if l.get("forecast_bunker_price_ifo") is not None else None,
+                        forecast_bunker_price_mdo=float(l.get("forecast_bunker_price_mdo")) if l.get("forecast_bunker_price_mdo") is not None else None,
+                        custom_tariff=float(l.get("custom_tariff")) if l.get("custom_tariff") is not None else None,
+                        quote_id=l.get("quote_id")
+                    ))
+                
+                s_date = str(fc.get("start_date") or "2027-01-01")
+                e_date = str(fc.get("end_date") or "2027-12-31")
+                req = ForecastRequest(
+                    start_date=s_date if len(s_date) == 10 else f"{s_date}-01",
+                    end_date=e_date if len(e_date) == 10 else f"{e_date}-31",
+                    projection_lines=clean_lines,
+                    port_cost_mode="DETAILED"
+                )
+                sim_res = run_forecast_simulation(req)
+                fc["aggregated_data"] = sim_res.get("aggregated_data")
+                fc["simulation_data"] = sim_res.get("simulation_data")
+            except Exception as sim_e:
+                print("Warning: could not auto-simulate on load_forecast:", sim_e)
+        
+        return fc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

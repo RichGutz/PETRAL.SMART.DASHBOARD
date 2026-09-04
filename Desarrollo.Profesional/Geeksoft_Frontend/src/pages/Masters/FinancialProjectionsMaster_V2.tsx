@@ -108,7 +108,8 @@ export const FinancialProjectionsMaster: React.FC = () => {
                             const sim = await ForecastService.runSimulation({
                                 start_date: sDate,
                                 end_date: eDate,
-                                projection_lines: sc.projection_lines
+                                projection_lines: sc.projection_lines,
+                                port_cost_mode: 'DETAILED'
                             });
                             if (sim && sim.aggregated_data) {
                                 sc.aggregated_data = sim.aggregated_data;

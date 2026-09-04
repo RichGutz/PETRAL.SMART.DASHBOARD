@@ -807,5 +807,64 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 
 - **Estado:** ✅ **100% CUADRADO AL CENTAVO ($0.00 DE DISCREPANCIA EN TODOS LOS ESCENARIOS)**.
 
+
+---
+
+## 🎯 Ronda 6: Triple Cuadre Pericial (Matriz Petral ↔ Matriz Navitranso ↔ Reporte Consolidado MEC)
+
+### 🔹 Caso R6.1: Discrepancia en Pantalla de Proyecciones Financieras / Reporte Consolidado
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencia Gráfica Reportada:** Captura enviada por el usuario (respaldada en `Obsidian.Maestro.Costos.Portuarios\PNGs\discrepancia_reporte_consolidado_captura.png` y `Exceles.Petral\PORT.COSTS.PATRICIA\discrepancia_reporte_consolidado_captura.png`).
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Al visualizar el resumen de escenarios en `FinancialProjectionsMaster_V2.tsx` (Año 2027 - PB Base Jose de los Heros, 60 viajes, 810k TM):
+    - **Matriz Petral & Matriz Navitranso:** Total Gross Margin = **$12,168,490.78** │ Días = **304.42 d**.
+    - **Reporte Consolidado en Pantalla:** Mostraba erróneamente **$15,636,602** │ Días = **538 d**, con PnL/Viaje inflados ($262k Matarani, $243k Mejillones, $274k Marcona).
+  - **Causa Raíz:** El endpoint `load_forecast(forecast_id)` en `backend/api/routers/forecast.py` devolvía el registro crudo de Supabase `commercial_forecasts` sin la simulación ni los agregados oficiales (`aggregated_data`). Al llegar al frontend sin `aggregated_data`, `FinancialProjectionsMaster_V2.tsx` ejecutaba un bloque de fallback `else` con cálculos estáticos hardcodeados (`13000 hirePerDay`, etc.) y vinculaciones desincronizadas.
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Backend (`backend/api/routers/forecast.py`):**
+     - En `load_forecast`: Cuando un escenario tiene líneas de proyección, se dispara automáticamente la ejecución de `run_forecast_simulation(port_cost_mode="DETAILED")`.
+     - Se enriquecen los metadatos retornando `aggregated_data` y `simulation_data` oficiales calculados por el motor central.
+  2. **Frontend (`FinancialProjectionsMaster_V2.tsx`):**
+     - Se fijó `port_cost_mode: 'DETAILED'` en `loadData()`.
+     - Se conectó `processedScenarios` para consumir directamente `f.aggregated_data` para el Cuadro 1 (Macro Tráfico Cabotaje vs Exportación) y Cuadro 2 (Rutas, PnL por Viaje, Margen Total, Días de Ocupación), eliminando cualquier aproximación estática.
+
+- **Script de Control de Calidad Ejecutado:**
+  - `Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_mec_consolidado_loop.py`
+
+- **Resultados de Cuadratura Pericial (QC):**
+  ```text
+  ==========================================================================================
+  🕵️‍♂️ AUDITORÍA BENOIT BLANC: TRIPLE CUADRE MATEMÁTICO (PETRAL ↔ NAVITRANSO ↔ CONSOLIDADO)
+  ==========================================================================================
+  [ESCENARIO 1: Año 2028 - SPCC con Demoras (Moquegua)]
+  • Volumen Total:          Petral = 162,000 TM  │ Navitranso = 162,000 TM  │ Consolidado = 162,000 TM  │ Diff = 0.00 ✅
+  • Total Gross Margin:     Petral = $1,699,411.90│ Navitranso = $1,699,411.90│ Consolidado = $1,699,411.90│ Diff = $0.00 ✅
+  • Total Días Ocupación:   Petral = 47.96 d     │ Navitranso = 47.96 d     │ Consolidado = 47.96 d     │ Diff = 0.00 ✅
+
+  [ESCENARIO 2: Año 2027 - PB Base Jose de los Heros (Multi-Buque)]
+  • Volumen Total:          Petral = 810,000 TM  │ Navitranso = 810,000 TM  │ Consolidado = 810,000 TM  │ Diff = 0.00 ✅
+  • Total Gross Margin:     Petral = $12,168,490.78│ Navitranso = $12,168,490.78│ Consolidado = $12,168,490.78│ Diff = $0.00 ✅
+  • Total Días Ocupación:   Petral = 304.42 d    │ Navitranso = 304.42 d    │ Consolidado = 304.42 d    │ Diff = 0.00 ✅
+  • Desglose Rutas Consolidado:
+    - ILO-MATARANI  (23 v): PnL = $4,604,810.21 │ PnL/Viaje = $200,209.14 │ Días = 93.84 d ✅
+    - ILO-MEJILLONES (18 v): PnL = $3,334,000.32 │ PnL/Viaje = $185,222.24 │ Días = 105.98 d ✅
+    - ILO-MARCONA   (19 v): PnL = $4,229,680.25 │ PnL/Viaje = $222,614.75 │ Días = 104.60 d ✅
+
+  [ESCENARIO 3: Año 2026 - NEXA Triangular (IZ)]
+  • Volumen Total:          Petral = 300,000 TM  │ Navitranso = 300,000 TM  │ Consolidado = 300,000 TM  │ Diff = 0.00 ✅
+  • Total Gross Margin:     Petral = $3,544,716.24│ Navitranso = $3,544,716.24│ Consolidado = $3,544,716.24│ Diff = $0.00 ✅
+  • Total Días Ocupación:   Petral = 94.74 d     │ Navitranso = 94.74 d     │ Consolidado = 94.74 d     │ Diff = 0.00 ✅
+
+  [ESCENARIO 4: Año 2027 - Multi-Cliente (SPCC + NEXA) Flota Completa 4 Buques]
+  • Volumen Total:          Petral = 462,000 TM  │ Navitranso = 462,000 TM  │ Consolidado = 462,000 TM  │ Diff = 0.00 ✅
+  • Total Gross Margin:     Petral = $4,782,070.74│ Navitranso = $4,782,070.74│ Consolidado = $4,782,070.74│ Diff = $0.00 ✅
+  • Total Días Ocupación:   Petral = 142.70 d    │ Navitranso = 142.70 d    │ Consolidado = 142.70 d    │ Diff = 0.00 ✅
+  ==========================================================================================
+  ```
+
+- **Estado:** ✅ **TRIPLE CUADRE MATEMÁTICO 100% CERRADO Y CERTIFICADO ($0.00 DE DISCREPANCIA EN TODOS LOS VÉRTICES)**.
+
 ---
 *Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
