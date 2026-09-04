@@ -612,14 +612,14 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">
                     ${r.route} ${r.vesselDetails && r.vesselDetails.length > 1 ? `<span style="font-size: 10px; color: #0284c7; font-weight: normal;">(${r.vesselDetails.length} buques)</span>` : ''}
                 </td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${Math.round(r.pnlPerTrip).toLocaleString('en-US')}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #334155;">${Math.round(r.pnlPerTrip).toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold; color: #0f172a;">${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #94a3b8;">-</td>
             </tr>
             `;
 
@@ -628,16 +628,16 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     rowHtml += `
                     <tr style="background: #f0fdf4; color: #334155; font-size: 11px;">
                         <td style="padding: 4px 10px 4px 28px; border: 1px solid #cbd5e1; font-style: italic; color: #475569;">
-                            ↳ <span style="font-weight: bold; font-style: normal; color: #0f172a; background: #ffffff; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 3px; font-family: monospace;">${v.vessel}</span>
+                            ↳ <span style="font-weight: bold; font-style: normal; color: #0f172a; background: #ffffff; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 3px; font-family: 'Segoe UI', Arial, sans-serif;">${v.vessel}</span>
                         </td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${v.annualTons.toLocaleString('en-US')}</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${Math.round(v.fullLoad).toLocaleString('en-US')}</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${v.annualTrips}</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">$${Math.round(v.pnlPerTrip).toLocaleString('en-US')}</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: 600;">$${Math.round(v.totalGrossMargin).toLocaleString('en-US')}</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #0369a1;">${v.volumeSharePct.toFixed(2)}%</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${Math.round(v.daysOccupation)}</td>
-                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${v.annualTons.toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(v.fullLoad).toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600;">${v.annualTrips}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(v.pnlPerTrip).toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600;">${Math.round(v.totalGrossMargin).toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #0369a1;">${v.volumeSharePct.toFixed(2)}%</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600;">${Math.round(v.daysOccupation)}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #94a3b8;">-</td>
                     </tr>
                     `;
                 });
@@ -740,7 +740,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         border-radius: 4px;
                         font-size: 11px;
                         font-weight: 700;
-                        font-family: 'Courier New', monospace;
+                        font-family: 'Segoe UI', Arial, sans-serif;
                     }
                     .section-label {
                         font-size: 13px;
@@ -754,8 +754,11 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     table {
                         width: 100%;
                         border-collapse: collapse;
-                        font-size: 11px;
+                        font-size: 11.5px;
                         margin-bottom: 22px;
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        font-feature-settings: 'tnum';
+                        font-variant-numeric: tabular-nums;
                     }
                     th {
                         background-color: #f1f5f9;
@@ -856,21 +859,21 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         <tbody>
                             <tr>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; background: #fff;">Viajes cabotaje</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.cabotageTrips}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(2)}%</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold;">${mec.cabotageTrips}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(2)}%</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; background: #fff;">Viajes exportación</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.exportTrips}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(2)}%</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold;">${mec.exportTrips}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(2)}%</td>
                             </tr>
                             <tr class="total-row">
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: 800;">TOTAL</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.00%</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalTrips}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 800;">100.00%</td>
                             </tr>
                         </tbody>
                     </table>
@@ -895,14 +898,14 @@ export const FinancialProjectionsMaster: React.FC = () => {
                             ${routesHtml}
                             <tr class="total-row">
                                 <td style="padding: 7px 10px; border: 1px solid #cbd5e1;">TOTAL GENERAL</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
                                 <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right;">-</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalTrips}</td>
                                 <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right;">-</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #047857;">$${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.00%</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysOccupation)}</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysAvailable)}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #047857;">${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 800;">100.00%</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(mec.totalDaysOccupation)}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(mec.totalDaysAvailable)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1166,14 +1169,14 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     <td style="padding: 4px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">
                         ${r.route} ${r.vesselDetails && r.vesselDetails.length > 1 ? `<span style="font-size: 9.5px; color: #0284c7; font-weight: normal;">(${r.vesselDetails.length} buques)</span>` : ''}
                     </td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${Math.round(r.pnlPerTrip).toLocaleString('en-US')}</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #334155;">${Math.round(r.pnlPerTrip).toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold; color: #0f172a;">${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #94a3b8;">-</td>
                 </tr>
                 `;
 
@@ -1182,16 +1185,16 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         rowHtml += `
                         <tr style="background: #f0fdf4; color: #334155; font-size: 10.5px;">
                             <td style="padding: 3px 6px 3px 22px; border: 1px solid #cbd5e1; font-style: italic; color: #475569;">
-                                ↳ <span style="font-weight: bold; font-style: normal; color: #0f172a; background: #ffffff; padding: 1px 4px; border: 1px solid #cbd5e1; border-radius: 3px; font-family: monospace;">${v.vessel}</span>
+                                ↳ <span style="font-weight: bold; font-style: normal; color: #0f172a; background: #ffffff; padding: 1px 4px; border: 1px solid #cbd5e1; border-radius: 3px; font-family: 'Segoe UI', Arial, sans-serif;">${v.vessel}</span>
                             </td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${v.annualTons.toLocaleString('en-US')}</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${Math.round(v.fullLoad).toLocaleString('en-US')}</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${v.annualTrips}</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">$${Math.round(v.pnlPerTrip).toLocaleString('en-US')}</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: 600;">$${Math.round(v.totalGrossMargin).toLocaleString('en-US')}</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #0369a1;">${v.volumeSharePct.toFixed(2)}%</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${Math.round(v.daysOccupation)}</td>
-                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${v.annualTons.toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(v.fullLoad).toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600;">${v.annualTrips}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(v.pnlPerTrip).toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600;">${Math.round(v.totalGrossMargin).toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #0369a1;">${v.volumeSharePct.toFixed(2)}%</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 600;">${Math.round(v.daysOccupation)}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #94a3b8;">-</td>
                         </tr>
                         `;
                     });
@@ -1203,7 +1206,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 <div class="scenario-section" style="margin-bottom: 22px; page-break-inside: avoid;">
                     
                     <!-- TABLA 1: CABOTAJE VS EXPORTACION CON CABECERA TEMÁTICA -->
-                    <table style="max-width: 480px; margin-bottom: 8px;">
+                    <table style="max-width: 480px; margin-bottom: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">
                         <thead>
                             <tr>
                                 <th colspan="4" style="background-color: ${theme.bgHeader}; color: ${theme.textHeader}; text-align: center; font-size: 11.5px; font-weight: 800; padding: 5px 8px; border: 1px solid #cbd5e1; letter-spacing: 0.2px;">
@@ -1220,27 +1223,27 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         <tbody>
                             <tr>
                                 <td style="padding: 3px 8px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155;">Viajes cabotaje</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.cabotageTrips}</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(2)}%</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold;">${mec.cabotageTrips}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(2)}%</td>
                             </tr>
                             <tr>
                                 <td style="padding: 3px 8px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155;">Viajes exportación</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.exportTrips}</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(2)}%</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: bold;">${mec.exportTrips}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(2)}%</td>
                             </tr>
                             <tr class="total-row" style="background: #f8fafc; font-weight: 800;">
                                 <td style="padding: 3px 8px; border: 1px solid #cbd5e1;">Total</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">100.00%</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalTrips}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">100.00%</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <!-- TABLA 2: MATRIZ DE RUTAS / PUERTOS -->
-                    <table style="width: 100%; margin-bottom: 0;">
+                    <table style="width: 100%; margin-bottom: 0; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">
                         <thead>
                             <tr style="background: #f1f5f9;">
                                 <th style="text-align: left; font-size: 9.5px; padding: 4px 6px;">Puertos / Ruta</th>
@@ -1258,14 +1261,14 @@ export const FinancialProjectionsMaster: React.FC = () => {
                             ${routesHtml}
                             <tr class="total-row" style="background: #f8fafc; font-weight: 800; border-top: 2px solid #94a3b8;">
                                 <td style="padding: 4px 8px; border: 1px solid #cbd5e1;">Total</td>
-                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
                                 <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right;">-</td>
-                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${mec.totalTrips}</td>
                                 <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right;">-</td>
-                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #047857;">$${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
-                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">100.00%</td>
-                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysOccupation)}</td>
-                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysAvailable)}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; color: #047857;">${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">100.00%</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(mec.totalDaysOccupation)}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;">${Math.round(mec.totalDaysAvailable)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1773,10 +1776,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                                 {r.annualTrips}
                                                                                             </td>
                                                                                             <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
-                                                                                                ${Math.round(r.pnlPerTrip).toLocaleString('en-US')}
+                                                                                                {Math.round(r.pnlPerTrip).toLocaleString('en-US')}
                                                                                             </td>
                                                                                             <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800 font-bold">
-                                                                                                ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
+                                                                                                {Math.round(r.totalGrossMargin).toLocaleString('en-US')}
                                                                                             </td>
                                                                                             <td className="py-1 px-2.5 text-center border border-slate-300 font-semibold text-blue-900">
                                                                                                 {r.volumeSharePct.toFixed(2)}%
@@ -1810,10 +1813,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                                     {v.annualTrips}
                                                                                                 </td>
                                                                                                 <td className="py-1 px-3 text-right border border-slate-300 text-slate-700">
-                                                                                                    ${Math.round(v.pnlPerTrip).toLocaleString('en-US')}
+                                                                                                    {Math.round(v.pnlPerTrip).toLocaleString('en-US')}
                                                                                                 </td>
                                                                                                 <td className="py-1 px-3 text-right border border-slate-300 text-slate-800 font-semibold">
-                                                                                                    ${Math.round(v.totalGrossMargin).toLocaleString('en-US')}
+                                                                                                    {Math.round(v.totalGrossMargin).toLocaleString('en-US')}
                                                                                                 </td>
                                                                                                 <td className="py-1 px-3 text-center border border-slate-300 text-sky-800 font-medium">
                                                                                                     {v.volumeSharePct.toFixed(2)}%
@@ -1835,7 +1838,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                 <td className="py-2 px-3 text-right border border-slate-300">-</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{mec.totalTrips}</td>
                                                                                 <td className="py-2 px-3 text-right border border-slate-300">-</td>
-                                                                                <td className="py-2 px-3 text-right border border-slate-300 text-emerald-800">${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                                                                <td className="py-2 px-3 text-right border border-slate-300 text-emerald-800">{Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300 font-black">100.00%</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{Math.round(mec.totalDaysOccupation)}</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{Math.round(mec.totalDaysAvailable)}</td>
@@ -2103,10 +2106,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                 {r.annualTrips}
                                                             </td>
                                                             <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
-                                                                ${Math.round(r.pnlPerTrip).toLocaleString('en-US')}
+                                                                {Math.round(r.pnlPerTrip).toLocaleString('en-US')}
                                                             </td>
                                                             <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800 font-bold">
-                                                                ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
+                                                                {Math.round(r.totalGrossMargin).toLocaleString('en-US')}
                                                             </td>
                                                             <td className="py-1 px-2.5 text-center border border-slate-300 font-semibold text-blue-900">
                                                                 {r.volumeSharePct.toFixed(2)}%
@@ -2125,7 +2128,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                         <td className="py-1.5 px-2.5 text-right border border-slate-300">-</td>
                                                         <td className="py-1.5 px-2.5 text-center border border-slate-300">{mec.totalTrips}</td>
                                                         <td className="py-1.5 px-2.5 text-right border border-slate-300">-</td>
-                                                        <td className="py-1.5 px-2.5 text-right border border-slate-300 text-emerald-800">${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                                        <td className="py-1.5 px-2.5 text-right border border-slate-300 text-emerald-800">{Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
                                                         <td className="py-1.5 px-2.5 text-center border border-slate-300 font-black">100.00%</td>
                                                         <td className="py-1.5 px-2.5 text-center border border-slate-300">{Math.round(mec.totalDaysOccupation)}</td>
                                                         <td className="py-1.5 px-2.5 text-center border border-slate-300">{Math.round(mec.totalDaysAvailable)}</td>
