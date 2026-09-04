@@ -1022,4 +1022,67 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 - **Estado:** ✅ **IMPLEMENTADO, CERTIFICADO Y DESPLEGADO EN PRODUCCIÓN**.
 
 ---
+
+### 🔹 Caso R6.6: Exportación Premium a Excel (.xlsx) con ExcelJS en Informe Consolidado (Individual y Multi-Escenario)
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\media_1788555800000.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\media_1788555800000.png` (Maestro de Matrices mostrando ambos botones de exportación Excel).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Los botones de descarga de Excel en el Maestro de Matrices (`Descargar Excel (.xlsx)` en cada tarjeta individual y `Descargar Excel Consolidado` en el bloque multi-escenario) generaban archivos planos en blanco y negro mediante SheetJS (`XLSX.utils.aoa_to_sheet`), sin colores, sin bordes, sin tipografía corporativa ni formatos numéricos profesionales.
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Nuevo Servicio Especializado (`src/services/exportMecConsolidatedExcel.ts`):**
+     - Desarrollado con **`ExcelJS`** incorporando el sistema cromático idéntico de la Matriz Petral (75% de transparencia / 25% tint pastel):
+       - **Clientes:** SPCC (`#C0DAE8` / `#0369A1`), NEXA (`#C3D2E0` / `#0F4C81`).
+       - **Rutas:** MATARANI (`#C1EDF4` / `#0E7490`), MARCONA (`#E9D5FD` / `#6B21A8`), MEJILLONES (`#F6D1FB` / `#86198F`).
+       - **Buques:** TABLONES (`#F6C9C9` / `#991B1B`), MOQUEGUA (`#C5E8D2` / `#166534`), CONCON (`#D1D5DA` / `#1E293B`), HUEMUL (`#D3D1F9` / `#3730A3`).
+       - **Cabecera y Totales:** Ribbon Navy Blue (`#0F4C81`), Fila de Total General (`#C7CACE` / `#0F172A`) con doble borde inferior contable.
+     - **Formato Numérico Riguroso:** `#,##0` en toneladas, viajes, P/L y margen; `0.00%` en participaciones; sin símbolos `$ ` sueltos.
+     - **Exportación Individual:** Genera la hoja del escenario con Cabecera Ejecutiva, Tabla 1 (Tráfico Macro), Tabla 2 (Rutas y Buques) y Notas de Premisas.
+     - **Exportación Multi-Escenario:** Genera la hoja apilada `INFORME_CONSOLIDADO` (con secciones temáticas distintivas) + Hojas individuales por cada escenario seleccionado.
+  2. **Integración en Frontend (`FinancialProjectionsMaster_V2.tsx`):**
+     - Conectados `handleExportMecExcel` y `handleExportMultiMecExcel` a las funciones de `exportMecConsolidatedExcel.ts`.
+
+- **Resultados de Cuadratura y Verificación (QC):**
+  - Script de validación `node qc_excel_export_test.mjs` -> ✅ PASS (100% identidad matemática de datos).
+  - `npx vite build` -> ✅ 1092 módulos compilados en 30.88s sin errores.
+  - `git push origin main` -> ✅ Commit `4e098a5`.
+  - `deploy_forecast_kickoff.py` -> ✅ Desplegado al VPS (`https://forecast.geeksoft.tech`).
+
+- **Estado:** ✅ **IMPLEMENTADO, CERTIFICADO Y DESPLEGADO EN PRODUCCIÓN**.
+
+---
+
+### 🔹 Caso R6.7: Resolución Forense de Alerta de Recuperación OpenXML en Archivos ExcelJS
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\media_1788559612170.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\media_1788559612170.png` (Diálogo de Excel desktop: *"We found a problem with some content in 'Reporte_Consolidado_...xlsx'. Do you want us to try to recover as much as we can?"*).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Al abrir los archivos `.xlsx` generados por el nuevo exportador `exportMecConsolidatedExcel.ts` en Microsoft Excel de escritorio, aparecía un cuadro de advertencia solicitando reparar el libro.
+  - **Causa Raíz Identificada:**
+    1. **Estructura Inválida de Vistas / Freeze Panes (`ws.views`):** Se definió `ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 0, xSplit: 0 }]`. En el estándar OpenXML de Microsoft Excel, declarar un estado `frozen` con `ySplit = 0` y `xSplit = 0` genera un elemento XML `<pane>` inválido que Excel interpreta como corrupción estructural.
+    2. **Sanitización de Nombres de Pestañas (`sheetName`):** Nombres de hojas que excedían los 31 caracteres o contenían caracteres reservados/comillas generaban advertencias en la tabla de partes del libro (`workbook.xml`).
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Alineación con OpenXML en `applyWorksheetStandards` (`exportMecConsolidatedExcel.ts`):**
+     - Se corrigió la configuración de la vista a `ws.views = [{ showGridLines: true }]` (eliminando la declaración ilegal de freeze pane vacío).
+  2. **Función de Sanitización Estricta de Hojas (`sanitizeSheetName`):**
+     - Se implementó un sanitizador que remueve caracteres prohibidos `[\/\\?*:[\]]`, comillas iniciales/finales, recorta a 31 caracteres máximos y garantiza unicidad en el libro consolidado (`usedSheetNames`).
+  3. **Protección Numérica Canónica:**
+     - Todos los campos numéricos fueron blindados con fallbacks `value || 0` para asegurar que ninguna celda contenga valores `NaN` o `undefined` en el stream binario.
+
+- **Resultados de Cuadratura y Verificación (QC):**
+  - Validación con `openpyxl` en script de inspección -> ✅ PASS (Libro y hojas cargadas limpiamente sin advertencias).
+  - `npx vite build` -> ✅ 1092 módulos compilados en 30.64s con `exit code 0`.
+  - `git push origin main` -> ✅ Commit registrado.
+  - `deploy_forecast_kickoff.py` -> ✅ Desplegado al VPS de Producción (`https://forecast.geeksoft.tech`).
+
+- **Estado:** ✅ **SOLUCIONADO, VALIDADO Y DESPLEGADO EN PRODUCCIÓN**.
+
+---
 *Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
+

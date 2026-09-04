@@ -50,6 +50,15 @@ function getVesselColor(vesselName: string) {
     return { bg: 'FFF8FAFC', fg: 'FF475569' };
 }
 
+function sanitizeSheetName(name: string, fallback: string = 'Escenario'): string {
+    let clean = (name || fallback)
+        .replace(/[\/\\?*:[\]]/g, '_')
+        .replace(/^'+|'+$/g, '')
+        .trim();
+    if (clean.length > 31) clean = clean.substring(0, 31);
+    return clean || fallback;
+}
+
 const thinBorder: Partial<ExcelJS.Borders> = {
     top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
     left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -164,7 +173,6 @@ function renderScenarioSection(
 
     // 2. TABLA 1: DISTRIBUCIÓN MACRO POR TIPO DE TRÁFICO
     const t1Headers = ['Tipo Tráfico', 'Nº viajes', 'Volumen TM', '%'];
-    const t1RowStart = r;
 
     // Header Tabla 1
     t1Headers.forEach((h, colIdx) => {
@@ -180,8 +188,8 @@ function renderScenarioSection(
 
     // Filas Tabla 1
     const t1Data = [
-        ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, mec.cabotageSharePct / 100],
-        ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, mec.exportSharePct / 100],
+        ['Viajes cabotaje', mec.cabotageTrips || 0, mec.cabotageVolumeTm || 0, (mec.cabotageSharePct || 0) / 100],
+        ['Viajes exportación', mec.exportTrips || 0, mec.exportVolumeTm || 0, (mec.exportSharePct || 0) / 100],
     ];
 
     t1Data.forEach(row => {
@@ -216,15 +224,14 @@ function renderScenarioSection(
     });
 
     // Fila Total Tabla 1
-    const totT1 = ['Total', mec.totalTrips, mec.totalVolumeTm, 1.0];
     const c1Tot = ws.getCell(r, 1);
-    c1Tot.value = totT1[0];
+    c1Tot.value = 'Total';
     c1Tot.font = { name: 'Segoe UI', size: 9.5, bold: true };
     c1Tot.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
     c1Tot.border = thinBorder;
 
     const c2Tot = ws.getCell(r, 2);
-    c2Tot.value = totT1[1];
+    c2Tot.value = mec.totalTrips || 0;
     c2Tot.font = { name: 'Segoe UI', size: 9.5, bold: true };
     c2Tot.numFmt = '#,##0';
     c2Tot.alignment = { horizontal: 'center' };
@@ -232,7 +239,7 @@ function renderScenarioSection(
     c2Tot.border = thinBorder;
 
     const c3Tot = ws.getCell(r, 3);
-    c3Tot.value = totT1[2];
+    c3Tot.value = mec.totalVolumeTm || 0;
     c3Tot.font = { name: 'Segoe UI', size: 9.5, bold: true };
     c3Tot.numFmt = '#,##0';
     c3Tot.alignment = { horizontal: 'right' };
@@ -240,7 +247,7 @@ function renderScenarioSection(
     c3Tot.border = thinBorder;
 
     const c4Tot = ws.getCell(r, 4);
-    c4Tot.value = totT1[3];
+    c4Tot.value = 1.0;
     c4Tot.font = { name: 'Segoe UI', size: 9.5, bold: true };
     c4Tot.numFmt = '0.00%';
     c4Tot.alignment = { horizontal: 'right' };
@@ -264,9 +271,8 @@ function renderScenarioSection(
     ws.getRow(r).height = 20;
     r++;
 
-    mec.routes.forEach(routeRow => {
+    (mec.routes || []).forEach(routeRow => {
         const routeColor = getRouteColor(routeRow.route);
-        const isRouteExpanded = !!expandedRoutes[`${scenario.id}__${routeRow.route}`];
 
         // Fila de Ruta Principal
         const cRoute = ws.getCell(r, 1);
@@ -276,49 +282,49 @@ function renderScenarioSection(
         cRoute.border = thinBorder;
 
         const cTm = ws.getCell(r, 2);
-        cTm.value = routeRow.annualTons;
+        cTm.value = routeRow.annualTons || 0;
         cTm.font = { name: 'Segoe UI', size: 9.5, bold: true };
         cTm.numFmt = '#,##0';
         cTm.alignment = { horizontal: 'right' };
         cTm.border = thinBorder;
 
         const cFull = ws.getCell(r, 3);
-        cFull.value = Math.round(routeRow.fullLoad);
+        cFull.value = Math.round(routeRow.fullLoad || 0);
         cFull.font = { name: 'Segoe UI', size: 9.5 };
         cFull.numFmt = '#,##0';
         cFull.alignment = { horizontal: 'right' };
         cFull.border = thinBorder;
 
         const cTrips = ws.getCell(r, 4);
-        cTrips.value = routeRow.annualTrips;
+        cTrips.value = routeRow.annualTrips || 0;
         cTrips.font = { name: 'Segoe UI', size: 9.5, bold: true };
         cTrips.numFmt = '#,##0';
         cTrips.alignment = { horizontal: 'center' };
         cTrips.border = thinBorder;
 
         const cPnl = ws.getCell(r, 5);
-        cPnl.value = Math.round(routeRow.pnlPerTrip);
+        cPnl.value = Math.round(routeRow.pnlPerTrip || 0);
         cPnl.font = { name: 'Segoe UI', size: 9.5, bold: true };
         cPnl.numFmt = '#,##0';
         cPnl.alignment = { horizontal: 'right' };
         cPnl.border = thinBorder;
 
         const cMargin = ws.getCell(r, 6);
-        cMargin.value = Math.round(routeRow.totalGrossMargin);
+        cMargin.value = Math.round(routeRow.totalGrossMargin || 0);
         cMargin.font = { name: 'Segoe UI', size: 9.5, bold: true };
         cMargin.numFmt = '#,##0';
         cMargin.alignment = { horizontal: 'right' };
         cMargin.border = thinBorder;
 
         const cPct = ws.getCell(r, 7);
-        cPct.value = routeRow.volumeSharePct / 100;
+        cPct.value = (routeRow.volumeSharePct || 0) / 100;
         cPct.font = { name: 'Segoe UI', size: 9.5 };
         cPct.numFmt = '0.00%';
         cPct.alignment = { horizontal: 'right' };
         cPct.border = thinBorder;
 
         const cDaysOcc = ws.getCell(r, 8);
-        cDaysOcc.value = Math.round(routeRow.daysOccupation);
+        cDaysOcc.value = Math.round(routeRow.daysOccupation || 0);
         cDaysOcc.font = { name: 'Segoe UI', size: 9.5 };
         cDaysOcc.numFmt = '#,##0';
         cDaysOcc.alignment = { horizontal: 'right' };
@@ -331,7 +337,7 @@ function renderScenarioSection(
         ws.getRow(r).height = 19;
         r++;
 
-        // Desglose de Buques (si existen sub-buques o está expandido)
+        // Desglose de Buques
         if (routeRow.vesselDetails && routeRow.vesselDetails.length > 0) {
             routeRow.vesselDetails.forEach(vd => {
                 const vesselColor = getVesselColor(vd.vessel);
@@ -343,49 +349,49 @@ function renderScenarioSection(
                 cSubV.border = thinBorder;
 
                 const cSubTm = ws.getCell(r, 2);
-                cSubTm.value = vd.annualTons;
+                cSubTm.value = vd.annualTons || 0;
                 cSubTm.font = { name: 'Segoe UI', size: 9 };
                 cSubTm.numFmt = '#,##0';
                 cSubTm.alignment = { horizontal: 'right' };
                 cSubTm.border = thinBorder;
 
                 const cSubFull = ws.getCell(r, 3);
-                cSubFull.value = Math.round(vd.fullLoad);
+                cSubFull.value = Math.round(vd.fullLoad || 0);
                 cSubFull.font = { name: 'Segoe UI', size: 9 };
                 cSubFull.numFmt = '#,##0';
                 cSubFull.alignment = { horizontal: 'right' };
                 cSubFull.border = thinBorder;
 
                 const cSubTrips = ws.getCell(r, 4);
-                cSubTrips.value = vd.annualTrips;
+                cSubTrips.value = vd.annualTrips || 0;
                 cSubTrips.font = { name: 'Segoe UI', size: 9 };
                 cSubTrips.numFmt = '#,##0';
                 cSubTrips.alignment = { horizontal: 'center' };
                 cSubTrips.border = thinBorder;
 
                 const cSubPnl = ws.getCell(r, 5);
-                cSubPnl.value = Math.round(vd.pnlPerTrip);
+                cSubPnl.value = Math.round(vd.pnlPerTrip || 0);
                 cSubPnl.font = { name: 'Segoe UI', size: 9 };
                 cSubPnl.numFmt = '#,##0';
                 cSubPnl.alignment = { horizontal: 'right' };
                 cSubPnl.border = thinBorder;
 
                 const cSubMargin = ws.getCell(r, 6);
-                cSubMargin.value = Math.round(vd.totalGrossMargin);
+                cSubMargin.value = Math.round(vd.totalGrossMargin || 0);
                 cSubMargin.font = { name: 'Segoe UI', size: 9 };
                 cSubMargin.numFmt = '#,##0';
                 cSubMargin.alignment = { horizontal: 'right' };
                 cSubMargin.border = thinBorder;
 
                 const cSubPct = ws.getCell(r, 7);
-                cSubPct.value = vd.volumeSharePct / 100;
+                cSubPct.value = (vd.volumeSharePct || 0) / 100;
                 cSubPct.font = { name: 'Segoe UI', size: 9 };
                 cSubPct.numFmt = '0.00%';
                 cSubPct.alignment = { horizontal: 'right' };
                 cSubPct.border = thinBorder;
 
                 const cSubDays = ws.getCell(r, 8);
-                cSubDays.value = Math.round(vd.daysOccupation);
+                cSubDays.value = Math.round(vd.daysOccupation || 0);
                 cSubDays.font = { name: 'Segoe UI', size: 9 };
                 cSubDays.numFmt = '#,##0';
                 cSubDays.alignment = { horizontal: 'right' };
@@ -417,20 +423,20 @@ function renderScenarioSection(
     totalRowCells[0].value = 'Total';
     totalRowCells[0].alignment = { horizontal: 'left' };
 
-    totalRowCells[1].value = mec.totalVolumeTm;
+    totalRowCells[1].value = mec.totalVolumeTm || 0;
     totalRowCells[1].numFmt = '#,##0';
     totalRowCells[1].alignment = { horizontal: 'right' };
 
     totalRowCells[2].value = '';
 
-    totalRowCells[3].value = mec.totalTrips;
+    totalRowCells[3].value = mec.totalTrips || 0;
     totalRowCells[3].numFmt = '#,##0';
     totalRowCells[3].alignment = { horizontal: 'center' };
 
     totalRowCells[4].value = '-';
     totalRowCells[4].alignment = { horizontal: 'center' };
 
-    totalRowCells[5].value = Math.round(mec.totalGrossMargin);
+    totalRowCells[5].value = Math.round(mec.totalGrossMargin || 0);
     totalRowCells[5].numFmt = '#,##0';
     totalRowCells[5].alignment = { horizontal: 'right' };
 
@@ -438,11 +444,11 @@ function renderScenarioSection(
     totalRowCells[6].numFmt = '0.00%';
     totalRowCells[6].alignment = { horizontal: 'right' };
 
-    totalRowCells[7].value = Math.round(mec.totalDaysOccupation);
+    totalRowCells[7].value = Math.round(mec.totalDaysOccupation || 0);
     totalRowCells[7].numFmt = '#,##0';
     totalRowCells[7].alignment = { horizontal: 'right' };
 
-    totalRowCells[8].value = Math.round(mec.totalDaysAvailable);
+    totalRowCells[8].value = Math.round(mec.totalDaysAvailable || 0);
     totalRowCells[8].numFmt = '#,##0';
     totalRowCells[8].alignment = { horizontal: 'right' };
 
@@ -462,17 +468,17 @@ function renderScenarioSection(
  * Configura anchos y vistas de cuadrícula estándar
  */
 function applyWorksheetStandards(ws: ExcelJS.Worksheet) {
-    ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 0, xSplit: 0 }];
+    ws.views = [{ showGridLines: true }];
     ws.columns = [
-        { width: 26 }, // Puertos / Ruta
-        { width: 15 }, // TM Anual
-        { width: 12 }, // Full load
-        { width: 12 }, // Nº viajes
-        { width: 15 }, // P/L x Viaje
-        { width: 22 }, // Total Margen Operativo
+        { width: 28 }, // Puertos / Ruta
+        { width: 16 }, // TM Anual
+        { width: 14 }, // Full load
+        { width: 13 }, // Nº viajes
+        { width: 16 }, // P/L x Viaje
+        { width: 24 }, // Total Margen Operativo
         { width: 12 }, // %
-        { width: 16 }, // Dias ocupación
-        { width: 16 }, // Dias disponibles
+        { width: 17 }, // Dias ocupación
+        { width: 17 }, // Dias disponibles
     ];
 }
 
@@ -489,7 +495,7 @@ export async function exportSingleMecExcel(
     wb.lastModifiedBy = 'Petral Financial Engine';
     wb.created = new Date();
 
-    const sheetName = `Año_${scenario.year}_${scenario.name}`.replace(/[\/\\?*:[\]]/g, '_').substring(0, 31);
+    const sheetName = sanitizeSheetName(`Año_${scenario.year}_${scenario.name}`);
     const ws = wb.addWorksheet(sheetName);
     applyWorksheetStandards(ws);
 
@@ -537,7 +543,7 @@ export async function exportSingleMecExcel(
     // Descargar archivo
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const cleanFileName = `Reporte_Consolidado_${scenario.year}_${scenario.name}.xlsx`.replace(/[\/\\?*:[\]]/g, '_');
+    const cleanFileName = `Reporte_Consolidado_${scenario.year}_${scenario.name.replace(/[^a-zA-Z0-9_\- ]/g, '_').trim()}.xlsx`;
     
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -620,10 +626,19 @@ export async function exportMultiMecExcel(
     // =========================================================================
     // 2. HOJAS INDIVIDUALES POR ESCENARIO
     // =========================================================================
+    const usedSheetNames = new Set<string>(['INFORME_CONSOLIDADO']);
+
     scenariosToExport.forEach((scenario, sIdx) => {
-        const rawName = `Año_${scenario.year}_${scenario.name}`.replace(/[\/\\?*:[\]]/g, '_');
-        const sheetName = rawName.substring(0, 31);
-        const ws = wb.addWorksheet(sheetName);
+        let baseName = sanitizeSheetName(`Año_${scenario.year}_${scenario.name}`);
+        let finalSheetName = baseName;
+        let counter = 1;
+        while (usedSheetNames.has(finalSheetName)) {
+            const suffix = `_${counter++}`;
+            finalSheetName = `${baseName.substring(0, 31 - suffix.length)}${suffix}`;
+        }
+        usedSheetNames.add(finalSheetName);
+
+        const ws = wb.addWorksheet(finalSheetName);
         applyWorksheetStandards(ws);
 
         let rowSingle = 1;
