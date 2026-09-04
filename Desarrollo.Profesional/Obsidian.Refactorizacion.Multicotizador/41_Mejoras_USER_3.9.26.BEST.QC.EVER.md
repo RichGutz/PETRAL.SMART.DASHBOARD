@@ -867,4 +867,40 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 - **Estado:** ✅ **TRIPLE CUADRE MATEMÁTICO 100% CERRADO Y CERTIFICADO ($0.00 DE DISCREPANCIA EN TODOS LOS VÉRTICES)**.
 
 ---
+
+### 🔹 Caso R6.2: Optimización Estética y Tipográfica en Reportes PDF / Excel & Blindaje E2E
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\evidencia_impresion_fuente_cero_punto.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\evidencia_impresion_fuente_cero_punto.png` (Evidencia física del punto en el cero pareciendo un 8).
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\discrepancia_informe_consolidado_captura_r6_2.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\discrepancia_informe_consolidado_captura_r6_2.png` (Auditoría del consolidado de escenarios).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  1. **El Cero con Punto (`0` que parece `8` al imprimir):** El CSS usaba `font-family: 'Consolas', monospace`. En fuentes de programación, el cero tiene un punto central (*dotted zero*). En papel físico a 8px/8.5px, la absorción de tinta empasta el punto con el borde, haciendo que `13,500` parezca `13,588` o `62,000` parezca `62,888`.
+  2. **El Carácter `$ ` Innecesario:** Cada celda numérica anteponía `$`, consumiendo 1 carácter y reduciendo el ancho útil en papel A4 Landscape.
+  3. **Blindaje de QC E2E:** Se requería un script de prueba dedicado para validar automáticamente que el componente React de Proyecciones Financieras nunca se desincronice.
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Tipografía Corporativa & Cero Abierto:**
+     - Se reemplazó `Consolas` por `'Segoe UI', Arial, 'DejaVu Sans', sans-serif !important` con `font-variant-numeric: tabular-nums; -webkit-font-feature-settings: "tnum"; font-feature-settings: "tnum";`.
+     - El cero `0` queda 100% abierto y limpio (sin punto ni barra central) y cada dígito mantiene el mismo ancho tabular para columnas rectas perfectas.
+  2. **Aumento de Tamaño de Fuente en PDF:**
+     - `td.td-num`: Aumentado de `8.5px` a `9.5px` (`font-weight: 500`).
+     - `td.td-metric-name`: Aumentado de `8.5px` a `9px` (`font-weight: 500`).
+     - `td.td-total-cell`: Aumentado a `9.5px` (`font-weight: 700`).
+  3. **Eliminación del Símbolo `$ `:**
+     - En `exportFinancialMatrixExcel.ts` & `exportFinancialMatrixNavitransoExcel.ts`: `cell.numFmt = '#,##0.00'` y `#,##0`.
+     - En `exportFinancialMatrixPdf.ts` & `exportFinancialMatrixNavitransoPdf.ts`: `formatNumericCell` devuelve números formateados sin `$`.
+  4. **Suite de QC Automatizada:**
+     - Creado `test_qc_projections_master_e2e.py` en `Geeksoft_Engine` para certificar la convergencia automática en cualquier escenario de la base de datos.
+
+- **Scripts de Control de Calidad Ejecutados:**
+  - `python test_qc_projections_master_e2e.py` -> ✅ PASS ($0.00 discrepancia).
+  - `python run_qc_e2e_triple_cuadre.py` -> ✅ PASS ($0.00 discrepancia).
+  - `node qc_comprehensive_navitranso_test.mjs` -> ✅ PASS (Excel generado).
+  - `npx vite build` -> ✅ PASS (0 errores, 1091 módulos).
+
+- **Estado:** ✅ **DESPLEGADO Y VERIFICADO EN PRODUCCIÓN (VPS: https://forecast.geeksoft.tech)**.
+
+---
 *Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
