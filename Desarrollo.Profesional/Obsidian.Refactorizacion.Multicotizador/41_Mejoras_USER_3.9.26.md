@@ -470,4 +470,32 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 | **R2.4** | Excel Navitranso: Cabeceras C, R, B, fuente 10pt y Zoom 75% | `exportFinancialMatrixNavitransoExcel.ts` | `PRE.R2_4.EXCEL_NAVITRANSO_CRB_F10_Z75` | ✅ **RESUELTO** |
 
 ---
+
+## 🎯 Ronda 3: Prueba Definitiva de Control de Calidad (QC Stress Test de Convergencia Bidireccional)
+
+### 🕵️‍♂️ Protocolo Pericial Benoit Blanc: Matriz Financiera ↔ Multicotizador con Overrides en Caliente
+
+#### 1. Formulación del Problema y Entendimiento Pericial
+La **Matriz Financiera** cuenta con capacidades de simulación *What-If* en caliente que permiten al usuario sobreescribir dinámicamente variables comerciales y operativas de una ruta:
+- **Tarifa Base de Flete** (`custom_tariff`).
+- **Demoras Operativas** (días de demora, porcentaje de impacto o tarifa diaria de demurrage).
+- **Precios Proyectados de Búnker** (`forecast_bunker_price_ifo`, `forecast_bunker_price_mdo`).
+
+#### 2. Hipótesis de Convergencia Matemática
+Si se selecciona una ruta grabada en la base de datos (con su snapshot de tramos, tiempos y costos), se proyecta en la **Matriz Financiera** aplicándole cambios en caliente (overrides de flete, demoras o búnker), y simultáneamente se alimenta el motor analítico del **Multicotizador** (`spot_engine.py` / `calculate_multicotizador_simulation`) con exactamente ese mismo payload de variables modificadas:
+**Ambos motores deben converger con $0.00 de discrepancia matemática** en todas las métricas:
+- Ingreso Bruto (Gross Revenue = Flete + Demurrage + Refacturación de Muellaje)
+- Comisiones Comerciales y Margen Neto
+- Costos de Búnker (IFO + MDO)
+- Costos de Puerto
+- Días de Mar, Puerto y Ocupación Total
+- Margen Operativo (Voyage Result / P&L)
+- TCE Realizado ($/día)
+
+#### 3. Metodología de Ejecución:
+- **Fase 1 (Prueba Focalizada - 1 Ruta):** Auditar a detalle la ruta emblemática `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem` aplicando sobreescritura de tarifa comercial (`custom_tariff = $28.50`) y variación de demoras/búnker.
+- **Fase 2 (Prueba Exhaustiva - Todas las Rutas Grabadas):** Ejecutar loop automatizado sobre todas las rutas registradas en la base de datos para certificar la convergencia universal.
+- **Fase 3 (Acta y Dictamen Pericial):** Consignar las tablas de comparación y resultados de terminal en este documento.
+
+---
 *Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*
