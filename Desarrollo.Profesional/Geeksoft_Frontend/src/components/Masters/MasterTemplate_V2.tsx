@@ -87,10 +87,10 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                 <div className="flex items-center justify-between max-w-full mx-auto w-full">
                     
                     {/* Logos y Título de App */}
-                    <div className="flex items-center gap-3.5">
-                        <img src="/Logo.Petral.png" alt="Naviera Petral" className="object-contain cursor-pointer transition-transform hover:scale-105" style={{ height: '55px', maxHeight: '55px' }} onClick={() => navigate('/dashboard')} />
-                        <div className="flex items-center border-l border-slate-200 pl-3.5">
-                            <img src="/LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg" alt="DELFOS" className="h-9 object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
+                    <div className="flex items-center gap-3">
+                        <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
+                        <div className="flex items-center border-l border-slate-200 pl-3">
+                            <img src="/LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg" alt="DELFOS" className="object-contain cursor-pointer transition-transform hover:scale-105" style={{ height: '42px', maxHeight: '42px' }} onClick={() => navigate('/dashboard')} />
                         </div>
 
                         {/* Live Network Status Pill Estilo APEFAC */}
