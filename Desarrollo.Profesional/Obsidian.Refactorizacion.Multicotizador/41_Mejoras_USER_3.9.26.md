@@ -406,5 +406,13 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
   - Configurar `.scenario-badge-banner` con `width: 100% !important; margin: 2px 0 3px 0 !important; border-radius: 0 !important; box-sizing: border-box !important;` para que calce con exactitud milimétrica al 100% del ancho de la grilla en todas las páginas del reporte.
 - **Estado:** 📝 **ANOTADO Y EN ESPERA**.
 
+### 🔹 Punto R2.3: Homologación de Cabeceras C, R, B, Tipografía Tamaño 10 y Zoom 75% en Excel (Matriz Petral)
+- **Módulo:** `exportFinancialMatrixExcel.ts`.
+- **Requerimiento:**
+  1. **Cabeceras C, R y B:** Reemplazar los textos de cabecera de las tres primeras columnas de dimensiones en la fila 1 de Excel por **`C`**, **`R`** y **`B`** (en lugar de `CLIENTE`, `RUTA`, `BUQUE`).
+  2. **Tamaño de Fuente 10 pt:** Establecer `size: 10` en todas las celdas de nombres de métricas y valores numéricos (`cell.font = { name: 'Segoe UI', size: 10, ... }`), tanto en filas de datos normales como en subtotales y totales.
+  3. **Apertura de Hoja con Zoom al 75%:** Configurar en la vista de la hoja (`ws.views = [{ state: 'normal', zoomScale: 75 }]`) para que al abrir el archivo descargado en Microsoft Excel se inicialice automáticamente con el zoom al **75%**, permitiendo abarcar toda la proyección de 12 meses + Total Acumulado en pantalla completa.
+- **Estado:** 📝 **ANOTADO Y EN ESPERA**.
+
 ---
 *Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*
