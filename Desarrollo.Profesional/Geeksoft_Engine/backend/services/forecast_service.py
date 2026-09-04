@@ -860,7 +860,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- FIDELIDAD AL SNAPSHOT (Axioma 1: La Foto no se reinventa) ---
                 is_same_vessel = bool(vessel and original_vessel_id and vessel.strip().upper() == str(original_vessel_id).strip().upper())
                 has_bunker_override = bool((line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) or (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0))
-                has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0)
+                has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0 and abs(float(line.custom_tariff) - float(yield_flete)) > 0.01)
                 fin_summary = legs_data.get("financial_summary") or {}
                 has_valid_snapshot = bool(fin_summary and float(fin_summary.get("grandBunkerTotal", 0)) > 0)
 

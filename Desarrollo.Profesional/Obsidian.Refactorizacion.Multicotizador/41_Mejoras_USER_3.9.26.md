@@ -22,20 +22,22 @@
 
 ### 2. Discrepancia / Ausencia de Demurrage en Matriz Petral al invocar Ruta Presupuesto
 - **Ubicación:** Integración entre **Multicotizador** (Ruta Presupuesto) y **Matriz Petral** (Modelación / Forecast).
-- **Caso Observado en Capturas:**
-  - **En Multicotizador** (Ruta: `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem`):
-    - Días Demurrage calculados: `3.53 d` (Leg 1: `1.86 d`, Leg 2: `1.67 d`).
-    - Ingreso Demurrage (+): `$70,600` ($20,000/d × 3.53 d).
-    - Costo Demurrage (-): `$45,890` ($13,000/d × 3.53 d).
-    - Bunker Dem (-): `$8,195`.
-    - P/L Resultante: `$181,243`.
-  - **En Matriz Petral** (al cargar la misma ruta `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem`):
-    - Línea `(+) Demurrage`: muestra guion `-` ($0 / vacío).
-    - Días-Buque: registra `4.1` d (omitiendo o sin reflejar los días de estadía/demurrage calculados).
-    - Net Revenue: `$280,250` (solo suma Freight $276,750 + Dockage $3,500).
-    - Voyage Result / P&L: `$164,728` (difiere del P/L del multicotizador de $181,243).
-- **Acción requerida:** Investigar a fondo el mapeo / propagación de datos desde el backend/motor de rutas guardadas hacia la grilla de la Matriz Petral para asegurar que los componentes de Demurrage (ingresos, costos y días) se trasladen e incorporen correctamente.
-- **Estado:** 📝 Anotado para investigación profunda (Siguiente en turno: P2).
+- **Causa Raíz Descubierta (Escena del Crimen):**
+  - Al seleccionar la ruta cotizada, el frontend autocompleta el campo `custom_tariff` con el flete cotizado (ej. `$20.50`).
+  - En el backend (`forecast_service.py`), la condición `has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0)` interpretaba que toda ruta añadida tenía un "override manual", por lo que **descartaba el snapshot inmaculado del Multicotizador** y recalculaba una ruta sin los días/ingresos/costos de estadía.
+- **Cirugía Quirúrgica (DIFF):**
+  - Se modificó la condición en `forecast_service.py` (Línea 863) para comparar si la tarifa realmente difiere del flete ponderado de la cotización: `abs(custom_tariff - yield_flete) > 0.01`.
+- **Estado:** ✅ **RESUELTO Y VALIDADO EN TERMINAL (03/09/2026)**
+- **QC Terminal y Comparación Forense (Caso `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem`):**
+  - **Demurrage Revenue:** `$70,600.0` (3.53 d × $20,000/d) ✅
+  - **Demurrage Days:** `3.53 d` ✅
+  - **Gross Revenue:** `$350,850.0` (Flete $276,750 + Muellaje $3,500 + Demurrage $70,600) ✅
+  - **Total Bunker Costs:** `$28,176.00` (incluye bunker de demurrage $8,194.62) ✅
+  - **Total Port Costs:** `$42,500.0` ✅
+  - **Total Duration (Días-Buque):** `7.61 d` (4.08 d navegación/puerto + 3.53 d demurrage) ✅
+  - **Voyage Result / P&L:** `$181,243.01` (Calce 100% exacto con Multicotizador) ✅
+  - **TCE Real:** `$36,816.19` ✅
+  - **Compilación Frontend:** `npx vite build` exit code 0.
 
 ---
 
@@ -48,7 +50,7 @@
   2. **Matriz Petral** (Modelación matricial mensual/anual).
   3. **Informe Consolidado** (Agregador final de escenarios).
   Garantizar consistencia matemática 100% estricta en los tres niveles.
-- **Estado:** 📝 Anotado para auditoría y corrección.
+- **Estado:** 📝 Anotado para auditoría y corrección (Siguiente en turno: P3).
 
 ---
 
