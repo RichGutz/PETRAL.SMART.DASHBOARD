@@ -171,7 +171,8 @@ def calc_navitranso(agg_data, projection_lines, months):
 
 def calc_consolidado_mec(agg_data):
     """
-    Cálculo canónico del Reporte Consolidado (MEC) a partir de aggregated_data
+    Cálculo canónico del Reporte Consolidado (MEC / FinancialProjectionsMaster_V2.tsx)
+    a partir de aggregated_data.
     """
     routes_map = {}
     for client, routesDict in agg_data.items():

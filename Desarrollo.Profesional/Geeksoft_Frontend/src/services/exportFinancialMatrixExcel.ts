@@ -262,11 +262,11 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                         ) {
                             // MONETARIO UNITARIO: Tarifas y TCE con centavos
                             cell.value = parsedNum;
-                            cell.numFmt = '$#,##0.00';
+                            cell.numFmt = '#,##0.00';
                         } else {
                             // MONETARIO GLOBAL: Net Revenue, Hire, Bunker, Puertos, P&L, etc.
                             cell.value = parsedNum;
-                            cell.numFmt = '$#,##0';
+                            cell.numFmt = '#,##0';
                         }
                     } else {
                         // Ceros, guiones y vacíos en meses inactivos: celda limpia y vacía
@@ -342,16 +342,14 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                 if (typeof cell.value === 'number') {
                     const num = cell.value;
                     const fmt = cell.numFmt || '';
-                    if (fmt.includes('$') && fmt.includes('.00')) {
-                        visualLen = `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.length;
-                    } else if (fmt.includes('$')) {
-                        visualLen = `$${Math.round(num).toLocaleString('en-US')}`.length;
+                    if (fmt.includes('.00')) {
+                        visualLen = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).length;
                     } else if (fmt.includes('%')) {
                         visualLen = `${(num * 100).toFixed(1)}%`.length;
                     } else if (fmt.includes('.0')) {
                         visualLen = num.toFixed(1).length;
                     } else {
-                        visualLen = `${Math.round(num).toLocaleString('en-US')}`.length;
+                        visualLen = Math.round(num).toLocaleString('en-US').length;
                     }
                 } else {
                     const str = String(cell.value || '').trim();
