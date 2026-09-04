@@ -9,25 +9,25 @@
 
 import { LOGO_PETRAL_BASE64, LOGO_GEEKSOFT_BASE64 } from '../assets/logosBase64';
 
-// Paleta corporativa oficial homologada
+// Paleta corporativa con 75% de transparencia (25% tint pastel) para ahorro de tinta en impresión física
 const COLOR_MAP: Record<string, { bg: string; fg: string }> = {
-    // Clientes
-    'bg-sky-700': { bg: '#0369a1', fg: '#ffffff' },
-    'bg-petral-blue': { bg: '#0f4c81', fg: '#ffffff' },
-    'bg-orange-500': { bg: '#f97316', fg: '#ffffff' },
-    // Rutas
-    'bg-cyan-500': { bg: '#06b6d4', fg: '#ffffff' },
-    'bg-purple-500': { bg: '#a855f7', fg: '#ffffff' },
-    'bg-fuchsia-500': { bg: '#d946ef', fg: '#ffffff' },
-    'bg-slate-700': { bg: '#334155', fg: '#ffffff' },
-    // Buques
-    'bg-red-600': { bg: '#dc2626', fg: '#ffffff' },
-    'bg-green-600': { bg: '#16a34a', fg: '#ffffff' },
-    'bg-slate-600': { bg: '#475569', fg: '#ffffff' },
-    'bg-indigo-600': { bg: '#4f46e5', fg: '#ffffff' },
-    'bg-slate-800': { bg: '#1e293b', fg: '#ffffff' },
+    // Clientes (75% transparencia / 25% tint)
+    'bg-sky-700': { bg: '#c0dae8', fg: '#0369a1' },
+    'bg-petral-blue': { bg: '#c3d2e0', fg: '#0f4c81' },
+    'bg-orange-500': { bg: '#fedcc5', fg: '#c2410c' },
+    // Rutas (75% transparencia / 25% tint)
+    'bg-cyan-500': { bg: '#c1edf4', fg: '#0e7490' },
+    'bg-purple-500': { bg: '#e9d5fd', fg: '#6b21a8' },
+    'bg-fuchsia-500': { bg: '#f6d1fb', fg: '#86198f' },
+    'bg-slate-700': { bg: '#ccd0d5', fg: '#1e293b' },
+    // Buques (75% transparencia / 25% tint)
+    'bg-red-600': { bg: '#f6c9c9', fg: '#991b1b' },
+    'bg-green-600': { bg: '#c5e8d2', fg: '#166534' },
+    'bg-slate-600': { bg: '#d1d5da', fg: '#1e293b' },
+    'bg-indigo-600': { bg: '#d3d1f9', fg: '#3730a3' },
+    'bg-slate-800': { bg: '#c7cace', fg: '#0f172a' },
     'bg-amber-100': { bg: '#fef3c7', fg: '#78350f' },
-    'bg-petral-teal': { bg: '#0d9488', fg: '#ffffff' },
+    'bg-petral-teal': { bg: '#c3e4e1', fg: '#115e59' },
 };
 
 function getDimensionColor(className: string, text: string): { bg: string; fg: string } | null {
@@ -37,18 +37,18 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
         }
     }
     const upper = text.toUpperCase();
-    if (upper.includes('NEXA')) return { bg: '#0f4c81', fg: '#ffffff' };
-    if (upper.includes('SPCC')) return { bg: '#0369a1', fg: '#ffffff' };
-    if (upper.includes('MATARANI')) return { bg: '#06b6d4', fg: '#ffffff' };
-    if (upper.includes('MARCONA')) return { bg: '#a855f7', fg: '#ffffff' };
-    if (upper.includes('MEJILLONES')) return { bg: '#d946ef', fg: '#ffffff' };
-    if (upper.includes('TABLONES')) return { bg: '#dc2626', fg: '#ffffff' };
-    if (upper.includes('MOQUEGUA')) return { bg: '#16a34a', fg: '#ffffff' };
-    if (upper.includes('CONCON')) return { bg: '#475569', fg: '#ffffff' };
-    if (upper.includes('HUEMUL')) return { bg: '#4f46e5', fg: '#ffffff' };
-    if (upper.includes('TOTAL ACUMULADO')) return { bg: '#0d9488', fg: '#ffffff' };
-    if (upper.includes('TOTAL FLOTA')) return { bg: '#1e293b', fg: '#ffffff' };
-    if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT')) return { bg: '#1e293b', fg: '#fbbf24' };
+    if (upper.includes('NEXA')) return { bg: '#c3d2e0', fg: '#0f4c81' };
+    if (upper.includes('SPCC')) return { bg: '#c0dae8', fg: '#0369a1' };
+    if (upper.includes('MATARANI')) return { bg: '#c1edf4', fg: '#0e7490' };
+    if (upper.includes('MARCONA')) return { bg: '#e9d5fd', fg: '#6b21a8' };
+    if (upper.includes('MEJILLONES')) return { bg: '#f6d1fb', fg: '#86198f' };
+    if (upper.includes('TABLONES')) return { bg: '#f6c9c9', fg: '#991b1b' };
+    if (upper.includes('MOQUEGUA')) return { bg: '#c5e8d2', fg: '#166534' };
+    if (upper.includes('CONCON')) return { bg: '#d1d5da', fg: '#1e293b' };
+    if (upper.includes('HUEMUL')) return { bg: '#d3d1f9', fg: '#3730a3' };
+    if (upper.includes('TOTAL ACUMULADO')) return { bg: '#c3e4e1', fg: '#115e59' };
+    if (upper.includes('TOTAL FLOTA')) return { bg: '#c7cace', fg: '#0f172a' };
+    if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT')) return { bg: '#fef3c7', fg: '#78350f' };
     return null;
 }
 
@@ -339,9 +339,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             const isAccum = b.isAccum;
             const isSub = b.isSubtotal;
 
-            const cColor = isAccum ? { bg: '#0d9488', fg: '#ffffff' } : (isFleet ? { bg: '#1e293b', fg: '#fbbf24' } : (getDimensionColor(b.clientCls, b.client) || { bg: '#0369a1', fg: '#ffffff' }));
-            const rColor = isAccum ? { bg: '#0d9488', fg: '#ccfbf1' } : (isFleet ? { bg: '#1e293b', fg: '#94a3b8' } : (getDimensionColor(b.routeCls, b.route) || { bg: '#a855f7', fg: '#ffffff' }));
-            const vColor = isAccum ? { bg: '#0d9488', fg: '#ccfbf1' } : (isFleet ? { bg: '#1e293b', fg: '#94a3b8' } : (getDimensionColor(b.vesselCls, b.vessel) || { bg: '#16a34a', fg: '#ffffff' }));
+            const cColor = isAccum ? { bg: '#c3e4e1', fg: '#115e59' } : (isFleet ? { bg: '#c7cace', fg: '#0f172a' } : (getDimensionColor(b.clientCls, b.client) || { bg: '#c0dae8', fg: '#0369a1' }));
+            const rColor = isAccum ? { bg: '#c3e4e1', fg: '#115e59' } : (isFleet ? { bg: '#c7cace', fg: '#0f172a' } : (getDimensionColor(b.routeCls, b.route) || { bg: '#e9d5fd', fg: '#6b21a8' }));
+            const vColor = isAccum ? { bg: '#c3e4e1', fg: '#115e59' } : (isFleet ? { bg: '#c7cace', fg: '#0f172a' } : (getDimensionColor(b.vesselCls, b.vessel) || { bg: '#c5e8d2', fg: '#166534' }));
 
             if (isFleet) {
                 return b.rows.map((row, rIdx) => {
@@ -353,7 +353,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     return `
                     <tr class="${trClass}">
                         ${isFirst ? `
-                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important; color: #ffffff !important; font-weight: 900; font-size: 8.5px; text-align: center; vertical-align: middle;">
+                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #c7cace !important; color: #0f172a !important; font-weight: 900; font-size: 8.5px; text-align: center; vertical-align: middle;">
                                 TOTAL FLOTA
                             </td>
                         ` : ''}
@@ -379,7 +379,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     return `
                     <tr class="${trClass}">
                         ${isFirst ? `
-                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #0d9488 !important; color: #ffffff !important; font-weight: 900; font-size: 8.5px; text-align: center; vertical-align: middle;">
+                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #c3e4e1 !important; color: #115e59 !important; font-weight: 900; font-size: 8.5px; text-align: center; vertical-align: middle;">
                                 TOTAL ACUMULADO
                             </td>
                         ` : ''}
@@ -409,11 +409,11 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                             <td rowspan="${rowCount}" class="td-dimension" style="background-color: ${cColor.bg} !important;">
                                 ${createVerticalSvg(subClientName, rowCount, cColor.fg)}
                             </td>
-                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important;">
-                                ${createVerticalSvg('Σ SUBTOTAL', rowCount, '#fbbf24')}
+                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: #fef3c7 !important;">
+                                ${createVerticalSvg('Σ SUBTOTAL', rowCount, '#78350f')}
                             </td>
-                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important;">
-                                ${createVerticalSvg('TOTAL ' + subClientName, rowCount, '#fbbf24')}
+                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: #fef3c7 !important;">
+                                ${createVerticalSvg('TOTAL ' + subClientName, rowCount, '#78350f')}
                             </td>
                         ` : ''}
                         <td class="td-metric-name ${row.metric.startsWith('↳') || row.metric.startsWith('  ') ? 'pl-subrow' : ''}">

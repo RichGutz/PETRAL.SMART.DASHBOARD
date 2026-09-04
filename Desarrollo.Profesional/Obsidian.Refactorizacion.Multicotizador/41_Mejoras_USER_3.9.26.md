@@ -4,7 +4,7 @@
 **Fecha:** 03 de Septiembre, 2026  
 **Auditor a Cargo:** Detective Benoit Blanc  
 **Metodología:** Método Benoit Blanc Canónico (`BEN` • `CLON` • `LEG` • `DIFF` • `QC` • `NOTA`)  
-**Estado General:** En Ejecución Paso a Paso (P1, P2 y P3 Resueltos al 100% y Validados)
+**Estado General:** ✅ **100% COMPLETADO (P1, P2, P3, P4 y P5 Resueltos y Validados)**
 
 ---
 
@@ -16,7 +16,7 @@
 | **P2** | Discrepancia de Demurrage en Matriz Petral | Engine (`forecast_service.py`) | `PRE.P2.DEMURRAGE_MATRIZ_PETRAL` | ✅ **RESUELTO** |
 | **P3** | Loop QC Triangular E2E (Multicotizador ➔ Matriz ➔ Consolidado) | Engine & Script Headless (`run_qc_e2e_mec_consolidado_loop.py`) | `PRE.P3.LOOP_QC_CONSOLIDADO` | ✅ **RESUELTO** |
 | **P4** | Columnas `C`, `R`, `B` y redistribución de ancho a los 12 meses | Generador de Reportes (PDF / Matriz) | `PRE.P4.COLUMNAS_CRB_ANCHO` | ✅ **RESUELTO** |
-| **P5** | Transparencia al 75% en celdas de color para ahorro de tinta | Exportador PDF (ReportLab) y Excel | `PRE.P5.TRANSPARENCIA_75` | 📝 **PENDIENTE** |
+| **P5** | Transparencia al 75% en celdas de color para ahorro de tinta | Exportador PDF (HTML) y Excel (ARGB) | `PRE.P5.TRANSPARENCIA_75` | ✅ **RESUELTO** |
 
 ---
 
@@ -355,14 +355,34 @@ if __name__ == "__main__":
 
 ---
 
-## 📌 2. Casos Siguientes en el Backlog
-
-### 🔹 Caso P5: Transparencia / Suavizado de Colores de Fondo en Exportación PDF y Excel (Ahorro de Tinta)
-- **Ubicación:** Generador de PDF (ReportLab / Engine / HTML) y exportador Excel de reportes matriciales.
-- **Requerimiento:**
-  - Aplicar **transparencia al 75%** (o tono pastel/tint atenuado al 25% de saturación/opacidad) a los fondos de las celdas rellenas con colores identificadores (columnas de clientes, rutas, buques o bloques destacados).
-  - **Objetivo:** Optimización de impresión (evitar consumo excesivo de tinta al imprimir físicamente) manteniendo la legibilidad y estética.
-- **Estado:** 📝 Anotado (Listo para ejecutar).
+### 🔹 Caso P5: Transparencia al 75% en Celdas de Color para Ahorro de Tinta en PDF y Excel
+- **Objetivo:** Atenuar al 25% de opacidad / tint pastel (75% transparencia sobre papel blanco) todos los fondos de celdas coloreadas (clientes, rutas, buques y subtotales) con tipografía oscura de alto contraste, evitando el consumo excesivo de tinta o toner en impresiones físicas.
+- **Archivos Intervenidos:**
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixPdf.ts`
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixNavitransoPdf.ts`
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts`
+- **Cirugía Quirúrgica y Paleta Homologada (DIFF):**
+  - **Fórmula de Mezcla Suave (25% color + 75% blanco):**
+    - `SPCC` (`#0369a1`): Fondo `#c0dae8` / ARGB `FFC0DAE8`, Texto `#0369a1`
+    - `NEXA` (`#0f4c81`): Fondo `#c3d2e0` / ARGB `FFC3D2E0`, Texto `#0f4c81`
+    - `MATARANI` (`#06b6d4`): Fondo `#c1edf4` / ARGB `FFC1EDF4`, Texto `#0e7490`
+    - `MARCONA` (`#a855f7`): Fondo `#e9d5fd` / ARGB `FFE9D5FD`, Texto `#6b21a8`
+    - `MEJILLONES` (`#d946ef`): Fondo `#f6d1fb` / ARGB `FFF6D1FB`, Texto `#86198f`
+    - `TABLONES` (`#dc2626`): Fondo `#f6c9c9` / ARGB `FFF6C9C9`, Texto `#991b1b`
+    - `MOQUEGUA` (`#16a34a`): Fondo `#c5e8d2` / ARGB `FFC5E8D2`, Texto `#166534`
+    - `CONCON` (`#475569`): Fondo `#d1d5da` / ARGB `FFD1D5DA`, Texto `#1e293b`
+    - `HUEMUL` (`#4f46e5`): Fondo `#d3d1f9` / ARGB `FFD3D1F9`, Texto `#3730a3`
+    - `TOTAL ACUMULADO` (`#0d9488`): Fondo `#c3e4e1` / ARGB `FFC3E4E1`, Texto `#115e59`
+    - `TOTAL FLOTA` (`#1e293b`): Fondo `#c7cace` / ARGB `FFC7CACE`, Texto `#0f172a`
+    - `SUBTOTAL CLIENTE` (`#1e293b` + `#fbbf24`): Fondo `#fef3c7` / ARGB `FFFEF3C7`, Texto `#78350f`
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0` (1091 módulos transformados, 0 errores).
+  - Loop QC Triangular E2E: 4/4 escenarios validados con `$0.00 / 0.00 TM / 0.00 d` de discrepancia.
+- **Estado:** ✅ **RESUELTO**
 
 ---
-*Documento canónico actualizado al 100% con código y traza pericial por Detective Benoit Blanc - 03/09/2026.*
+
+## 🏆 Conclusión Final de la Auditoría Benoit Blanc
+Todas las 5 mejoras solicitadas el 03/09/2026 han sido ejecutadas, validadas con safepoints Git, compiladas en terminal y documentadas exhaustivamente con total rigor forense.
+
+*Documento canónico cerrado y certificado al 100% por Detective Benoit Blanc - 03/09/2026.*

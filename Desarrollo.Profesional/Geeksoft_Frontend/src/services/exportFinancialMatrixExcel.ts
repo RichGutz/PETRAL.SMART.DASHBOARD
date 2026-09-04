@@ -1,24 +1,24 @@
 import ExcelJS from 'exceljs';
 
-// Mapeo de colores hex a ARGB para ExcelJS
+// Mapeo de colores hex a ARGB con 75% de transparencia (25% tint pastel) para ahorro de tinta en impresión física
 const COLOR_MAP: Record<string, { bg: string; fg: string }> = {
-    // Clientes
-    'bg-sky-700': { bg: 'FF0369A1', fg: 'FFFFFFFF' },
-    'bg-petral-blue': { bg: 'FF0F4C81', fg: 'FFFFFFFF' },
-    'bg-orange-500': { bg: 'FFF97316', fg: 'FFFFFFFF' },
-    // Rutas
-    'bg-cyan-500': { bg: 'FF06B6D4', fg: 'FFFFFFFF' },
-    'bg-purple-500': { bg: 'FFA855F7', fg: 'FFFFFFFF' },
-    'bg-fuchsia-500': { bg: 'FFD946EF', fg: 'FFFFFFFF' },
-    'bg-slate-700': { bg: 'FF334155', fg: 'FFFFFFFF' },
-    // Buques
-    'bg-red-600': { bg: 'FFDC2626', fg: 'FFFFFFFF' },
-    'bg-green-600': { bg: 'FF16A34A', fg: 'FFFFFFFF' },
-    'bg-slate-600': { bg: 'FF475569', fg: 'FFFFFFFF' },
-    'bg-indigo-600': { bg: 'FF4F46E5', fg: 'FFFFFFFF' },
-    'bg-slate-800': { bg: 'FF1E293B', fg: 'FFFFFFFF' },
+    // Clientes (75% transparencia / 25% tint)
+    'bg-sky-700': { bg: 'FFC0DAE8', fg: 'FF0369A1' },
+    'bg-petral-blue': { bg: 'FFC3D2E0', fg: 'FF0F4C81' },
+    'bg-orange-500': { bg: 'FFFEDCC5', fg: 'FFC2410C' },
+    // Rutas (75% transparencia / 25% tint)
+    'bg-cyan-500': { bg: 'FFC1EDF4', fg: 'FF0E7490' },
+    'bg-purple-500': { bg: 'FFE9D5FD', fg: 'FF6B21A8' },
+    'bg-fuchsia-500': { bg: 'FFF6D1FB', fg: 'FF86198F' },
+    'bg-slate-700': { bg: 'FFCCD0D5', fg: 'FF1E293B' },
+    // Buques (75% transparencia / 25% tint)
+    'bg-red-600': { bg: 'FFF6C9C9', fg: 'FF991B1B' },
+    'bg-green-600': { bg: 'FFC5E8D2', fg: 'FF166534' },
+    'bg-slate-600': { bg: 'FFD1D5DA', fg: 'FF1E293B' },
+    'bg-indigo-600': { bg: 'FFD3D1F9', fg: 'FF3730A3' },
+    'bg-slate-800': { bg: 'FFC7CACE', fg: 'FF0F172A' },
     'bg-amber-100': { bg: 'FFFEF3C7', fg: 'FF78350F' },
-    'bg-petral-teal': { bg: 'FF0D9488', fg: 'FFFFFFFF' },
+    'bg-petral-teal': { bg: 'FFC3E4E1', fg: 'FF115E59' },
 };
 
 function getCellArgb(className: string, text: string, isHeader: boolean, isTotalAcumHeader: boolean) {
@@ -38,18 +38,18 @@ function getCellArgb(className: string, text: string, isHeader: boolean, isTotal
 
     // Heurística basada en el texto si no coincide por clase
     const upper = text.toUpperCase();
-    if (upper.includes('NEXA')) return { bg: 'FF0F4C81', fg: 'FFFFFFFF' };
-    if (upper.includes('SPCC')) return { bg: 'FF0369A1', fg: 'FFFFFFFF' };
-    if (upper.includes('MATARANI')) return { bg: 'FF06B6D4', fg: 'FFFFFFFF' }; // Cyan
-    if (upper.includes('MARCONA')) return { bg: 'FFA855F7', fg: 'FFFFFFFF' }; // Purple
-    if (upper.includes('MEJILLONES')) return { bg: 'FFD946EF', fg: 'FFFFFFFF' }; // Fuchsia
-    if (upper.includes('TABLONES')) return { bg: 'FFDC2626', fg: 'FFFFFFFF' };
-    if (upper.includes('MOQUEGUA')) return { bg: 'FF16A34A', fg: 'FFFFFFFF' };
-    if (upper.includes('CONCON')) return { bg: 'FF475569', fg: 'FFFFFFFF' };
-    if (upper.includes('HUEMUL')) return { bg: 'FF4F46E5', fg: 'FFFFFFFF' };
-    if (upper.includes('TOTAL ACUMULADO')) return { bg: 'FF0D9488', fg: 'FFFFFFFF' }; // Teal
-    if (upper.includes('TOTAL FLOTA')) return { bg: 'FF1E293B', fg: 'FFFFFFFF' }; // Slate 800
-    if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT')) return { bg: 'FF1E293B', fg: 'FFFBBF24' }; // Slate 800 + Amber
+    if (upper.includes('NEXA')) return { bg: 'FFC3D2E0', fg: 'FF0F4C81' };
+    if (upper.includes('SPCC')) return { bg: 'FFC0DAE8', fg: 'FF0369A1' };
+    if (upper.includes('MATARANI')) return { bg: 'FFC1EDF4', fg: 'FF0E7490' };
+    if (upper.includes('MARCONA')) return { bg: 'FFE9D5FD', fg: 'FF6B21A8' };
+    if (upper.includes('MEJILLONES')) return { bg: 'FFF6D1FB', fg: 'FF86198F' };
+    if (upper.includes('TABLONES')) return { bg: 'FFF6C9C9', fg: 'FF991B1B' };
+    if (upper.includes('MOQUEGUA')) return { bg: 'FFC5E8D2', fg: 'FF166534' };
+    if (upper.includes('CONCON')) return { bg: 'FFD1D5DA', fg: 'FF1E293B' };
+    if (upper.includes('HUEMUL')) return { bg: 'FFD3D1F9', fg: 'FF3730A3' };
+    if (upper.includes('TOTAL ACUMULADO')) return { bg: 'FFC3E4E1', fg: 'FF115E59' };
+    if (upper.includes('TOTAL FLOTA')) return { bg: 'FFC7CACE', fg: 'FF0F172A' };
+    if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT')) return { bg: 'FFFEF3C7', fg: 'FF78350F' };
 
     return null;
 }
