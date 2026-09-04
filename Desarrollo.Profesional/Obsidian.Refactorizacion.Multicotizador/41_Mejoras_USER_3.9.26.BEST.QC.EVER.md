@@ -903,4 +903,92 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 - **Estado:** ✅ **DESPLEGADO Y VERIFICADO EN PRODUCCIÓN (VPS: https://forecast.geeksoft.tech)**.
 
 ---
+
+### 🔹 Caso R6.3: Cuadre Espejo 1:1 de P&L por Viaje (Informe Consolidado ↔ Matriz Petral)
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\matriz_petral_dashboard_123k.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\matriz_petral_dashboard_123k.png` (Matriz Petral en Dashboard con P&L de $123k en Tablones y $156k en Moquegua).
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\consolidado_262k_discrepancia.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\consolidado_262k_discrepancia.png` (Discrepancia en Consolidado con P&L inflado a $269k-$283k).
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\pdf_page_0.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\pdf_page_0.png` (PDF exportado con $ y tipografía anterior).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Al revisar la ruta `ILO-MARCONA` en el escenario `2027 PB (Jose de los Heros + Demoras)`:
+    - **Matriz Petral (`/dashboard`):** 
+      - Tablones: Net Revenue $396,650 - Hire $146,180 - Bunker $60,343 - Puertos $67,000 = **$123,127 P&L/Viaje**.
+      - Moquegua: Net Revenue $396,650 - Hire $126,690 - Bunker $51,398 - Puertos $62,000 = **$156,562 P&L/Viaje**.
+    - **Informe Consolidado (`/financial-projections`):**
+      - Tablones: Mostraba **$269,307 P&L/Viaje** (¡más del doble!).
+      - Moquegua: Mostraba **$283,252 P&L/Viaje**.
+      - Ruta Completa: Mostraba **$274,445 P&L/Viaje**.
+  - **Causa Raíz:** En `FinancialProjectionsMaster_V2.tsx`, el cálculo iteraba sobre `aggregated_data` leyendo `pnl = Number(mVal.voyage_result)`. En el modelo financiero, `voyage_result` es el Margen de Contribución bruto *antes* del costo de arriendo diario de nave (`tceCostTotal = tceReq * dur * freq`). En la Matriz Petral, la fila visible `(=) VOYAGE RESULT / P&L` es `plVsRequired = voyageResult - tceCostTotal`. Al no restar el costo de Hire diario ($13k/día $\times$ duración), el Consolidado duplicaba el P&L.
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Alineación Matemática del P&L Neto (`FinancialProjectionsMaster_V2.tsx`):**
+     ```typescript
+     const dur = Number(mVal.total_duration || 0);
+     const tceReq = Number(mVal.tce_required_unit || mVal.tce_required || 13000);
+     const tceCost = tceReq * dur;
+     const rawPnl = Number(mVal.voyage_result || 0);
+     const pnl = rawPnl - tceCost; // (=) VOYAGE RESULT / P&L exacto de la Matriz Petral
+     ```
+  2. **Eliminación Total de Prefijo `$ ` y Monospace en Consolidado:**
+     - Eliminados todos los `$${` en tablas en pantalla y en plantillas HTML de exportación PDF (`handleExportMecPDF`, `handleExportMultiMecPDF`).
+     - Reemplazado `Courier New` por `'Segoe UI', Arial, sans-serif` con cifras tabulares (`font-feature-settings: 'tnum'`).
+
+- **Resultados de Cuadratura Pericial (QC):**
+  ```text
+  =========================================================================================================
+  🕵️  PROTOCOLO BENOIT BLANC — AUDITORIA FORENSE DE CUADRE 1:1 CON MATRIZ PETRAL
+  =========================================================================================================
+  RUTA / BUQUE                   │ TM ANUAL   │ VIAJES │ P/L X VJ     │ TOTAL MARGIN   │ DIAS  
+  ───────────────────────────────┼────────────┼────────┼──────────────┼────────────────┼───────
+  ▶ ILO-MATARANI                 │    310,500 │     23 │      160,661 │      3,695,207 │  175.0
+     ↳ TABLONES                  │     54,000 │      4 │      140,489 │        561,954 │   30.4
+     ↳ MOQUEGUA                  │    256,500 │     19 │      164,908 │      3,133,252 │  144.6
+  ▶ ILO-MEJILLONES               │    243,000 │     18 │      101,578 │      1,828,404 │  177.5
+     ↳ TABLONES                  │    175,500 │     13 │       94,431 │      1,227,609 │  127.2
+     ↳ MOQUEGUA                  │     67,500 │      5 │      120,159 │        600,795 │   50.3
+  ▶ ILO-MARCONA                  │    256,500 │     19 │      135,445 │      2,573,460 │  185.2
+     ↳ TABLONES                  │    162,000 │     12 │      123,127 │      1,477,525 │  116.9
+     ↳ MOQUEGUA                  │     94,500 │      7 │      156,562 │      1,095,935 │   68.2
+  ───────────────────────────────┼────────────┼────────┼──────────────┼────────────────┼───────
+  TOTAL GENERAL                  │    810,000 │     60 │ -            │      8,097,071 │  537.7
+  =========================================================================================================
+  🎯 Verificación de TABLONES ILO-MARCONA: $123,127.10/vj (Esperado: $123,127.10) -> ✅ 100% CUADRADO
+  🎯 Verificación de MOQUEGUA ILO-MARCONA: $156,562.12/vj (Esperado: $156,562.12) -> ✅ 100% CUADRADO
+  🎯 Verificación de MOQUEGUA ILO-MATARANI: $164,908.00/vj (Esperado: $164,908.00) -> ✅ 100% CUADRADO
+  ```
+
+- **Estado:** ✅ **CERTIFICADO 1:1 AL CENTAVO Y PUBLICADO EN PRODUCCIÓN**.
+
+---
+
+### 🔹 Caso R6.4: Rescate Canónico de Demurrage en Exportación PDF de Matriz PETRAL
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\pdf_demora_no_aparece_sin_desplegar.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\pdf_demora_no_aparece_sin_desplegar.png` (PDF sin desplegar donde Demurrage salía en blanco).
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\pdf_demora_si_aparece_desplegado.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\pdf_demora_si_aparece_desplegado.png` (PDF desplegado manualmente donde sí salía $4,639,000).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Al exportar a PDF la Matriz Petral desde el Dashboard sin haber abierto el acordeón `+` de Net Revenue en cada nave, el PDF leía la tabla DOM de la pantalla.
+  - Al estar colapsado, las subfilas `↳ (+) Demurrage` no estaban presentes en el HTML del navegador.
+  - El generador de PDF, al sumar los bloques de naves, encontraba `fleetMonthlyTotals.demurrage = [0, 0, ...]`, dejando la demora en blanco/cero en `TOTAL FLOTA` e igualando `Freight Revenue` a `Net Revenue`.
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Paso de Datos Canónicos (`ForecastGridFilters.tsx`):**
+     - Se actualizó la invocación pasando el dataset del escenario `data` a `exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName, data)`.
+  2. **Inyección Directa desde `aggregated_data` (`exportFinancialMatrixPdf.ts`):**
+     - Se añadió lógica para extraer y totalizar mensualmente los valores oficiales de Demurrage, Freight, Dockage Revenue, Gross Revenue y Comisiones desde `scenarioData.aggregated_data`.
+     - Si los bloques de naves estaban colapsados en el DOM, el motor de PDF inyecta automáticamente los valores precalculados exactos ($396,200, $325,600, ..., Total $4,639,000).
+     - El PDF ahora **siempre incluye las demoras reales**, sin importar el estado visual de los acordeones en el navegador.
+
+- **Verificación de Compilación y Despliegue:**
+  - `npx vite build` -> ✅ 1091 módulos compilados sin advertencias bloqueantes.
+  - `python deploy_forecast_kickoff.py` -> ✅ Desplegado con éxito al VPS de Producción (`https://forecast.geeksoft.tech`).
+
+- **Estado:** ✅ **SOLUCIONADO Y DESPLEGADO EN PRODUCCIÓN**.
+
+---
 *Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
