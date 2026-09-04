@@ -44,15 +44,18 @@ export const Login: React.FC = () => {
 
             {/* 2. Tarjeta Flotante Central (Glassmorphism Premium Original) */}
             <div className="relative w-full max-w-[420px] mx-4 bg-[#F8FAFC]/15 border border-white/30 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.35),0_30px_60px_-30px_rgba(0,0,0,0.4)] p-8 md:p-10 z-10 flex flex-col justify-between">
-                
                 <div>
-                    {/* Logo de Petral */}
-                    <div className="flex justify-center mb-6">
+                    {/* Logos Petral y Delfos Favicon */}
+                    <div className="flex items-center justify-center gap-3 mb-6">
                         <img 
                             src="/Logo.Petral.png" 
                             alt="Naviera Petral" 
                             className="h-10 object-contain" 
-                            style={{ transform: 'translateX(-18px)' }}
+                        />
+                        <img 
+                            src="/favicon.png" 
+                            alt="DELFOS" 
+                            className="h-10 object-contain" 
                         />
                     </div>
 
