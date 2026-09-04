@@ -88,7 +88,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                     
                     {/* Logos y Título de App */}
                     <div className="flex items-center gap-3">
-                        <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
+                        <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-10.5 object-contain cursor-pointer" style={{ height: '42px' }} onClick={() => navigate('/dashboard')} />
                         <div className="flex items-center border-l border-slate-200 pl-3">
                             <img src="/LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg" alt="DELFOS" className="h-8 object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
                         </div>

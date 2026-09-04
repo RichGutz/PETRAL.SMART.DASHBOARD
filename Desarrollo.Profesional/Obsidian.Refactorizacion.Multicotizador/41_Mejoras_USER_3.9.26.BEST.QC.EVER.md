@@ -991,4 +991,35 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 - **Estado:** ✅ **SOLUCIONADO Y DESPLEGADO EN PRODUCCIÓN**.
 
 ---
+
+### 🔹 Caso R6.5: Optimización de Anchos en PDF Navitranso (Transferencia del 10%) & Nombre Dinámico de Escenario en Ribbon
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\media_1788550039199.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\media_1788550039199.png` (Visualización del Maestro de Matrices con el nombre del escenario registrado: `2027 PB (Jose de los Heros + Demoras)`).
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\Navitranso_Matriz_Financiera_landscape_20260904_132731.png` (PDF Navitranso anterior con ancho de columna de métricas ajustado).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  1. **Anchos de Columna en PDF Navitranso:** La columna `MÉTRICA NAVITRANSO` tenía un ancho fijado en `125px`, lo que en descripciones contables largas provocaba saltos de línea y compresión visual. Por su parte, la columna final `TOTAL ACUM` tenía `70px`, contando con margen para ser reducida.
+  2. **Nombre Genérico en el Ribbon Azul:** En el cintillo azul superior de las tablas PDF de ambas matrices (`Matriz Petral` y `Matriz Navitranso`), se mostraba el texto por defecto `ESCENARIO: ESCENARIO BASE...` en vez del nombre real registrado en la base de datos (ejemplo: `2027 PB (Jose de los Heros + Demoras)` visible en el Maestro de Matrices).
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Redistribución de Anchos en `exportFinancialMatrixNavitransoPdf.ts`:**
+     - **Reducción del 10% en `TOTAL ACUM`:** Reducido de `70px` a `63px` ($-7\text{px}$).
+     - **Ampliación en `MÉTRICA NAVITRANSO`:** Incrementado de `125px` a `132px` ($+7\text{px}$).
+     - Aplicado en `<thead>` (`th.th-metric`, `th.th-total`) y reglas CSS (`td.td-metric-name`, `td.td-total-cell`).
+  2. **Inyección Dinámica del Nombre de Escenario en `ForecastGridFilters.tsx`:**
+     - Se extrae `forecastName` directamente desde `useForecastContext_V2()`.
+     - `rawScenarioName = (forecastName && forecastName.trim()) || data?.name || data?.scenario_name || (matrixFormat === 'NAVITRANSO' ? 'Escenario Base NAVITRANSO' : 'Escenario Base PETRAL');`
+     - Se envía dinámicamente tanto a `exportFinancialMatrixNavitransoPdf` como a `exportFinancialMatrixPdf`, reflejando exactamente el nombre del escenario (ej. `2027 PB (Jose de los Heros + Demoras)`) en el ribbon azul de ambas matrices.
+
+- **Resultados de Cuadratura y Verificación (QC):**
+  - **Ancho Total de Tabla Landscape:** $16\text{px} \times 3 + 132\text{px} + (63\text{px} \times 12) + 63\text{px} = 999\text{px}$, encaje milimétrico al 100% del A4 horizontal.
+  - `npx vite build` -> ✅ Exitoso en 10.77s (1091 módulos).
+  - `git push origin main` -> ✅ Commit `c586ed3`.
+  - `deploy_forecast_kickoff.py` -> ✅ Desplegado al VPS (`https://forecast.geeksoft.tech`).
+
+- **Estado:** ✅ **IMPLEMENTADO, CERTIFICADO Y DESPLEGADO EN PRODUCCIÓN**.
+
+---
 *Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
