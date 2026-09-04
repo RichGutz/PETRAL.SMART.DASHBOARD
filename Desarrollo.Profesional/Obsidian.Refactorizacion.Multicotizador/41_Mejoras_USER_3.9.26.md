@@ -399,11 +399,16 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 
 ---
 
-### 🔹 Punto R2.2: Ribbon Azul de Escenario al 100% Exacto del Ancho de la Tabla (Todas las Páginas)
-- **Módulo:** `exportFinancialMatrixPdf.ts` y `exportFinancialMatrixNavitransoPdf.ts`.
-- **Evidencia Visual:** Captura enviada por el usuario (respaldada en `PNGs/media_1788493123798.png` y `PORT.COSTS.PATRICIA/media_1788493123798.png`), mostrando que el banner `.scenario-badge-banner` tiene `width: fit-content; max-width: 95%; margin: 2px auto` y bordes redondeados, lo cual deja márgenes laterales y no calza exactamente con los bordes izquierdo/derecho de la tabla contable.
-- **Requerimiento:**
-  - Configurar `.scenario-badge-banner` con `width: 100% !important; margin: 2px 0 3px 0 !important; border-radius: 0 !important; box-sizing: border-box !important;` para que calce con exactitud milimétrica al 100% del ancho de la grilla en todas las páginas del reporte.
+### 🔹 Punto R2.2: Ribbon Azul de Escenario al 100% Exacto del Ancho de la Tabla (PDF Petral y Navitranso - Todas las Páginas)
+- **Módulo:** `exportFinancialMatrixPdf.ts` (Formato Petral) y `exportFinancialMatrixNavitransoPdf.ts` (Formato Navitranso).
+- **Evidencias Visuales Respaldadas:**
+  1. Captura Matriz Petral: `media_1788493123798.png` (respaldada en `PNGs/` y `PORT.COSTS.PATRICIA/`).
+  2. Captura Matriz Navitranso: `media_1788493394833.png` (respaldada en `PNGs/` y `PORT.COSTS.PATRICIA/`).
+- **Diagnóstico:**
+  En ambos reportes, `.scenario-badge-banner` usaba `width: fit-content; max-width: 95%; margin: 2px auto; border-radius: 3px;`, lo que generaba un banner flotante centrado con esquinas redondeadas y márgenes vacíos a los costados, desalineado del 100% del ancho de la grilla contable.
+- **Solución Quirúrgica:**
+  Configurar en el CSS de ambos exportadores:
+  `width: 100% !important; margin: 2px 0 3px 0 !important; border-radius: 0 !important; box-sizing: border-box !important;` para que calce exactamente de borde a borde con la tabla contable en todas las páginas.
 - **Estado:** 📝 **ANOTADO Y EN ESPERA**.
 
 ### 🔹 Punto R2.3: Homologación de Cabeceras C, R, B, Tipografía Tamaño 10 y Zoom 75% en Excel (Matriz Petral)
