@@ -44,11 +44,11 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
 }
 
 function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
-    const height = Math.max(35, rowSpan * 18);
+    const height = Math.max(30, rowSpan * 16);
     const midY = -height / 2;
     return `
-    <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
-        <text x="${midY}" y="15" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">${text}</text>
+    <svg width="16" height="${height}" viewBox="0 0 16 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="11" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8" font-weight="bold" letter-spacing="0.3">${text}</text>
     </svg>
     `;
 }
@@ -553,16 +553,16 @@ export function generateFinancialMatrixPdfHtml(
                 ESCENARIO: ${scenarioName} &bull; MONEDA: USD &bull; (Parte ${pageIdx + 1} de ${totalPagesCount})
             </div>
 
-            <!-- 2. Grilla Contable con THEAD Oficial: CLI, RUT, BUQ -->
+            <!-- 2. Grilla Contable con THEAD Oficial: C, R, B -->
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="th-dim" style="width: 24px;">CLI</th>
-                        <th class="th-dim" style="width: 24px;">RUT</th>
-                        <th class="th-dim" style="width: 24px;">BUQ</th>
-                        <th class="th-metric" style="width: 128px;">MÉTRICA</th>
-                        ${safeMonths.map(m => `<th class="th-month" style="width: 58px;">${m}</th>`).join('')}
-                        <th class="th-total" style="width: 66px;">${totalHeader}</th>
+                        <th class="th-dim" style="width: 16px;">C</th>
+                        <th class="th-dim" style="width: 16px;">R</th>
+                        <th class="th-dim" style="width: 16px;">B</th>
+                        <th class="th-metric" style="width: 120px;">MÉTRICA</th>
+                        ${safeMonths.map(m => `<th class="th-month" style="width: 63px;">${m}</th>`).join('')}
+                        <th class="th-total" style="width: 70px;">${totalHeader}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -714,60 +714,65 @@ export function generateFinancialMatrixPdfHtml(
             font-weight: normal !important;
         }
         
-        /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) con ROTACIÓN VECTORIAL SVG 100% BLINDADA */
+        /* Celdas de Dimensiones Verticales (C, R, B) con ROTACIÓN VECTORIAL SVG 100% BLINDADA */
         td.td-dimension {
-            width: 24px !important;
-            max-width: 24px !important;
-            min-width: 24px !important;
+            width: 16px !important;
+            max-width: 16px !important;
+            min-width: 16px !important;
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
         }
 
-        /* Columna 4: Nombres de Métricas (128px) */
+        /* Columna 4: Nombres de Métricas (120px) */
         td.td-metric-name {
-            width: 128px !important;
-            min-width: 128px !important;
-            max-width: 128px !important;
+            width: 120px !important;
+            min-width: 120px !important;
+            max-width: 120px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;
-            padding-left: 5px;
+            padding-left: 4px;
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 9px !important;
-        }
-        .pl-subrow {
-            padding-left: 12px !important;
-            color: #475569 !important;
             font-size: 8.5px !important;
         }
+        .pl-subrow {
+            padding-left: 10px !important;
+            color: #475569 !important;
+            font-size: 8px !important;
+        }
 
-        /* Columnas de Datos (Meses a 58px, Fuente 9px) */
+        /* Columnas de Datos (Meses a 63px, Fuente 8.5px) */
         td.td-num {
-            width: 58px !important;
-            max-width: 58px !important;
+            width: 63px !important;
+            max-width: 63px !important;
             text-align: right !important;
-            font-size: 9px !important;
+            font-size: 8.5px !important;
             font-weight: normal !important;
             color: #1e293b;
-            padding-right: 3px;
+            padding-right: 2px;
+            padding-left: 2px;
+            letter-spacing: -0.2px;
         }
         td.td-empty {
-            width: 58px !important;
-            max-width: 58px !important;
+            width: 63px !important;
+            max-width: 63px !important;
             text-align: center;
             color: #cbd5e1;
         }
-        /* Columna Total Acumulado (66px) */
+        /* Columna Total Acumulado (70px) */
         td.td-total-cell {
-            width: 66px !important;
-            max-width: 66px !important;
-            min-width: 66px !important;
-            font-size: 9px !important;
+            width: 70px !important;
+            max-width: 70px !important;
+            min-width: 70px !important;
+            font-size: 8.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
+            padding-right: 2px;
+            padding-left: 2px;
+            letter-spacing: -0.2px;
         }
 
         /* Filas Especiales */

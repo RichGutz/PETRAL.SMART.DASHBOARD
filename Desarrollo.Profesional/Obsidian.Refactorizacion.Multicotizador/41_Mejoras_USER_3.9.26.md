@@ -15,7 +15,7 @@
 | **P1** | Renombrar `FORMATO MEC` ➔ `FORMATO CONSOLIDADO` | Frontend (Badges, Headers, Botones) | `PRE.P1.FORMATO_CONSOLIDADO` | ✅ **RESUELTO** |
 | **P2** | Discrepancia de Demurrage en Matriz Petral | Engine (`forecast_service.py`) | `PRE.P2.DEMURRAGE_MATRIZ_PETRAL` | ✅ **RESUELTO** |
 | **P3** | Loop QC Triangular E2E (Multicotizador ➔ Matriz ➔ Consolidado) | Engine & Script Headless (`run_qc_e2e_mec_consolidado_loop.py`) | `PRE.P3.LOOP_QC_CONSOLIDADO` | ✅ **RESUELTO** |
-| **P4** | Columnas `C`, `R`, `B` y redistribución de ancho a los 12 meses | Generador de Reportes (PDF / Matriz) | `PRE.P4.COLUMNAS_CRB_ANCHO` | 📝 **PENDIENTE** |
+| **P4** | Columnas `C`, `R`, `B` y redistribución de ancho a los 12 meses | Generador de Reportes (PDF / Matriz) | `PRE.P4.COLUMNAS_CRB_ANCHO` | ✅ **RESUELTO** |
 | **P5** | Transparencia al 75% en celdas de color para ahorro de tinta | Exportador PDF (ReportLab) y Excel | `PRE.P5.TRANSPARENCIA_75` | 📝 **PENDIENTE** |
 
 ---
@@ -334,27 +334,35 @@ if __name__ == "__main__":
 
 ---
 
-## 📌 2. Casos Siguientes en el Backlog
-
 ### 🔹 Caso P4: Ajuste de Ancho y Nombres de Columnas en Informes PETRAL y NAVITRANSO
-- **Ubicación:** Generación de Informes PDF / Tablas matriciales (`FORMATO PETRAL` y `FORMATO NAVITRANSO`).
-- **Cambios Requeridos:**
-  - **Renombrar las 3 primeras columnas:**
-    - `CLI` (Cliente) ➔ **`C`**
-    - `RUT` (Ruta) ➔ **`R`**
-    - `BUQ` (Buque) ➔ **`B`**
-  - **Angostar las 3 columnas iniciales (`C`, `R`, `B`):** Reducir su ancho al mínimo necesario.
-  - **Redistribuir el ancho ganado entre los 12 meses:** Asignar el espacio liberado equitativamente a las columnas de los 12 meses (`2027-01` a `2027-12`) para evitar el truncamiento de cifras numéricas con puntos suspensivos (ej. `$10,265,3..`).
-- **Estado:** 📝 Anotado (Listo para ejecutar).
+- **Objetivo:** Optimización tipográfica y espacial en reportes PDF para evitar truncamiento de cifras (ej. `$18,743,145`).
+- **Archivos Intervenidos:**
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixPdf.ts`
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixNavitransoPdf.ts`
+- **Cirugía Quirúrgica (DIFF):**
+  1. **Cabeceras THEAD:**
+     - `CLI` ➔ `C` (Ancho reducido de 24px a 16px)
+     - `RUT` ➔ `R` (Ancho reducido de 24px a 16px)
+     - `BUQ` ➔ `B` (Ancho reducido de 24px a 16px)
+  2. **Renderizado Vectorial SVG (`createVerticalSvg`):**
+     - Adaptado al ancho de 16px con tipografía de 8px y viewBox ajustado `0 0 16 ${height}`.
+  3. **Redistribución de Ancho a los 12 Meses:**
+     - Columnas de meses ampliadas de 58px a 63px (y Total Acumulado a 70px).
+     - Tipografía calibrada a 8.5px / 8px con `letter-spacing: -0.2px` y padding optimizado.
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0` (1091 módulos transformados, 0 errores).
+- **Estado:** ✅ **RESUELTO**
 
 ---
 
+## 📌 2. Casos Siguientes en el Backlog
+
 ### 🔹 Caso P5: Transparencia / Suavizado de Colores de Fondo en Exportación PDF y Excel (Ahorro de Tinta)
-- **Ubicación:** Generador de PDF (ReportLab / Engine) y exportador Excel de reportes matriciales.
+- **Ubicación:** Generador de PDF (ReportLab / Engine / HTML) y exportador Excel de reportes matriciales.
 - **Requerimiento:**
   - Aplicar **transparencia al 75%** (o tono pastel/tint atenuado al 25% de saturación/opacidad) a los fondos de las celdas rellenas con colores identificadores (columnas de clientes, rutas, buques o bloques destacados).
   - **Objetivo:** Optimización de impresión (evitar consumo excesivo de tinta al imprimir físicamente) manteniendo la legibilidad y estética.
-- **Estado:** 📝 Anotado (Pendiente de calibración visual).
+- **Estado:** 📝 Anotado (Listo para ejecutar).
 
 ---
 *Documento canónico actualizado al 100% con código y traza pericial por Detective Benoit Blanc - 03/09/2026.*
