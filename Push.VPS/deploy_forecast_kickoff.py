@@ -65,7 +65,18 @@ def deploy():
 
     try:
         print(f"\nConectando a {VPS_HOST}...")
-        client.connect(hostname=VPS_HOST, port=VPS_PORT, username=VPS_USER, password=VPS_PASS, timeout=15)
+        import time
+        connected = False
+        for attempt in range(1, 4):
+            try:
+                client.connect(hostname=VPS_HOST, port=VPS_PORT, username=VPS_USER, password=VPS_PASS, timeout=30, banner_timeout=60)
+                connected = True
+                break
+            except Exception as e:
+                print(f"  Intento {attempt} falló: {e}. Reintentando en 3s...")
+                time.sleep(3)
+        if not connected:
+            raise Exception("No se pudo conectar al VPS tras 3 intentos.")
         print("  >> Conexión SSH establecida ✓")
 
         # 1. Crear directorio en VPS
