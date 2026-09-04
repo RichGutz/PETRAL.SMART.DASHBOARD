@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { TrendingUp, Calendar, FileSpreadsheet, Layers, ChevronDown, ChevronRight, User, CheckCircle2, RefreshCw, Play, Trash2, Printer, Plus, X, Sparkles, Filter, Check, ArrowRight, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
+import { exportSingleMecExcel, exportMultiMecExcel } from '../../services/exportMecConsolidatedExcel';
 
 interface MecVesselDetail {
     vessel: string;
@@ -537,69 +538,14 @@ export const FinancialProjectionsMaster: React.FC = () => {
         }
     };
 
-    // EXPORTACIÓN A EXCEL 1:1 IGUAL AL ARCHIVO FORMATO.MEC.BUDGETS.2026.xlsx (WYSIWYG: LO QUE VES ES LO QUE SE EXPORTA)
-    const handleExportMecExcel = (scenario: ScenarioCardItem) => {
-        const mec = scenario.mec;
-        const wb = XLSX.utils.book_new();
-
-        const wsData: any[][] = [
-            [`Año ${scenario.year} - Proyectado`],
-            ['', 'Nº viajes', 'Volumen TM', '%'],
-            ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(2)}%`],
-            ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(2)}%`],
-            ['Total', mec.totalTrips, mec.totalVolumeTm, '100.00%'],
-            [],
-            ['Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Gross Margin', '%', 'Dias ocupación', 'Dias disponibles']
-        ];
-
-        mec.routes.forEach(r => {
-            const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
-            wsData.push([
-                r.route,
-                r.annualTons,
-                Math.round(r.fullLoad),
-                r.annualTrips,
-                Math.round(r.pnlPerTrip),
-                Math.round(r.totalGrossMargin),
-                `${r.volumeSharePct.toFixed(2)}%`,
-                Math.round(r.daysOccupation),
-                ''
-            ]);
-
-            if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
-                r.vesselDetails.forEach(v => {
-                    wsData.push([
-                        `  ↳ ${v.vessel}`,
-                        v.annualTons,
-                        Math.round(v.fullLoad),
-                        v.annualTrips,
-                        Math.round(v.pnlPerTrip),
-                        Math.round(v.totalGrossMargin),
-                        `${v.volumeSharePct.toFixed(2)}%`,
-                        Math.round(v.daysOccupation),
-                        ''
-                    ]);
-                });
-            }
-        });
-
-        wsData.push([
-            'Total',
-            mec.totalVolumeTm,
-            '',
-            mec.totalTrips,
-            '',
-            Math.round(mec.totalGrossMargin),
-            '100.00%',
-            Math.round(mec.totalDaysOccupation),
-            Math.round(mec.totalDaysAvailable)
-        ]);
-
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, "FORMATO.MEC");
-
-        const fileName = `FORMATO.MEC.BUDGETS.${scenario.year}.xlsx`;
-        XLSX.writeFile(wb, fileName);
+    // EXPORTACIÓN A EXCEL 1:1 FORMATEADO CON EXCELJS (PALETA CROMÁTICA MATRIZ PETRAL)
+    const handleExportMecExcel = async (scenario: ScenarioCardItem) => {
+        try {
+            await exportSingleMecExcel(scenario, premisasNotes, expandedMecRoutes);
+        } catch (err: any) {
+            console.error("Error al exportar Excel individual:", err);
+            alert(`Error al exportar Excel: ${err?.message || err}`);
+        }
     };
 
     // EXPORTACIÓN A PDF EJECUTIVO OFICIAL (WYSIWYG: LO QUE VES ES LO QUE SE IMPRIME)
@@ -1016,143 +962,15 @@ export const FinancialProjectionsMaster: React.FC = () => {
         { bgHeader: '#cfe2f3', textHeader: '#0b5394', borderColor: '#9fc5e8', tag: 'bg-blue-100 text-blue-900 border-blue-300' }
     ];
 
-    // EXPORTACIÓN A EXCEL MULTI-ESCENARIO
-    const handleExportMultiMecExcel = (scenariosToExport: ScenarioCardItem[]) => {
+    // EXPORTACIÓN A EXCEL MULTI-ESCENARIO FORMATEADO CON EXCELJS (PALETA CROMÁTICA MATRIZ PETRAL)
+    const handleExportMultiMecExcel = async (scenariosToExport: ScenarioCardItem[]) => {
         if (scenariosToExport.length === 0) return alert('Por favor selecciona al menos un escenario para exportar.');
-        const wb = XLSX.utils.book_new();
-
-        // Hoja Consolidada Apilada
-        const masterData: any[][] = [
-            ['NAVIERA PETRAL S.A. - INFORME EJECUTIVO MULTI-ESCENARIO CONSOLIDADO'],
-            [`Fecha de Emisión: ${new Date().toLocaleDateString('es-PE')} ${new Date().toLocaleTimeString('es-PE')}`],
-            ['Premisas:'],
-            ...premisasNotes.split('\n').map(line => [line]),
-            []
-        ];
-
-        scenariosToExport.forEach((scenario, sIdx) => {
-            const mec = scenario.mec;
-            masterData.push([`========================================================================================`]);
-            masterData.push([`SECCIÓN ${sIdx + 1}: ${scenario.name.toUpperCase()} (Año ${scenario.year} | Autor: ${scenario.userId})`]);
-            masterData.push([`========================================================================================`]);
-            masterData.push(['', 'Nº viajes', 'Volumen TM', '%']);
-            masterData.push(['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(2)}%`]);
-            masterData.push(['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(2)}%`]);
-            masterData.push(['Total', mec.totalTrips, mec.totalVolumeTm, '100.00%']);
-            masterData.push([]);
-            masterData.push(['Puertos / Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Margen Operativo', '%', 'Dias ocupación', 'Dias disponibles']);
-
-            mec.routes.forEach(r => {
-                const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
-                masterData.push([
-                    r.route,
-                    r.annualTons,
-                    Math.round(r.fullLoad),
-                    r.annualTrips,
-                    Math.round(r.pnlPerTrip),
-                    Math.round(r.totalGrossMargin),
-                    `${r.volumeSharePct.toFixed(2)}%`,
-                    Math.round(r.daysOccupation),
-                    ''
-                ]);
-
-                if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
-                    r.vesselDetails.forEach(v => {
-                        masterData.push([
-                            `  ↳ ${v.vessel}`,
-                            v.annualTons,
-                            Math.round(v.fullLoad),
-                            v.annualTrips,
-                            Math.round(v.pnlPerTrip),
-                            Math.round(v.totalGrossMargin),
-                            `${v.volumeSharePct.toFixed(2)}%`,
-                            Math.round(v.daysOccupation),
-                            ''
-                        ]);
-                    });
-                }
-            });
-
-            masterData.push([
-                'Total',
-                mec.totalVolumeTm,
-                '',
-                mec.totalTrips,
-                '',
-                Math.round(mec.totalGrossMargin),
-                '100.00%',
-                Math.round(mec.totalDaysOccupation),
-                Math.round(mec.totalDaysAvailable)
-            ]);
-            masterData.push([]);
-            masterData.push([]);
-        });
-
-        const masterWs = XLSX.utils.aoa_to_sheet(masterData);
-        XLSX.utils.book_append_sheet(wb, masterWs, "INFORME_CONSOLIDADO");
-
-        // Hojas individuales por escenario
-        scenariosToExport.forEach((scenario) => {
-            const mec = scenario.mec;
-            const wsData: any[][] = [
-                [`Año ${scenario.year} - ${scenario.name}`],
-                ['', 'Nº viajes', 'Volumen TM', '%'],
-                ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(2)}%`],
-                ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(2)}%`],
-                ['Total', mec.totalTrips, mec.totalVolumeTm, '100.00%'],
-                [],
-                ['Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Gross Margin', '%', 'Dias ocupación', 'Dias disponibles']
-            ];
-
-            mec.routes.forEach(r => {
-                const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
-                wsData.push([
-                    r.route,
-                    r.annualTons,
-                    Math.round(r.fullLoad),
-                    r.annualTrips,
-                    Math.round(r.pnlPerTrip),
-                    Math.round(r.totalGrossMargin),
-                    `${r.volumeSharePct.toFixed(2)}%`,
-                    Math.round(r.daysOccupation),
-                    ''
-                ]);
-
-                if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
-                    r.vesselDetails.forEach(v => {
-                        wsData.push([
-                            `  ↳ ${v.vessel}`,
-                            v.annualTons,
-                            Math.round(v.fullLoad),
-                            v.annualTrips,
-                            Math.round(v.pnlPerTrip),
-                            Math.round(v.totalGrossMargin),
-                            `${v.volumeSharePct.toFixed(2)}%`,
-                            Math.round(v.daysOccupation),
-                            ''
-                        ]);
-                    });
-                }
-            });
-
-            wsData.push([
-                'Total',
-                mec.totalVolumeTm,
-                '',
-                mec.totalTrips,
-                '',
-                Math.round(mec.totalGrossMargin),
-                '100.00%',
-                Math.round(mec.totalDaysOccupation),
-                Math.round(mec.totalDaysAvailable)
-            ]);
-
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            const cleanName = (scenario.name || 'Escenario').replace(/[:\\/?*\[\]]/g, '').substring(0, 28);
-            XLSX.utils.book_append_sheet(wb, ws, cleanName);
-        });
-
-        XLSX.writeFile(wb, `PETRAL_INFORME_CONSOLIDADO_MULTI_ESCENARIOS_MEC.xlsx`);
+        try {
+            await exportMultiMecExcel(scenariosToExport, premisasNotes, expandedMecRoutes);
+        } catch (err: any) {
+            console.error("Error al exportar Excel multi-escenario:", err);
+            alert(`Error al exportar Excel Consolidado: ${err?.message || err}`);
+        }
     };
 
     // EXPORTACIÓN A PDF EJECUTIVO MULTI-ESCENARIO (FORMATO EJECUTIVO DE HOJA CONTINUA FOXIT READY)
