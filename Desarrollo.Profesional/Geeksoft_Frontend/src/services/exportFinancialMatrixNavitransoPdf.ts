@@ -512,9 +512,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                         <th class="th-dim" style="width: 16px;">C</th>
                         <th class="th-dim" style="width: 16px;">R</th>
                         <th class="th-dim" style="width: 16px;">B</th>
-                        <th class="th-metric" style="width: 125px;">MÉTRICA NAVITRANSO</th>
+                        <th class="th-metric" style="width: 132px;">MÉTRICA NAVITRANSO</th>
                         ${safeMonths.map(m => `<th class="th-month" style="width: 63px;">${m}</th>`).join('')}
-                        <th class="th-total" style="width: 70px;">${totalHeader}</th>
+                        <th class="th-total" style="width: 63px;">${totalHeader}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -680,9 +680,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
 
         /* Columna 4: Nombres de Métricas */
         td.td-metric-name {
-            width: 125px !important;
-            min-width: 125px !important;
-            max-width: 125px !important;
+            width: 132px !important;
+            min-width: 132px !important;
+            max-width: 132px !important;
             text-align: left !important;
             font-weight: 500 !important;
             color: #0f172a;
@@ -718,9 +718,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         }
         /* Columna Total Acumulado */
         td.td-total-cell {
-            width: 70px !important;
-            max-width: 70px !important;
-            min-width: 70px !important;
+            width: 63px !important;
+            max-width: 63px !important;
+            min-width: 63px !important;
             font-size: 9.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;

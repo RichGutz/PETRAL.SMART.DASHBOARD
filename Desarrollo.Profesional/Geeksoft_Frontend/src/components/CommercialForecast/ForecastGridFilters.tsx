@@ -10,6 +10,7 @@ export const ForecastGridFilters: React.FC = () => {
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const { 
         data, 
+        forecastName,
         dynamicMonths: months = [],
         matrixFormat = 'PETRAL',
         hiddenClients = [], setHiddenClients = (() => {}),
@@ -126,7 +127,8 @@ export const ForecastGridFilters: React.FC = () => {
         if (isGeneratingPdf) return;
         setIsGeneratingPdf(true);
         try {
-            const scenarioName = data?.name || data?.scenario_name || (matrixFormat === 'NAVITRANSO' ? 'Escenario Base NAVITRANSO' : 'Escenario Base PETRAL');
+            const rawScenarioName = (forecastName && forecastName.trim()) || (data?.name && data.name.trim()) || (data?.scenario_name && data.scenario_name.trim()) || (matrixFormat === 'NAVITRANSO' ? 'Escenario Base NAVITRANSO' : 'Escenario Base PETRAL');
+            const scenarioName = rawScenarioName;
             if (matrixFormat === 'NAVITRANSO') {
                 await exportFinancialMatrixNavitransoPdf('forecast-grid-table', orientation, scenarioName);
             } else {
