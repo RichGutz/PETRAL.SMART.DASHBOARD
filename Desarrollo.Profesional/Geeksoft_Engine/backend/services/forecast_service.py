@@ -1167,14 +1167,14 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "actual_discharge_rate": unit_result.get("actual_discharge_rate", 0.0),
             "audit_trail": unit_result.get("audit_trail", {}),
             "raw_inputs": inputs,
-            "route_name": spot_route.get("name") if is_spot_route else None,
+            "route_name": (spot_route.get("name") if spot_route else None) if is_spot_route else None,
             "port_costs_breakdown": {
-                "origin": {} if is_spot_route else orig_result.get("breakdown", {}),
-                "destination": {} if is_spot_route else dest_result.get("breakdown", {})
+                "origin": {} if (is_spot_route or 'orig_result' not in locals()) else orig_result.get("breakdown", {}),
+                "destination": {} if (is_spot_route or 'dest_result' not in locals()) else dest_result.get("breakdown", {})
             },
             "port_costs_audit": {
-                "origin": {} if is_spot_route else orig_result.get("audit_trail", {}),
-                "destination": {} if is_spot_route else dest_result.get("audit_trail", {})
+                "origin": {} if (is_spot_route or 'orig_result' not in locals()) else orig_result.get("audit_trail", {}),
+                "destination": {} if (is_spot_route or 'dest_result' not in locals()) else dest_result.get("audit_trail", {})
             }
         }
         

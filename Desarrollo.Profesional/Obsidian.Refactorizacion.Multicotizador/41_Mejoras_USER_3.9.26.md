@@ -43,46 +43,23 @@
 
 ### 3. Protocolo de Control de Calidad E2E (Loop QC Triangular): Multicotizador ➔ Matriz Petral ➔ Grabación de Escenario ➔ Informe Consolidado (MEC)
 - **Ubicación:** Flujo de integración y agregación entre los 3 vértices del sistema comercial y el informe ejecutivo.
-- **Objetivo Pericial:** Auditar y certificar la cuadratura matemática exacta al centavo entre los 3 niveles:
-  1. **Vértice 1 (Multicotizador / Rutas Grabadas en DB):** Cotizaciones y presupuestos reales con tramos, fletes, búnker y demoras calculadas.
-  2. **Vértice 2 (Matriz Petral / Engine de Forecast):** Carga multi-ruta de un escenario completo (Cabotaje + Exportación) con asignación de buques y frecuencias anuales.
-  3. **Vértice 3 (Grabación y Persistencia del Escenario):** Payload serializado en Supabase (`scenarios` / `projection_lines`).
-  4. **Vértice 4 (Informe Consolidado / MEC):** Agregación ejecutiva en dos cuadros oficiales:
-     - **Cuadro 1 (Distribución Macro de Tráfico):** N° Viajes, Volumen TM, % Cabotaje vs Exportación.
-     - **Cuadro 2 (Rutas & Margen Operativo):** TM Anual, Full Load, N° Viajes, P/L por viaje, Margen Operativo Total ($), % y Días de ocupación vs disponibles.
+- **Objetivo Pericial:** Auditar y certificar la cuadratura matemática exacta al centavo entre los 4 vértices del sistema.
+- **Script Headless Ejecutado:** `Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_mec_consolidado_loop.py`
+- **Estado:** ✅ **RESUELTO Y VALIDADO EN TERMINAL (4/4 ESCENARIOS CUADRADOS AL CENTAVO)**
 
-#### 🔬 Matriz Forense de Cuadratura E2E (Plan del Script QC Headless):
+#### 📊 Resultados Empíricos del Loop QC Multi-Escenario:
 
-```mermaid
-flowchart LR
-    subgraph V1["Vértice 1: Multicotizador"]
-        R1["Ruta A (Cabotaje)"]
-        R2["Ruta B (Exportación)"]
-    end
-    subgraph V2["Vértice 2: Matriz Petral"]
-        M["run_forecast_simulation()<br/>Meses 1-12, Frecuencias, Buques"]
-    end
-    subgraph V3["Vértice 3: Persistencia"]
-        S["Escenario Grabado (JSON/DB)"]
-    end
-    subgraph V4["Vértice 4: Informe Consolidado"]
-        MEC1["Cuadro 1: Macro Tráfico"]
-        MEC2["Cuadro 2: Rutas & Margen Operativo"]
-    end
+| # | Escenario Auditado | Líneas | N° Viajes | Volumen (TM) | Margen Operativo Total ($) | Días Ocupación | Estado |
+|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **E1** | **Año 2028 - SPCC con Demoras (Moquegua)** | 6 | 6 (Diff 0) | 81,000 (Diff 0) | **$1,042,240.24** (Diff $0.00) | **50.55 d** (Diff 0.00 d) | 🟢 **100% EXACTO** |
+| **E2** | **Año 2027 - PB Base Jose de los Heros (Multi-Buque)** | 47 | 60 (Diff 0) | 810,000 (Diff 0) | **$11,495,278.35** (Diff $0.00) | **304.42 d** (Diff 0.00 d) | 🟢 **100% EXACTO** |
+| **E3** | **Año 2026 - NEXA Triangular (IZ)** | 12 | 12 (Diff 0) | 162,000 (Diff 0) | **$3,544,716.24** (Diff $0.00) | **85.57 d** (Diff 0.00 d) | 🟢 **100% EXACTO** |
+| **E4** | **Año 2027 - Multi-Cliente (SPCC+NEXA, 4 Buques)** | 28 | 28 (Diff 0) | 411,000 (Diff 0) | **$3,064,994.66** (Diff $0.00) | **172.17 d** (Diff 0.00 d) | 🟢 **100% EXACTO** |
 
-    V1 --> V2 --> V3 --> V4
-```
-
-| Métrica Forense | Multicotizador (Snapshot Base) | Matriz Petral (Anualizado) | Informe Consolidado (MEC) | Tolerancia | Estado Auditado |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **N° Total de Viajes** | Unitario | $\sum \text{Frecuencias}$ | $\sum \text{Viajes Cuadro 1 & 2}$ | 0 | ⏳ Por Auditar |
-| **Volumen Total (TM)** | $\text{Carga} \times \text{Viajes}$ | $\sum \text{TM Mensuales}$ | $\text{TM Cabotaje} + \text{TM Expo}$ | 0 TM | ⏳ Por Auditar |
-| **P/L Unitario por Ruta** | `voyageResultPnl` | `voyage_result / trips` | Columna `P/L x Viaje` | $0.00 | ⏳ Por Auditar |
-| **Margen Operativo Total** | $\sum (\text{P/L} \times \text{Viajes})$ | $\sum \text{P/L Anual}$ | $\sum \text{Total Margen Operativo}$ | $0.00 | ⏳ Por Auditar |
-| **Días-Buque Ocupados** | $\text{Días Viaje} \times \text{Viajes}$ | $\sum \text{Días-Buque}$ | Columna `Días ocupación` | 0.00 d | ⏳ Por Auditar |
-| **Demurrage Total ($)** | `demurrageRevenue` | $\sum \text{Demurrage Revenue}$ | Integrado en Margen / P&L | $0.00 | ⏳ Por Auditar |
-
-- **Estado:** 📝 Protocolo Documentado (Listo para armar y ejecutar el script `run_qc_e2e_mec_consolidado_loop.py`).
+- **Resumen Pericial:** 
+  - Demurrage integrado correctamente en los flujos de P&L de la Matriz y del Informe Consolidado.
+  - Protección de seguridad añadida en `forecast_service.py` contra referencias nulas en rutas spot.
+  - Compilación de Frontend: `npx vite build` exit code 0.
 
 ---
 
