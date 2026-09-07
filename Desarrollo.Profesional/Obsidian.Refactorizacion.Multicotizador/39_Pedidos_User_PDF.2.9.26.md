@@ -561,9 +561,36 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 32. 📝 DICTAMEN FINAL Y SELLADO PERICIAL EXCEL MATRIZ PETRAL
+## 33. 🕵️‍♂️ RONDA 33: PERITAJE Y RETIRO DEL BOTÓN MANUAL EN MAESTRO DE PRECIOS DE BÚNKER (07.09.2026)
 
-* **Estado de la Solución**: Exportación a Excel de Matriz PETRAL perfeccionada con zoom al 65% nativo, las dos secciones de totales 100% desplegadas (15 métricas cada una) y columnas con ancho neto exacto.
+**Auditor a Cargo:** Detective Benoit Blanc  
+**Evidencia Física Evaluada:** Captura de pantalla de la barra de controles (`bunker_prices_retirar_registrar_cotizacion_07_09_2026.png`).  
+**Archivo Intervenido:** [`Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Masters/BunkerMaster.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Masters/BunkerMaster.tsx)
+
+### 33.1. 🔎 LEG (La Escena Previa)
+* El componente `BunkerMaster.tsx` presentaba en la cabecera superior dos botones de acción:
+  1. `+ Registrar Cotización` (Botón azul de ingreso manual).
+  2. `📄 Cargar Factura PDF` (Botón verde con parser automatizado de facturas de búnker).
+* La directiva de negocio requiere canalizar la carga de precios exclusivamente a través de facturas oficiales en PDF para asegurar trazabilidad pericial y erradicar inconsistencias manuales.
+
+### 33.2. 📐 DIFF (Cirugía Aplicada)
+```diff
+- <button 
+-     onClick={handleOpenCreate}
+-     className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm cursor-pointer"
+- >
+-     <Plus size={14} /> Registrar Cotización
+- </button>
+```
+* Se retiró el botón `+ Registrar Cotización` de la cabecera de `BunkerMaster.tsx`.
+* Se conserva intacto el botón `📄 Cargar Factura PDF` y las acciones de edición/auditoría existentes.
+
+### 33.3. 🔬 QC & Evidencia Terminal
+* Respaldo automático de la captura en:
+  1. `Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/PNGs/bunker_prices_retirar_registrar_cotizacion_07_09_2026.png`
+  2. `Exceles.Petral/PORT.COSTS.PATRICIA/bunker_prices_retirar_registrar_cotizacion_07_09_2026.png`
+* Compilación exitosa en `npx vite build`.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*
+

@@ -247,13 +247,6 @@ export const BunkerMaster: React.FC = () => {
                 <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-2">
                         <button 
-                            onClick={handleOpenCreate}
-                            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm cursor-pointer"
-                        >
-                            <Plus size={14} /> Registrar Cotización
-                        </button>
-
-                        <button 
                             onClick={handleUploadPdfClick}
                             disabled={isParsingPdf}
                             className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
