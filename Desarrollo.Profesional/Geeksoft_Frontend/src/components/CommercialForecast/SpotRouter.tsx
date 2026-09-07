@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { RouteMatrix } from './RouteMatrix';
 import { ForecastService } from '../../services/api';
 import { Play, Anchor, CheckCircle, X, ChevronDown, ChevronRight, Save, FolderOpen } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const SpotRouter: React.FC = () => {
+    const { user } = useAuth();
     const [vessels, setVessels] = useState<any[]>([]);
     const [selectedVessel, setSelectedVessel] = useState('');
 
@@ -25,8 +27,16 @@ export const SpotRouter: React.FC = () => {
     // Persistence Scenario State (Spot Route)
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [routeName, setRouteName] = useState('');
-    const [author, setAuthor] = useState('Demo User');
+    const [author, setAuthor] = useState<string>(() => user?.full_name || user?.email || 'Usuario');
     const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (user?.full_name) {
+            setAuthor(user.full_name);
+        } else if (user?.email) {
+            setAuthor(user.email);
+        }
+    }, [user]);
 
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [savedSpots, setSavedSpots] = useState<any[]>([]);

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { ForecastService } from '../services/api';
+import { useAuth } from './AuthContext';
 
 interface ForecastContextType {
     // State
@@ -105,6 +106,7 @@ interface ForecastContextType {
 const ForecastContext = createContext<ForecastContextType | undefined>(undefined);
 
 export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
+    const { user } = useAuth();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<'none' | 'save' | 'loadList' | 'loadSelected'>('none');
@@ -123,8 +125,17 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
 
     const [currentForecastId, setCurrentForecastId] = useState<string | null>(null);
     const [forecastName, setForecastName] = useState<string>("");
-    const [userId, setUserId] = useState<string>("Demo User");
+    const [userId, setUserId] = useState<string>(() => user?.full_name || user?.email || "Usuario");
     const [loadedAuthor, setLoadedAuthor] = useState<string>("");
+
+    // Sincronizar automáticamente el autor por defecto cuando la sesión de usuario esté lista/cambie
+    useEffect(() => {
+        if (user?.full_name) {
+            setUserId(user.full_name);
+        } else if (user?.email) {
+            setUserId(user.email);
+        }
+    }, [user]);
 
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [showLoadModal, setShowLoadModal] = useState(false);
@@ -490,6 +501,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const handleOpenSaveModal = async () => {
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
+        }
+        if (!currentForecastId && (user?.full_name || user?.email)) {
+            setUserId(user?.full_name || user?.email || "Usuario");
         }
         try {
             setActionLoading('loadList');
