@@ -2,16 +2,20 @@ import React, { useState, useMemo } from 'react';
 import { 
     FileText, Download, Search, ChevronRight, ChevronDown, 
     Award, CheckCircle2, Cpu, Layers, ShieldCheck, Briefcase, 
-    Anchor, DollarSign, ArrowRight, BookOpen, Clock, Building2, ExternalLink
+    Anchor, DollarSign, ArrowRight, BookOpen, Clock, Building2, ExternalLink,
+    Ship, Fuel, FileSpreadsheet, UserCheck, GitFork
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoPetral from '../../assets/Logo.Petral.png';
 
-interface MofRole {
+export interface MofRole {
     id: string;
     code: string;
+    personName: string;
     title: string;
+    shortTitle: string;
     department: string;
+    assignedAsset?: string;
     immediateBoss: string;
     subordinates: string;
     mainPurpose: string;
@@ -19,7 +23,8 @@ interface MofRole {
         num: string;
         activity: string;
         erpModule: string;
-        frequency: 'Diaria' | 'Por Viaje' | 'Mensual' | 'Anual' | 'A Demanda';
+        erpRoute: string;
+        frequency: 'Diaria' | 'Por Viaje Real' | 'Mensual' | 'Anual' | 'A Demanda';
         deliverable: string;
     }[];
     systemPermissions: {
@@ -35,596 +40,584 @@ interface MofRole {
     competencies: string[];
 }
 
-const MOF_ROLES: MofRole[] = [
+export const MOF_ROLES: MofRole[] = [
     {
-        id: 'mof-1',
+        id: 'mof-fernando',
         code: 'MOF-DIR-01',
-        title: 'Gerente General / Director Ejecutivo',
-        department: 'Dirección General & Estrategia',
+        personName: 'Fernando',
+        title: 'Gerente General (GG) / Dirección General',
+        shortTitle: 'Gerente General',
+        department: 'Dirección General & Estrategia Naviera',
+        assignedAsset: 'Flota Consolidada Petral',
         immediateBoss: 'Directorio Naviera Petral S.A.',
-        subordinates: 'Gerente Comercial, Superintendente de Operaciones, Oficial de Seguridad TI',
-        mainPurpose: 'Liderar la estrategia de fletamentos, aprobar presupuestos corporativos y velar por el Time Charter Equivalent (TCE) y Margen Bruto de la flota.',
+        subordinates: 'Iosef (Comercial), Maria Elena (Op. Moquegua), Jorge (Op. Tablones), Sandra (Liquidaciones)',
+        mainPurpose: 'Liderar la estrategia naviera, aprobar presupuestos anuales (PB 2027), supervisar el Time Charter Equivalent (TCE) y auditar el margen bruto consolidado de la flota.',
         coreResponsibilities: [
             {
                 num: '1.1',
                 activity: 'Aprobación y Cierre de Presupuestos Anuales de la Flota',
-                erpModule: 'Maestro de Presupuestos (/budgets)',
+                erpModule: 'Maestro de Presupuestos',
+                erpRoute: '/budgets',
                 frequency: 'Anual',
                 deliverable: 'Acta de Presupuesto Base PB 2027 sellada en base de datos.'
             },
             {
                 num: '1.2',
                 activity: 'Monitoreo de Rentabilidad y Margen Bruto Consolidado',
-                erpModule: 'Matriz Financiera (/dashboard)',
+                erpModule: 'Matriz Financiera Consolidada',
+                erpRoute: '/dashboard',
                 frequency: 'Mensual',
                 deliverable: 'Estado de Resultados P&L de la Flota por Cliente y Buque.'
             },
             {
                 num: '1.3',
-                activity: 'Evaluación de Contratos Marco y Fletamento de Naves',
-                erpModule: 'Maestro de Contratos (/contracts)',
+                activity: 'Evaluación de Acuerdos Marco y Fletamento de Naves',
+                erpModule: 'Maestro de Contratos',
+                erpRoute: '/contracts',
                 frequency: 'A Demanda',
-                deliverable: 'Aprobación de Addendas y Contratos COA de Transporte.'
+                deliverable: 'Aprobación de Addendas y Contratos COA de Transporte (SPCC, NEXA).'
+            },
+            {
+                num: '1.4',
+                activity: 'Auditoría Forense de Seguridad y Bóveda de Dispositivos',
+                erpModule: 'Device Vault & Seguridad',
+                erpRoute: '/device-vault',
+                frequency: 'Mensual',
+                deliverable: 'Revisión de autorizaciones de acceso y bitácora de auditoría.'
             }
         ],
         systemPermissions: [
             { moduleName: 'Matriz Financiera & Forecast', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Inspección de ingresos netos, costos de búnker y margen acumulado.' },
-            { moduleName: 'Maestro de Presupuestos', accessLevel: 'Control Total (Editor)', keyActions: 'Bloqueo, versionado y liberación de presupuestos anuales.' },
-            { moduleName: 'Libro de Auditoría Forense', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Trazabilidad de modificaciones de tarifas y usuarios.' }
+            { moduleName: 'Maestro de Presupuestos', accessLevel: 'Control Total (Editor)', keyActions: 'Bloqueo, versionado y sellado oficial del Presupuesto Base PB 2027.' },
+            { moduleName: 'Libro de Auditoría Forense', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Trazabilidad de modificaciones de tarifas y accesos.' }
         ],
         kpiIndicators: [
             { metric: 'Margen Bruto de Flota', target: '> 18.5% sobre flete neto', erpSource: 'Matriz Financiera Consolidada' },
-            { metric: 'TCE Promedio Diario', target: '> $12,500 USD/día', erpSource: 'Voyage Ledger / Matriz Financiera' },
-            { metric: 'Cumplimiento Presupuestal', target: '95% - 105% vs Presupuesto Base', erpSource: 'Maestro de Presupuestos' }
+            { metric: 'TCE Promedio Ponderado Diario', target: '> $12,500 USD/día', erpSource: 'Matriz Financiera / Proyecciones' },
+            { metric: 'Cumplimiento Presupuestal Consolidado', target: '95% - 105% vs Presupuesto Base', erpSource: 'Maestro de Presupuestos' }
         ],
-        competencies: ['Liderazgo Estratégico Naviero', 'Gestión Financiera de Buques', 'Negociación Marítima Internacional']
+        competencies: ['Liderazgo Estratégico Naviero', 'Gestión Financiera de Buques', 'Negociación Marítima Internacional', 'Gobierno Corporativo']
     },
     {
-        id: 'mof-2',
+        id: 'mof-iosef',
         code: 'MOF-COM-01',
-        title: 'Gerente Comercial & Fletamentos (Chartering Manager)',
-        department: 'Gerencia Comercial',
-        immediateBoss: 'Gerente General',
-        subordinates: 'Operador Comercial / Cotizador Spot',
-        mainPurpose: 'Estructurar y asegurar los contratos de fletamento marítimo (COA / Spot), optimizar el Net Revenue y definir políticas comerciales de flete.',
+        personName: 'Iosef',
+        title: 'Gerente Comercial (G Comercial) & Fletamentos',
+        shortTitle: 'Gerente Comercial',
+        department: 'Gerencia Comercial & Chartering',
+        assignedAsset: 'Contratos & Fletamentos Spot / COA',
+        immediateBoss: 'Fernando (Gerente General)',
+        subordinates: 'Gestión comercial directa de clientes y brokers marítimos',
+        mainPurpose: 'Estructurar y asegurar los contratos de fletamento marítimo (COA / Spot), optimizar el Net Revenue, fijar tarifas con Motor BAF y modelar el forecast comercial mensual.',
         coreResponsibilities: [
             {
                 num: '2.1',
-                activity: 'Modelado y Construcción de Escenarios de Proyección',
-                erpModule: 'Matriz Financiera & Forecast (/dashboard)',
+                activity: 'Modelado y Construcción de Escenarios de Forecast Comercial',
+                erpModule: 'Matriz Financiera & Forecast',
+                erpRoute: '/dashboard',
                 frequency: 'Mensual',
-                deliverable: 'Escenario Comercial Oficial (ej. Escenario Base H2 2026).'
+                deliverable: 'Escenario Comercial Oficial guardado (ej. Escenario Base H2 2026).'
             },
             {
                 num: '2.2',
-                activity: 'Parametrización de Contratos y Fórmulas BAF',
-                erpModule: 'Maestro de Contratos & Cierres (/contracts)',
-                frequency: 'Por Viaje',
-                deliverable: 'Registro de Tarifas Flat, Flete por MT y Tiers BAF.'
+                activity: 'Cotización Rápida Spot Multipiernas con Motor BAF',
+                erpModule: 'Multicotizador Spot',
+                erpRoute: '/multicotizador',
+                frequency: 'Diaria',
+                deliverable: 'Cotización Oficial Foxit-Ready en PDF emitida a clientes.'
             },
             {
                 num: '2.3',
-                activity: 'Validación de Rentabilidad en Cotizaciones Spot',
-                erpModule: 'Multicotizador Spot (/multicotizador)',
-                frequency: 'Diaria',
-                deliverable: 'Aprobación de Cotización Multipiernas y Flete Mínimo.'
+                activity: 'Parametrización de Contratos y Cláusulas de Búnker BAF',
+                erpModule: 'Precios de Búnker & Fórmulas BAF',
+                erpRoute: '/bunker-prices',
+                frequency: 'Mensual',
+                deliverable: 'Matriz de Escalación de Combustible actualizada con precios Platt/Refinería.'
+            },
+            {
+                num: '2.4',
+                activity: 'Gestión y Mantenimiento del Catálogo de Clientes',
+                erpModule: 'Maestro de Clientes & Contratos',
+                erpRoute: '/clients',
+                frequency: 'A Demanda',
+                deliverable: 'Fichas de clientes (SPCC, NEXA, Shougang, etc.) y términos de flete.'
             }
         ],
         systemPermissions: [
-            { moduleName: 'Matriz Financiera', accessLevel: 'Control Total (Editor)', keyActions: 'Edición en caliente de fletes, inyección de viajes y guardado en BD.' },
-            { moduleName: 'Multicotizador Spot', accessLevel: 'Control Total (Editor)', keyActions: 'Creación de piernas, override de demoras y exportación a Matriz.' },
-            { moduleName: 'Maestro de Clientes', accessLevel: 'Control Total (Editor)', keyActions: 'Alta de clientes mineros/industriales (SPCC, NEXA, Shougang).' }
+            { moduleName: 'Multicotizador Spot & Multipiernas', accessLevel: 'Control Total (Editor)', keyActions: 'Creación, cálculo, guardado y exportación de cotizaciones spot.' },
+            { moduleName: 'Matriz Financiera & Escenarios', accessLevel: 'Control Total (Editor)', keyActions: 'Modificación de tarifas en caliente, guardado de proyecciones y exportación Excel/PDF.' },
+            { moduleName: 'Maestro de Contratos & Clientes', accessLevel: 'Control Total (Editor)', keyActions: 'Alta y edición de contratos COA y tarifas base por ruta.' }
         ],
         kpiIndicators: [
-            { metric: 'Net Revenue Mensual', target: '> $1,800,000 USD/mes', erpSource: 'Matriz Financiera' },
-            { metric: 'Margen de Flete Spot', target: '> $3.20 USD/MT de margen neto', erpSource: 'Multicotizador Spot' },
-            { metric: 'Tasa de Cierre de Cotizaciones', target: '> 45% cotizaciones cerradas', erpSource: 'Maestro de Cotizaciones' }
+            { metric: 'Net Revenue Comercial Mensual', target: '> $1,800,000 USD/mes', erpSource: 'Matriz Financiera' },
+            { metric: 'Tarifa Media por TM Transportada', target: '> $14.50 USD/TM', erpSource: 'Multicotizador / Contratos' },
+            { metric: 'Tasa de Éxito de Cotizaciones Spot', target: '> 40% convertidas a viajes', erpSource: 'Maestro de Cotizaciones' }
         ],
-        competencies: ['Chartering & Negociación de Fletes', 'Modelado Financiero Marítimo', 'Derecho Marítimo Comercial']
+        competencies: ['Chartering & Negociación Marítima', 'Modelación Financiera de Fletes', 'Derecho Marítimo (Charters Parties)', 'Gestión de Clientes Corporativos']
     },
     {
-        id: 'mof-3',
-        code: 'MOF-COM-02',
-        title: 'Operador Comercial / Cotizador Spot',
-        department: 'Gerencia Comercial',
-        immediateBoss: 'Gerente Comercial & Fletamentos',
-        subordinates: 'Ninguno',
-        mainPurpose: 'Calcular con rapidez y precisión técnica las cotizaciones de viajes spot marítimos para clientes activos y nuevos prospectos.',
+        id: 'mof-maria-elena',
+        code: 'MOF-OPS-01',
+        personName: 'Maria Elena',
+        title: 'Operadora de Buque — M/N MOQUEGUA',
+        shortTitle: 'Operadora M/N MOQUEGUA',
+        department: 'Operaciones Marítimas',
+        assignedAsset: '🚢 M/N MOQUEGUA (DWT 28,000 MT / Draft 9.8m)',
+        immediateBoss: 'Fernando (Gerente General)',
+        subordinates: 'Coordinación con Capitán, Agencias Portuarias y Proveedores de Búnker',
+        mainPurpose: 'Asegurar la operación náutica, portuaria y de carga eficiente del buque M/N MOQUEGUA, minimizando demoras, supervisando consumos de combustible y auditando costos de puerto.',
         coreResponsibilities: [
             {
                 num: '3.1',
-                activity: 'Simulación de Viajes Spot Multipuertos',
-                erpModule: 'Multicotizador Spot (/multicotizador)',
+                activity: 'Monitoreo Diario de Navegación y Consumo (Noon Reports)',
+                erpModule: 'Maestro de Buques & Specs',
+                erpRoute: '/vessels',
                 frequency: 'Diaria',
-                deliverable: 'Ficha de Cotización con desglose de Flete, Búnker y Puertos.'
+                deliverable: 'Bitácora Diaria de Posición, Velocidad y Consumo IFO/MDO del MOQUEGUA.'
             },
             {
                 num: '3.2',
-                activity: 'Cálculo de Tiempos de Navegación y Permanencia',
-                erpModule: 'Maestro de Distancias (/routes) y Puertos (/ports)',
-                frequency: 'Por Viaje',
-                deliverable: 'Estimación de días mar (d_mar) y días puerto (d_puerto).'
+                activity: 'Coordinación Portuaria de Atraque y Operaciones de Muelle',
+                erpModule: 'Catálogo de Puertos & Terminales',
+                erpRoute: '/ports',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Statement of Facts (SOF) y Reporte de Laytime Carga/Descarga.'
             },
             {
                 num: '3.3',
-                activity: 'Exportación de Cotizaciones Aprobadas hacia la Matriz',
-                erpModule: 'Multicotizador (/multicotizador)',
-                frequency: 'Por Viaje',
-                deliverable: 'Inyección de viajes en la grilla mensual del Forecast.'
+                activity: 'Validación de Proformas y Costos Portuarios (PDA)',
+                erpModule: 'Maestro de Costos Portuarios',
+                erpRoute: '/port-costs',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Proforma Portuaria (PDA) autorizada para remolque, practicaje y muellaje.'
+            },
+            {
+                num: '3.4',
+                activity: 'Supervisión de Suministro de Combustible (Bunkering)',
+                erpModule: 'Precios & Inventario de Búnker',
+                erpRoute: '/bunker-prices',
+                frequency: 'A Demanda',
+                deliverable: 'Bunker Delivery Note (BDN) y control de densidades abordo.'
             }
         ],
         systemPermissions: [
-            { moduleName: 'Multicotizador Spot', accessLevel: 'Control Total (Editor)', keyActions: 'Modificación de tramos, toneladas MT, selección de buque y modo demora.' },
-            { moduleName: 'Maestro de Cotizaciones', accessLevel: 'Control Total (Editor)', keyActions: 'Guardado, duplicado y recuperación de cotizaciones históricas.' },
-            { moduleName: 'Maestro de Puertos & Distancias', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Consulta de millas náuticas y ritmos de carga/descarga.' }
+            { moduleName: 'Maestro de Buques (Specs MOQUEGUA)', accessLevel: 'Control Total (Editor)', keyActions: 'Edición de consumos nominales, calados, velocidades y capacidades.' },
+            { moduleName: 'Maestro de Costos Portuarios', accessLevel: 'Control Total (Editor)', keyActions: 'Carga de tarifas portuarias de puertos de escala del MOQUEGUA.' },
+            { moduleName: 'Catálogo de Puertos & Rutas', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Consulta de distancias náuticas, calados máximos y restricciones.' }
         ],
         kpiIndicators: [
-            { metric: 'Tiempo de Emisión de Cotización', target: '< 15 minutos por solicitud', erpSource: 'Multicotizador Spot' },
-            { metric: 'Convergencia de Costos', target: 'Delta < $0.01 vs Liquidación Real', erpSource: 'Loop QC MultiCotizador' },
-            { metric: 'Volumen Cotizado Mensual', target: '> 150,000 MT/mes', erpSource: 'Maestro de Cotizaciones' }
+            { metric: 'Tasa de Ocupación Efectiva MOQUEGUA', target: '> 92% días en mar/operación', erpSource: 'Bitácora de Buques' },
+            { metric: 'Desviación de Consumo IFO 380', target: '< 1.5% vs curva teórica', erpSource: 'Control de Búnker' },
+            { metric: 'Eficiencia en Muelle (Turnaround)', target: '< 48 horas promedio por escala', erpSource: 'Maestro de Puertos' }
         ],
-        competencies: ['Navegación y Rutas del Pacífico Sur', 'Cálculo Matemático de Fletes', 'Manejo Ágil del ERP Delfos']
+        competencies: ['Operaciones Náuticas & Estiba', 'Laytime & Demurrage Management', 'Coordinación Portuaria', 'Control de Bunkering']
     },
     {
-        id: 'mof-4',
-        code: 'MOF-OPS-01',
-        title: 'Superintendente de Operaciones Marítimas',
-        department: 'Operaciones Marítimas & Flota',
-        immediateBoss: 'Gerente General',
-        subordinates: 'Capitanes de Flota, Analista de Búnker',
-        mainPurpose: 'Asegurar la máxima disponibilidad operativa de los buques, supervisar el cumplimiento de itinerarios y controlar el consumo de búnker.',
+        id: 'mof-jorge',
+        code: 'MOF-OPS-02',
+        personName: 'Jorge',
+        title: 'Operador de Buque — M/N TABLONES',
+        shortTitle: 'Operador M/N TABLONES',
+        department: 'Operaciones Marítimas',
+        assignedAsset: '🚢 M/N TABLONES (DWT 25,000 MT / Draft 9.2m)',
+        immediateBoss: 'Fernando (Gerente General)',
+        subordinates: 'Coordinación con Capitán, Agencias Portuarias y Proveedores de Búnker',
+        mainPurpose: 'Asegurar la operación náutica, portuaria y de carga eficiente del buque M/N TABLONES, coordinando rotaciones de cabotaje e internacional y controlando costos operativos.',
         coreResponsibilities: [
             {
                 num: '4.1',
-                activity: 'Administración y Mantenimiento de la Flota',
-                erpModule: 'Maestro de Flota (/vessels)',
-                frequency: 'A Demanda',
-                deliverable: 'Fichas técnicas actualizadas (DWT, LOA, Consumos MT/día).'
+                activity: 'Monitoreo Diario de Travesía y Rendimiento del TABLONES',
+                erpModule: 'Maestro de Buques & Specs',
+                erpRoute: '/vessels',
+                frequency: 'Diaria',
+                deliverable: 'Reporte Operativo Diario (Daily Noon Report) del TABLONES.'
             },
             {
                 num: '4.2',
-                activity: 'Supervisión de Tiempos Operativos en Terminales',
-                erpModule: 'Maestro de Puertos & Terminales (/ports)',
-                frequency: 'Por Viaje',
-                deliverable: 'Control de 4.0h fijas suplementarias (amarre y conexiado).'
+                activity: 'Gestión de Escalas Portuarias y Agenciamiento Marítimo',
+                erpModule: 'Catálogo de Puertos & Terminales',
+                erpRoute: '/ports',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Nombramiento de Agentes Portuarios y Seguimiento de Operaciones.'
             },
             {
                 num: '4.3',
-                activity: 'Trazabilidad de Tráfico Marítimo y Rutas',
-                erpModule: 'Spaghetti Map (/spaghetti-map)',
-                frequency: 'Diaria',
-                deliverable: 'Seguimiento visual de trayectorias en el mapa GeoJSON.'
+                activity: 'Control de Costos Portuarios y Tarifas de Terminal',
+                erpModule: 'Maestro de Costos Portuarios',
+                erpRoute: '/port-costs',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Auditoría de Gastos de Practicaje, Remolcadores y Amarre en Terminales.'
+            },
+            {
+                num: '4.4',
+                activity: 'Recepción y Control de Búnker (MDO / IFO)',
+                erpModule: 'Precios & Inventario de Búnker',
+                erpRoute: '/bunker-prices',
+                frequency: 'A Demanda',
+                deliverable: 'BDN de búnker firmado y verificación de consumos en puerto.'
             }
         ],
         systemPermissions: [
-            { moduleName: 'Maestro de Flota', accessLevel: 'Control Total (Editor)', keyActions: 'Edición de buques, matrices de consumo IFO/MDO y calados.' },
-            { moduleName: 'Maestro de Puertos', accessLevel: 'Control Total (Editor)', keyActions: 'Actualización de ritmos de transferencia y tiempos de espera.' },
-            { moduleName: 'Maestro de Distancias Náuticas', accessLevel: 'Control Total (Editor)', keyActions: 'Actualización de matriz de millas náuticas PE/CL.' }
+            { moduleName: 'Maestro de Buques (Specs TABLONES)', accessLevel: 'Control Total (Editor)', keyActions: 'Edición de parámetros náuticos, velocidad ECO vs Full y capacidades.' },
+            { moduleName: 'Maestro de Costos Portuarios', accessLevel: 'Control Total (Editor)', keyActions: 'Mantenimiento de tarifas portuarias de puertos de escala.' },
+            { moduleName: 'Rutas Náuticas & Distancias', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Verificación de distancias en millas náuticas y tiempos de mar.' }
         ],
         kpiIndicators: [
-            { metric: 'Disponibilidad de Flota', target: '> 96% días operativos al año', erpSource: 'Maestro de Flota' },
-            { metric: 'Eficiencia de Búnker Navegación', target: 'Consumo real vs Matriz < 2%', erpSource: 'Voyage Ledger' },
-            { metric: 'Puntualidad en ETA Muelle', target: '> 92% arribos en ventana', erpSource: 'Spaghetti Map' }
+            { metric: 'Tasa de Ocupación Efectiva TABLONES', target: '> 90% días operativos', erpSource: 'Bitácora de Buques' },
+            { metric: 'Eficiencia de Combustible M/N TABLONES', target: '< 0.042 TM/Milla Náutica', erpSource: 'Control de Búnker' },
+            { metric: 'Cero Demoras por Gestión Operativa', target: '0 horas imputables a coordinación', erpSource: 'Maestro de Puertos' }
         ],
-        competencies: ['Gestión Técnica de Naves Tanqueras/Graneleras', 'Regulaciones Marítimas OMI/SOLAS', 'Logística Portuaria']
+        competencies: ['Navegación & Operaciones de Flota', 'Agenciamiento Portuario', 'Control de Combustibles Marinos', 'Resolución de Contingencias Náuticas']
     },
     {
-        id: 'mof-5',
-        code: 'MOF-CST-01',
-        title: 'Jefe de Costos Portuarios & Liquidaciones',
-        department: 'Costos Portuarios & Control de Gestión',
-        immediateBoss: 'Gerente Comercial / Gerente General',
-        subordinates: 'Liquidador de Gastos Portuarios',
-        mainPurpose: 'Tarificar, auditar y fiscalizar el 100% de los desembolsos portuarios bajo la fórmula PxQ y bandas arancelarias oficiales.',
+        id: 'mof-sandra',
+        code: 'MOF-FIN-01',
+        personName: 'Sandra',
+        title: 'Responsable de Liquidaciones & Control Financiero de Viajes Reales',
+        shortTitle: 'Liquidaciones Viajes Reales',
+        department: 'Liquidaciones Post-Fixture & Finanzas',
+        assignedAsset: 'Liquidaciones de Viajes Reales (Flota Completa)',
+        immediateBoss: 'Fernando (Gerente General)',
+        subordinates: 'Conciliación con Contabilidad, Clientes y Proveedores Portuarios',
+        mainPurpose: 'Ejecutar el cierre financiero y liquidación de cada viaje marítimo real, auditando fletes facturados, facturas de búnker, cuentas de desembolso final de puertos (FDA) y demoras.',
         coreResponsibilities: [
             {
                 num: '5.1',
-                activity: 'Gestión de Tarifarios Portuarios Oficiales',
-                erpModule: 'Maestro de Tarifas Portuarias (/port-tariffs)',
-                frequency: 'A Demanda',
-                deliverable: 'Tarifas validadas de Practicaje, Remolcaje y Muellaje.'
+                activity: 'Liquidación Contable y Financiera Post-Viaje Real',
+                erpModule: 'Maestro de Liquidaciones de Viajes',
+                erpRoute: '/liquidations',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Acta de Liquidación Final de Viaje (Voyage Settlement Sheet).'
             },
             {
                 num: '5.2',
-                activity: 'Auditoría Pericial de Liquidaciones de Agencias',
-                erpModule: 'Liquidador de Gastos Portuarios (/liquidations-pdf-audit)',
-                frequency: 'Por Viaje',
-                deliverable: 'Acta de Auditoría Forense PxQ vs Factura de Agencia.'
+                activity: 'Conciliación de Costos Portuarios Reales (FDA vs PDA)',
+                erpModule: 'Maestro de Costos Portuarios',
+                erpRoute: '/port-costs',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Auditoría y Aprobación de Facturas Finales de Agencias Portuarias.'
             },
             {
                 num: '5.3',
-                activity: 'Control y Cobro de Demoras (Demurrage)',
-                erpModule: 'Maestro de Demoras (/demurrage)',
-                frequency: 'Por Viaje',
-                deliverable: 'Liquidación de Días de Demora y Rate diario acordado.'
-            }
-        ],
-        systemPermissions: [
-            { moduleName: 'Tarifas & Gastos Portuarios', accessLevel: 'Control Total (Editor)', keyActions: 'Configuración de fórmulas PxQ, amarre, lanchas y Regla 6 OT.' },
-            { moduleName: 'Maestro de Demoras', accessLevel: 'Control Total (Editor)', keyActions: 'Registro de tasas diarias de demora y overrides de cliente.' },
-            { moduleName: 'Motor de Auditoría Dual', accessLevel: 'Control Total (Editor)', keyActions: 'Comparación proforma estimada vs facturación final.' }
-        ],
-        kpiIndicators: [
-            { metric: 'Desvío en Gastos Portuarios', target: 'Menor a 3.0% vs Proforma', erpSource: 'Liquidador de Gastos Portuarios' },
-            { metric: 'Ahorro por Auditoría de Facturas', target: '> $25,000 USD/trimestre', erpSource: 'Auditoría Dual' },
-            { metric: 'Efectividad en Cobro de Demoras', target: '100% demoras facturadas', erpSource: 'Maestro de Demoras' }
-        ],
-        competencies: ['Aranceles Portuarios (APM, DPW, TISUR, SPCC)', 'Auditoría Forense de Facturación', 'Contabilidad de Costos']
-    },
-    {
-        id: 'mof-6',
-        code: 'MOF-BNK-01',
-        title: 'Analista de Búnker & Rendimiento Energético',
-        department: 'Operaciones & Combustibles',
-        immediateBoss: 'Superintendente de Operaciones Marítimas',
-        subordinates: 'Ninguno',
-        mainPurpose: 'Monitorear cotizaciones de combustibles marinos, registrar precios diarios y aplicar la homologación MDO/MGO y factor BAF.',
-        coreResponsibilities: [
-            {
-                num: '6.1',
-                activity: 'Actualización Diaria de Precios de Búnker',
-                erpModule: 'Maestro de Precios de Búnker (/bunker-prices)',
-                frequency: 'Diaria',
-                deliverable: 'Tarifario diario de VLSFO e IFO/MDO por puerto de suministro.'
+                activity: 'Cálculo Pericial de Cuentas de Demora y Despacho',
+                erpModule: 'Multicotizador & Liquidaciones',
+                erpRoute: '/multicotizador',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Laytime & Demurrage Calculation Sheet para facturación a clientes.'
             },
             {
-                num: '6.2',
-                activity: 'Homologación de Facturación MGO ➔ MDO',
-                erpModule: 'Búnker & Voyage Ledger (/bunker-prices)',
-                frequency: 'Por Viaje',
-                deliverable: 'Unificación de compras bajo el estándar corporativo MDO.'
-            },
-            {
-                num: '6.3',
-                activity: 'Cálculo de Factor BAF Contractual',
-                erpModule: 'Flujograma / Motor BAF (/system-flowchart)',
+                num: '5.4',
+                activity: 'Conciliación de Forecast Proyectado vs Margen Real',
+                erpModule: 'Matriz Financiera & Proyecciones',
+                erpRoute: '/dashboard',
                 frequency: 'Mensual',
-                deliverable: 'Cálculo de ajuste de flete por variación de combustible.'
+                deliverable: 'Informe Mensual de Desviaciones Forecast vs Real para Gerencia General.'
             }
         ],
         systemPermissions: [
-            { moduleName: 'Maestro de Búnker', accessLevel: 'Control Total (Editor)', keyActions: 'Ingreso de precios Spot por puerto (Callao, Balboa, Mejillones).' },
-            { moduleName: 'Maestro Originación', accessLevel: 'Control Total (Editor)', keyActions: 'Configuración de fuentes de suministro y capacidades.' }
+            { moduleName: 'Maestro de Liquidaciones de Viajes', accessLevel: 'Control Total (Editor)', keyActions: 'Creación, edición, cierre y emisión de liquidaciones post-viaje.' },
+            { moduleName: 'Matriz Financiera (Modo Conciliación)', accessLevel: 'Control Total (Editor)', keyActions: 'Auditoría de ingresos netos reales y costos incurridos.' },
+            { moduleName: 'Ledger de Auditoría Forense', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Verificación de trazabilidad inmutable de transacciones.' }
         ],
         kpiIndicators: [
-            { metric: 'Actualización de Precios Búnker', target: '100% días hábiles actualizados', erpSource: 'Maestro de Búnker' },
-            { metric: 'Alineación de Homologación MDO', target: 'Cero discrepancias en facturas MGO', erpSource: 'Maestro de Búnker' },
-            { metric: 'Precisión del BAF', target: 'Delta = 0.00 vs contrato marco', erpSource: 'Motor BAF' }
+            { metric: 'Desviación Margen Real vs Proyectado', target: '< 3.0% de variación', erpSource: 'Liquidaciones vs Forecast' },
+            { metric: 'Tiempo de Liquidación Post-Zarpe', target: '< 5 días laborables', erpSource: 'Maestro de Liquidaciones' },
+            { metric: 'Conciliación de Facturas Portuarias FDA', target: '100% de facturas auditadas', erpSource: 'Maestro de Costos Portuarios' }
         ],
-        competencies: ['Mercado Spot de Combustibles Marinos', 'Química de Combustibles (VLSFO / MDO)', 'Análisis Estadístico']
-    },
-    {
-        id: 'mof-7',
-        code: 'MOF-SEC-01',
-        title: 'Oficial de Seguridad TI & Administrador de Plataforma',
-        department: 'Tecnología, Seguridad & Cumplimiento',
-        immediateBoss: 'Gerente General',
-        subordinates: 'Ninguno',
-        mainPurpose: 'Blindar el acceso a la plataforma mediante Device Vault (Zero-Trust), administrar permisos y garantizar la disponibilidad 24/7.',
-        coreResponsibilities: [
-            {
-                num: '7.1',
-                activity: 'Control y Autorización de Estaciones de Trabajo',
-                erpModule: 'Device Vault (/device-vault)',
-                frequency: 'A Demanda',
-                deliverable: 'Aprobación o Revocación de huellas de hardware (GPU/CPU).'
-            },
-            {
-                num: '7.2',
-                activity: 'Gestión de Cuentas de Usuario y Roles',
-                erpModule: 'Gestión de Usuarios & Permisos (/users)',
-                frequency: 'A Demanda',
-                deliverable: 'Configuración de roles Admin, Editor o Visor en DB.'
-            },
-            {
-                num: '7.3',
-                activity: 'Auditoría de Seguridad y Trazabilidad Transaccional',
-                erpModule: 'Libro de Auditoría (Audit Ledger) (/audit-ledger)',
-                frequency: 'Diaria',
-                deliverable: 'Bitácora inalterable de accesos y cambios en producción.'
-            }
-        ],
-        systemPermissions: [
-            { moduleName: 'Device Vault (Bóveda de Equipos)', accessLevel: 'Control Total (Editor)', keyActions: 'Autorizar, revocar y auditar estaciones de trabajo.' },
-            { moduleName: 'Usuarios & Permisos', accessLevel: 'Control Total (Editor)', keyActions: 'Creación de usuarios, reseteo de claves y asignación de permisos.' },
-            { moduleName: 'Libro de Auditoría', accessLevel: 'Control Total (Editor)', keyActions: 'Revisión forense de eventos de seguridad y sesiones activas.' }
-        ],
-        kpiIndicators: [
-            { metric: 'Uptime del Sistema en VPS', target: '99.9% disponibilidad anual', erpSource: 'Servidor VPS Producción' },
-            { metric: 'Tiempo de Aprobación de Equipos', target: '< 5 minutos desde solicitud', erpSource: 'Device Vault' },
-            { metric: 'Incidentes de Seguridad', target: '0 brechas de acceso no autorizado', erpSource: 'Audit Ledger' }
-        ],
-        competencies: ['Ciberseguridad & Zero-Trust', 'Administración Linux / Nginx / PostgreSQL', 'Auditoría Forense Digital']
+        competencies: ['Liquidaciones Marítimas Post-Fixture', 'Auditoría de Costos Portuarios & Búnker', 'Cálculo Pericial de Demurrage', 'Conciliación Financiera Naviera']
     }
 ];
 
 export const MofManual_V2: React.FC = () => {
     const navigate = useNavigate();
-    const [selectedRoleId, setSelectedRoleId] = useState<string>('mof-1');
+    const [selectedRole, setSelectedRole] = useState<MofRole>(MOF_ROLES[0]);
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-        responsibilities: true,
-        permissions: true,
-        kpis: true,
-        competencies: true
-    });
-
-    const toggleSection = (key: string) => {
-        setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
-    };
 
     const filteredRoles = useMemo(() => {
         if (!searchTerm.trim()) return MOF_ROLES;
-        const q = searchTerm.toLowerCase().trim();
+        const lower = searchTerm.toLowerCase();
         return MOF_ROLES.filter(r => 
-            r.title.toLowerCase().includes(q) ||
-            r.code.toLowerCase().includes(q) ||
-            r.department.toLowerCase().includes(q) ||
-            r.mainPurpose.toLowerCase().includes(q) ||
-            r.coreResponsibilities.some(res => res.activity.toLowerCase().includes(q) || res.erpModule.toLowerCase().includes(q))
+            r.personName.toLowerCase().includes(lower) ||
+            r.title.toLowerCase().includes(lower) ||
+            r.code.toLowerCase().includes(lower) ||
+            r.department.toLowerCase().includes(lower)
         );
     }, [searchTerm]);
 
-    const currentRole = MOF_ROLES.find(r => r.id === selectedRoleId) || MOF_ROLES[0];
-
-    const handlePrint = () => {
-        window.print();
-    };
-
     return (
-        <div className="p-6 space-y-6 w-full max-w-full mx-auto pb-12 print:p-0 print:m-0 font-sans">
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8 space-y-6">
             
-            {/* ── CABECERA PRINCIPAL CON LOGOS Y DESCARGA ── */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 w-full print:border-b-2 print:border-slate-800">
-                <div className="flex items-center gap-4">
-                    <img src={logoPetral} alt="Naviera Petral" className="h-10 object-contain" />
-                    <div className="h-8 border-l border-slate-200 hidden md:block"></div>
-                    <div>
-                        <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">MANUAL DE ORGANIZACIÓN Y FUNCIONES (MOF)</h2>
-                        <span className="text-xs text-slate-500 font-bold tracking-wider uppercase block">DESCRIPCIÓN DE CARGOS Y RESPONSABILIDADES ASOCIADAS A LOS FLUJOS DEL ERP</span>
+            {/* Header Corporativo */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+                
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                            <img src={logoPetral} alt="Petral Logo" className="h-10 w-auto object-contain rounded-lg" />
+                            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-xs font-bold tracking-wider uppercase flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5" />
+                                Estándar Operativo Canónico
+                            </span>
+                        </div>
+                        <div>
+                            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                                📋 Manual de Organización y Funciones (MOF)
+                            </h1>
+                            <p className="text-slate-400 text-sm sm:text-base max-w-3xl mt-1">
+                                Perfiles de puesto, matrices de responsabilidades, permisos de acceso y flujos del ERP para los 5 integrantes de <span className="text-white font-semibold">Naviera Petral S.A.</span>
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                <div className="flex items-center gap-3 print:hidden">
-                    <div className="relative w-64">
-                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Buscar puesto, función o módulo..."
-                            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        />
+                    {/* Acciones */}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <button
+                            onClick={() => navigate('/company-organigram')}
+                            className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                        >
+                            <GitFork className="w-4 h-4" />
+                            Ver Organigrama Oficial
+                        </button>
+                        <button
+                            onClick={() => navigate('/docs')}
+                            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2"
+                        >
+                            <FileText className="w-4 h-4 text-slate-400" />
+                            Docs as Code
+                        </button>
                     </div>
-                    <button 
-                        onClick={handlePrint}
-                        className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-sm cursor-pointer whitespace-nowrap"
-                    >
-                        <Download size={14} /> Imprimir Ficha MOF
-                    </button>
                 </div>
             </div>
 
-            {/* ── LAYOUT PRINCIPAL: SIDEBAR DE ROLES + FICHA DETALLADA ── */}
-            <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0">
+            {/* Layout Principal: Menú Lateral de Puestos + Contenido del MOF */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                {/* ── LISTA DE PUESTOS (IZQUIERDA - 320px) ── */}
-                <div className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 space-y-2 print:hidden">
-                    <div className="bg-slate-100 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                            <Briefcase size={14} className="text-blue-600" /> Cargos Oficiales ({filteredRoles.length})
-                        </span>
-                        <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold">ERP v2.5</span>
-                    </div>
+                {/* Panel Izquierdo: Lista de los 5 Integrantes */}
+                <div className="lg:col-span-4 space-y-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+                        
+                        {/* Buscador de Puestos */}
+                        <div className="relative mb-4">
+                            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Buscar por nombre o cargo..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                            />
+                        </div>
 
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 space-y-1 overflow-y-auto max-h-[750px]">
-                        {filteredRoles.map(role => {
-                            const isSelected = role.id === currentRole.id;
-                            return (
-                                <button
-                                    key={role.id}
-                                    onClick={() => setSelectedRoleId(role.id)}
-                                    className={`w-full text-left p-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex flex-col gap-1 border ${
-                                        isSelected 
-                                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
-                                            : 'bg-white text-slate-700 border-slate-100 hover:bg-slate-50 hover:border-slate-200'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-extrabold ${
-                                            isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-500'
-                                        }`}>
-                                            {role.code}
-                                        </span>
-                                        <ChevronRight size={14} className={isSelected ? 'text-white' : 'text-slate-400'} />
+                        {/* Lista de Roles */}
+                        <div className="space-y-2">
+                            {filteredRoles.map((role) => {
+                                const isSelected = selectedRole.id === role.id;
+                                return (
+                                    <div
+                                        key={role.id}
+                                        onClick={() => setSelectedRole(role)}
+                                        className={`
+                                            p-3.5 rounded-2xl border transition-all cursor-pointer text-left
+                                            ${isSelected 
+                                                ? 'bg-gradient-to-r from-blue-950/80 to-indigo-950/60 border-blue-500 shadow-lg shadow-blue-500/10' 
+                                                : 'bg-slate-950/60 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'}
+                                        `}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+                                                {role.code}
+                                            </span>
+                                            {role.assignedAsset && (
+                                                <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                                    <Ship className="w-3 h-3" />
+                                                    {role.assignedAsset.split(' ')[1] || 'Flota'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm font-black text-white flex items-center gap-1.5 mt-1">
+                                            {role.personName}
+                                            <span className="text-xs font-normal text-slate-400">({role.shortTitle})</span>
+                                        </p>
+                                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                                            {role.department}
+                                        </p>
                                     </div>
-                                    <span className="truncate leading-tight text-xs">{role.title}</span>
-                                    <span className={`text-[10px] truncate ${isSelected ? 'text-blue-100' : 'text-slate-400'}`}>
-                                        {role.department}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
+
+                        {/* Footer informativo */}
+                        <div className="mt-5 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 text-center">
+                            Naviera Petral S.A. • Estructura Oficial de 5 Integrantes
+                        </div>
                     </div>
                 </div>
 
-                {/* ── FICHA TÉCNICA MOF DEL PUESTO (DERECHA - 100% ANCHO) ── */}
-                <div className="flex-1 min-w-0 w-full bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:p-0 print:border-none">
-                    
-                    {/* ENCABEZADO DE FICHA MOF */}
-                    <div className="border-b border-slate-200 pb-5">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono font-black bg-blue-50 text-blue-700 px-3 py-1 rounded-lg border border-blue-200 uppercase">
-                                    {currentRole.code}
+                {/* Panel Derecho: Detalle Completo del MOF para el Puesto Seleccionado */}
+                <div className="lg:col-span-8 space-y-6">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-8">
+                        
+                        {/* Cabecera del Puesto */}
+                        <div className="border-b border-slate-800 pb-6">
+                            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full text-xs font-black tracking-widest uppercase">
+                                    {selectedRole.code}
                                 </span>
-                                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded">
-                                    {currentRole.department}
+                                <span className="text-xs text-slate-400 font-semibold flex items-center gap-1.5">
+                                    <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                    {selectedRole.department}
                                 </span>
                             </div>
-                            <span className="text-[10px] font-mono text-slate-400">
-                                Manual de Organización y Funciones • Naviera Petral S.A.
-                            </span>
-                        </div>
 
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">{currentRole.title}</h3>
+                            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                                {selectedRole.personName} — {selectedRole.title}
+                            </h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 text-xs font-medium text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <div>
-                                <span className="font-bold text-slate-800 block">👤 Superior Inmediato (Reporta a):</span>
-                                <span className="text-slate-700">{currentRole.immediateBoss}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800/60 text-xs">
+                                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                                    <span className="text-slate-400 font-bold block mb-0.5">🏢 Jefe Inmediato Superior:</span>
+                                    <strong className="text-slate-200">{selectedRole.immediateBoss}</strong>
+                                </div>
+                                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                                    <span className="text-slate-400 font-bold block mb-0.5">👥 Personal / Relaciones a Cargo:</span>
+                                    <strong className="text-slate-200">{selectedRole.subordinates}</strong>
+                                </div>
                             </div>
-                            <div>
-                                <span className="font-bold text-slate-800 block">👥 Personal a Cargo (Supervisa a):</span>
-                                <span className="text-slate-700">{currentRole.subordinates}</span>
-                            </div>
                         </div>
-                    </div>
 
-                    {/* 1. OBJETIVO / MISIÓN DEL CARGO */}
-                    <div className="space-y-2">
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                            <Award size={15} className="text-blue-600" /> 1. Misión y Objetivo Principal del Puesto
-                        </h4>
-                        <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl text-xs text-slate-700 leading-relaxed font-medium">
-                            {currentRole.mainPurpose}
+                        {/* Misión y Propósito Principal */}
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <Award className="w-4 h-4 text-amber-400" />
+                                1. Misión & Propósito Principal del Cargo
+                            </h3>
+                            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                                {selectedRole.mainPurpose}
+                            </p>
                         </div>
-                    </div>
 
-                    {/* 2. RESPONSABILIDADES EN LOS FLUJOS DEL ERP */}
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => toggleSection('responsibilities')}
-                            className="w-full flex items-center justify-between text-xs font-black text-slate-800 uppercase tracking-wide cursor-pointer py-1 select-none"
-                        >
-                            <span className="flex items-center gap-2">
-                                <Cpu size={15} className="text-indigo-600" /> 2. Funciones &amp; Responsabilidades en los Flujos del Sistema ERP ({currentRole.coreResponsibilities.length})
-                            </span>
-                            {expandedSections.responsibilities ? <ChevronDown size={15} className="text-slate-400" /> : <ChevronRight size={15} className="text-slate-400" />}
-                        </button>
+                        {/* Matriz de Responsabilidades y Entregables ERP */}
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                2. Funciones, Actividades y Entregables Vinculados al ERP
+                            </h3>
 
-                        {expandedSections.responsibilities && (
-                            <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                            <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200 text-[10.5px] font-black uppercase text-slate-600">
-                                            <th className="p-3 w-12 text-center">Ítem</th>
-                                            <th className="p-3">Actividad / Función Operativa</th>
-                                            <th className="p-3">Módulo / Ruta ERP</th>
-                                            <th className="p-3 w-28 text-center">Frecuencia</th>
-                                            <th className="p-3">Entregable / Resultado</th>
+                                        <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider bg-slate-950/60">
+                                            <th className="p-3 rounded-l-xl w-12">N°</th>
+                                            <th className="p-3">Actividad / Responsabilidad</th>
+                                            <th className="p-3">Módulo ERP</th>
+                                            <th className="p-3">Frecuencia</th>
+                                            <th className="p-3 rounded-r-xl">Entregable Oficial</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                                        {currentRole.coreResponsibilities.map((resp, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                                                <td className="p-3 font-mono font-bold text-center text-slate-500">{resp.num}</td>
-                                                <td className="p-3 font-bold text-slate-800">{resp.activity}</td>
+                                    <tbody className="divide-y divide-slate-800/60">
+                                        {selectedRole.coreResponsibilities.map((resp, idx) => (
+                                            <tr key={idx} className="hover:bg-slate-800/40 transition">
+                                                <td className="p-3 font-mono font-bold text-blue-400">{resp.num}</td>
+                                                <td className="p-3 font-semibold text-white">{resp.activity}</td>
                                                 <td className="p-3">
-                                                    <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-indigo-700 font-bold">
+                                                    <button
+                                                        onClick={() => navigate(resp.erpRoute)}
+                                                        className="px-2 py-1 bg-slate-800 hover:bg-blue-600/30 hover:text-blue-200 text-slate-300 rounded-md border border-slate-700/60 text-[10px] font-semibold transition flex items-center gap-1"
+                                                    >
                                                         {resp.erpModule}
-                                                    </span>
+                                                        <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
+                                                    </button>
                                                 </td>
-                                                <td className="p-3 text-center">
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                                <td className="p-3 text-slate-400 font-medium">
+                                                    <span className="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300">
                                                         {resp.frequency}
                                                     </span>
                                                 </td>
-                                                <td className="p-3 text-[11px] text-slate-600 font-medium">{resp.deliverable}</td>
+                                                <td className="p-3 text-slate-300 text-[11px] leading-relaxed">
+                                                    {resp.deliverable}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                        )}
-                    </div>
+                        </div>
 
-                    {/* 3. MATRIZ DE PERMISOS EN EL SISTEMA */}
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => toggleSection('permissions')}
-                            className="w-full flex items-center justify-between text-xs font-black text-slate-800 uppercase tracking-wide cursor-pointer py-1 select-none"
-                        >
-                            <span className="flex items-center gap-2">
-                                <ShieldCheck size={15} className="text-emerald-600" /> 3. Mapeo de Accesos &amp; Niveles de Permiso en ERP
-                            </span>
-                            {expandedSections.permissions ? <ChevronDown size={15} className="text-slate-400" /> : <ChevronRight size={15} className="text-slate-400" />}
-                        </button>
+                        {/* Permisos de Sistema y Niveles de Acceso */}
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <Cpu className="w-4 h-4 text-indigo-400" />
+                                3. Políticas de Acceso y Permisos en el ERP PETRAL
+                            </h3>
 
-                        {expandedSections.permissions && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {currentRole.systemPermissions.map((perm, idx) => (
-                                    <div key={idx} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <span className="text-xs font-black text-slate-800">{perm.moduleName}</span>
-                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
+                                {selectedRole.systemPermissions.map((perm, idx) => (
+                                    <div key={idx} className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold text-white">{perm.moduleName}</span>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                                 perm.accessLevel.includes('Editor') 
-                                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                                                    : 'bg-blue-100 text-blue-800 border border-blue-200'
+                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                                                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                                             }`}>
                                                 {perm.accessLevel}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-600">
+                                        <p className="text-[11px] text-slate-400 leading-relaxed">
                                             {perm.keyActions}
                                         </p>
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </div>
-
-                    {/* 4. INDICADORES CLAVE DE DESEMPEÑO (KPIS) */}
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => toggleSection('kpis')}
-                            className="w-full flex items-center justify-between text-xs font-black text-slate-800 uppercase tracking-wide cursor-pointer py-1 select-none"
-                        >
-                            <span className="flex items-center gap-2">
-                                <Layers size={15} className="text-amber-600" /> 4. Indicadores Clave de Gestión (KPIs) Monitoreados en ERP
-                            </span>
-                            {expandedSections.kpis ? <ChevronDown size={15} className="text-slate-400" /> : <ChevronRight size={15} className="text-slate-400" />}
-                        </button>
-
-                        {expandedSections.kpis && (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {currentRole.kpiIndicators.map((kpi, idx) => (
-                                    <div key={idx} className="p-3.5 bg-amber-50/50 border border-amber-200 rounded-xl flex flex-col justify-between gap-2">
-                                        <div>
-                                            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Métrica KPI</span>
-                                            <span className="text-xs font-black text-slate-900 leading-tight block mt-0.5">{kpi.metric}</span>
-                                        </div>
-                                        <div className="pt-2 border-t border-amber-200/60 flex flex-col gap-0.5">
-                                            <span className="text-[11px] font-black text-amber-900">Meta: {kpi.target}</span>
-                                            <span className="text-[9.5px] text-slate-500 font-mono">Fuente: {kpi.erpSource}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 5. COMPETENCIAS TÉCNICAS */}
-                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-wide block">
-                            5. Competencias Técnicas &amp; Perfil Requerido
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                            {currentRole.competencies.map((comp, idx) => (
-                                <span key={idx} className="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1.5">
-                                    <CheckCircle2 size={13} className="text-blue-600" /> {comp}
-                                </span>
-                            ))}
                         </div>
-                    </div>
 
-                    {/* PIE DE PÁGINA EDITORIAL OFICIAL */}
-                    <div className="border-t border-slate-200 pt-4 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                        <div>MOF v2.5 • NAVIERA PETRAL S.A.</div>
-                        <div>Documento Oficial de Organización &amp; Funciones</div>
-                        <div>{new Date().toLocaleDateString('es-PE')}</div>
-                    </div>
+                        {/* KPIs y Competencias Clave */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                            
+                            {/* KPIs */}
+                            <div className="space-y-3">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                    <Layers className="w-4 h-4 text-blue-400" />
+                                    4. Indicadores Clave de Desempeño (KPIs)
+                                </h3>
+                                <div className="space-y-2">
+                                    {selectedRole.kpiIndicators.map((kpi, idx) => (
+                                        <div key={idx} className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-bold text-white">{kpi.metric}</span>
+                                                <span className="font-mono font-bold text-emerald-400">{kpi.target}</span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-400">
+                                                Fuente ERP: <strong className="text-slate-300">{kpi.erpSource}</strong>
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
+                            {/* Competencias */}
+                            <div className="space-y-3">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                                    5. Competencias Profesionales Exigidas
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedRole.competencies.map((comp, idx) => (
+                                        <span 
+                                            key={idx}
+                                            className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 font-semibold flex items-center gap-1.5"
+                                        >
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                            {comp}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
@@ -632,3 +625,5 @@ export const MofManual_V2: React.FC = () => {
         </div>
     );
 };
+
+export default MofManual_V2;
