@@ -345,27 +345,27 @@ export const MofManual_V2: React.FC = () => {
     }, [searchTerm]);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="min-h-full bg-slate-50/50 text-slate-900 p-4 sm:p-6 lg:p-8 space-y-6">
             
-            {/* Header Corporativo */}
-            <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+            {/* Header Corporativo Luminoso */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
                 
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                            <img src={logoPetral} alt="Petral Logo" className="h-10 w-auto object-contain rounded-lg" />
-                            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-xs font-bold tracking-wider uppercase flex items-center gap-1.5">
-                                <BookOpen className="w-3.5 h-3.5" />
+                            <img src={logoPetral} alt="Petral Logo" className="h-10 w-auto object-contain rounded-lg shadow-sm" />
+                            <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-bold tracking-wider uppercase flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5 text-blue-600" />
                                 Estándar Operativo Canónico
                             </span>
                         </div>
                         <div>
-                            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                                 📋 Manual de Organización y Funciones (MOF)
                             </h1>
-                            <p className="text-slate-400 text-sm sm:text-base max-w-3xl mt-1">
-                                Perfiles de puesto, matrices de responsabilidades, permisos de acceso y flujos del ERP para los 5 integrantes de <span className="text-white font-semibold">Naviera Petral S.A.</span>
+                            <p className="text-slate-600 text-sm sm:text-base max-w-3xl mt-1">
+                                Perfiles de puesto, matrices de responsabilidades, permisos de acceso y flujos del ERP para los 5 integrantes de <span className="text-slate-900 font-bold">Naviera Petral S.A.</span>
                             </p>
                         </div>
                     </div>
@@ -374,16 +374,16 @@ export const MofManual_V2: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-2.5">
                         <button
                             onClick={() => navigate('/company-organigram')}
-                            className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm flex items-center gap-2"
                         >
                             <GitFork className="w-4 h-4" />
                             Ver Organigrama Oficial
                         </button>
                         <button
                             onClick={() => navigate('/docs')}
-                            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2"
+                            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm"
                         >
-                            <FileText className="w-4 h-4 text-slate-400" />
+                            <FileText className="w-4 h-4 text-slate-500" />
                             Docs as Code
                         </button>
                     </div>
@@ -395,7 +395,7 @@ export const MofManual_V2: React.FC = () => {
                 
                 {/* Panel Izquierdo: Lista de los 5 Integrantes */}
                 <div className="lg:col-span-4 space-y-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
                         
                         {/* Buscador de Puestos */}
                         <div className="relative mb-4">
@@ -405,7 +405,7 @@ export const MofManual_V2: React.FC = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Buscar por nombre o cargo..."
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition"
                             />
                         </div>
 
@@ -420,26 +420,26 @@ export const MofManual_V2: React.FC = () => {
                                         className={`
                                             p-3.5 rounded-2xl border transition-all cursor-pointer text-left
                                             ${isSelected 
-                                                ? 'bg-gradient-to-r from-blue-950/80 to-indigo-950/60 border-blue-500 shadow-lg shadow-blue-500/10' 
-                                                : 'bg-slate-950/60 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'}
+                                                ? 'bg-blue-50/80 border-blue-400 shadow-sm' 
+                                                : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100 hover:border-slate-300'}
                                         `}
                                     >
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">
+                                            <span className="text-[10px] font-bold tracking-wider text-blue-700 uppercase bg-blue-100 px-2 py-0.5 rounded-md border border-blue-200">
                                                 {role.code}
                                             </span>
                                             {role.assignedAsset && (
-                                                <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                                <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
                                                     <Ship className="w-3 h-3" />
                                                     {role.assignedAsset.split(' ')[1] || 'Flota'}
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-sm font-black text-white flex items-center gap-1.5 mt-1">
+                                        <p className="text-sm font-black text-slate-900 flex items-center gap-1.5 mt-1">
                                             {role.personName}
-                                            <span className="text-xs font-normal text-slate-400">({role.shortTitle})</span>
+                                            <span className="text-xs font-semibold text-slate-600">({role.shortTitle})</span>
                                         </p>
-                                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
                                             {role.department}
                                         </p>
                                     </div>
@@ -448,7 +448,7 @@ export const MofManual_V2: React.FC = () => {
                         </div>
 
                         {/* Footer informativo */}
-                        <div className="mt-5 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 text-center">
+                        <div className="mt-5 pt-4 border-t border-slate-200 text-[11px] text-slate-500 text-center font-medium">
                             Naviera Petral S.A. • Estructura Oficial de 5 Integrantes
                         </div>
                     </div>
@@ -456,58 +456,58 @@ export const MofManual_V2: React.FC = () => {
 
                 {/* Panel Derecho: Detalle Completo del MOF para el Puesto Seleccionado */}
                 <div className="lg:col-span-8 space-y-6">
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-8">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-8">
                         
                         {/* Cabecera del Puesto */}
-                        <div className="border-b border-slate-800 pb-6">
+                        <div className="border-b border-slate-200 pb-6">
                             <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full text-xs font-black tracking-widest uppercase">
+                                <span className="px-3 py-1 bg-blue-100 text-blue-800 border border-blue-300 rounded-full text-xs font-black tracking-widest uppercase">
                                     {selectedRole.code}
                                 </span>
-                                <span className="text-xs text-slate-400 font-semibold flex items-center gap-1.5">
-                                    <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                <span className="text-xs text-slate-500 font-bold flex items-center gap-1.5">
+                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
                                     {selectedRole.department}
                                 </span>
                             </div>
 
-                            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                                 {selectedRole.personName} — {selectedRole.title}
                             </h2>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800/60 text-xs">
-                                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                                    <span className="text-slate-400 font-bold block mb-0.5">🏢 Jefe Inmediato Superior:</span>
-                                    <strong className="text-slate-200">{selectedRole.immediateBoss}</strong>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-200 text-xs">
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                    <span className="text-slate-500 font-bold block mb-0.5">🏢 Jefe Inmediato Superior:</span>
+                                    <strong className="text-slate-900">{selectedRole.immediateBoss}</strong>
                                 </div>
-                                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-                                    <span className="text-slate-400 font-bold block mb-0.5">👥 Personal / Relaciones a Cargo:</span>
-                                    <strong className="text-slate-200">{selectedRole.subordinates}</strong>
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                    <span className="text-slate-500 font-bold block mb-0.5">👥 Personal / Relaciones a Cargo:</span>
+                                    <strong className="text-slate-900">{selectedRole.subordinates}</strong>
                                 </div>
                             </div>
                         </div>
 
                         {/* Misión y Propósito Principal */}
                         <div className="space-y-2">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <Award className="w-4 h-4 text-amber-400" />
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <Award className="w-4 h-4 text-amber-600" />
                                 1. Misión & Propósito Principal del Cargo
                             </h3>
-                            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
                                 {selectedRole.mainPurpose}
                             </p>
                         </div>
 
                         {/* Matriz de Responsabilidades y Entregables ERP */}
                         <div className="space-y-3">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                 2. Funciones, Actividades y Entregables Vinculados al ERP
                             </h3>
 
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-xs border-collapse">
                                     <thead>
-                                        <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider bg-slate-950/60">
+                                        <tr className="border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider bg-slate-50">
                                             <th className="p-3 rounded-l-xl w-12">N°</th>
                                             <th className="p-3">Actividad / Responsabilidad</th>
                                             <th className="p-3">Módulo ERP</th>
@@ -515,26 +515,26 @@ export const MofManual_V2: React.FC = () => {
                                             <th className="p-3 rounded-r-xl">Entregable Oficial</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-800/60">
+                                    <tbody className="divide-y divide-slate-100">
                                         {selectedRole.coreResponsibilities.map((resp, idx) => (
-                                            <tr key={idx} className="hover:bg-slate-800/40 transition">
-                                                <td className="p-3 font-mono font-bold text-blue-400">{resp.num}</td>
-                                                <td className="p-3 font-semibold text-white">{resp.activity}</td>
+                                            <tr key={idx} className="hover:bg-blue-50/50 transition">
+                                                <td className="p-3 font-mono font-extrabold text-blue-700">{resp.num}</td>
+                                                <td className="p-3 font-bold text-slate-900">{resp.activity}</td>
                                                 <td className="p-3">
                                                     <button
                                                         onClick={() => navigate(resp.erpRoute)}
-                                                        className="px-2 py-1 bg-slate-800 hover:bg-blue-600/30 hover:text-blue-200 text-slate-300 rounded-md border border-slate-700/60 text-[10px] font-semibold transition flex items-center gap-1"
+                                                        className="px-2 py-1 bg-slate-100 hover:bg-blue-100 hover:text-blue-800 text-slate-700 rounded-md border border-slate-200 text-[10px] font-semibold transition flex items-center gap-1"
                                                     >
                                                         {resp.erpModule}
                                                         <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
                                                     </button>
                                                 </td>
-                                                <td className="p-3 text-slate-400 font-medium">
-                                                    <span className="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300">
+                                                <td className="p-3 text-slate-600 font-medium">
+                                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-700 border border-slate-200">
                                                         {resp.frequency}
                                                     </span>
                                                 </td>
-                                                <td className="p-3 text-slate-300 text-[11px] leading-relaxed">
+                                                <td className="p-3 text-slate-700 text-[11px] leading-relaxed font-medium">
                                                     {resp.deliverable}
                                                 </td>
                                             </tr>
@@ -546,25 +546,25 @@ export const MofManual_V2: React.FC = () => {
 
                         {/* Permisos de Sistema y Niveles de Acceso */}
                         <div className="space-y-3">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <Cpu className="w-4 h-4 text-indigo-400" />
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <Cpu className="w-4 h-4 text-indigo-600" />
                                 3. Políticas de Acceso y Permisos en el ERP PETRAL
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {selectedRole.systemPermissions.map((perm, idx) => (
-                                    <div key={idx} className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-1.5">
+                                    <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-bold text-white">{perm.moduleName}</span>
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                            <span className="text-xs font-bold text-slate-900">{perm.moduleName}</span>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                                                 perm.accessLevel.includes('Editor') 
-                                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
-                                                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                                    : 'bg-blue-50 text-blue-700 border-blue-200'
                                             }`}>
                                                 {perm.accessLevel}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                                        <p className="text-[11px] text-slate-600 leading-relaxed">
                                             {perm.keyActions}
                                         </p>
                                     </div>
@@ -573,23 +573,23 @@ export const MofManual_V2: React.FC = () => {
                         </div>
 
                         {/* KPIs y Competencias Clave */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                             
                             {/* KPIs */}
                             <div className="space-y-3">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                    <Layers className="w-4 h-4 text-blue-400" />
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Layers className="w-4 h-4 text-blue-600" />
                                     4. Indicadores Clave de Desempeño (KPIs)
                                 </h3>
                                 <div className="space-y-2">
                                     {selectedRole.kpiIndicators.map((kpi, idx) => (
-                                        <div key={idx} className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs">
+                                        <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="font-bold text-white">{kpi.metric}</span>
-                                                <span className="font-mono font-bold text-emerald-400">{kpi.target}</span>
+                                                <span className="font-bold text-slate-900">{kpi.metric}</span>
+                                                <span className="font-mono font-bold text-emerald-700">{kpi.target}</span>
                                             </div>
-                                            <span className="text-[10px] text-slate-400">
-                                                Fuente ERP: <strong className="text-slate-300">{kpi.erpSource}</strong>
+                                            <span className="text-[10px] text-slate-500">
+                                                Fuente ERP: <strong className="text-slate-700">{kpi.erpSource}</strong>
                                             </span>
                                         </div>
                                     ))}
@@ -598,17 +598,17 @@ export const MofManual_V2: React.FC = () => {
 
                             {/* Competencias */}
                             <div className="space-y-3">
-                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4 text-amber-600" />
                                     5. Competencias Profesionales Exigidas
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedRole.competencies.map((comp, idx) => (
                                         <span 
                                             key={idx}
-                                            className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 font-semibold flex items-center gap-1.5"
+                                            className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-semibold flex items-center gap-1.5"
                                         >
-                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                             {comp}
                                         </span>
                                     ))}
