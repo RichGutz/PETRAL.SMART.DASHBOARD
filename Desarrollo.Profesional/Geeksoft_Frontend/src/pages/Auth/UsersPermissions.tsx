@@ -3,7 +3,7 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { AuthService } from '../../services/api';
 import type { UserPermissions, PermissionLevel } from '../../context/AuthContext';
 import { useAuth } from '../../context/AuthContext';
-import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle } from 'lucide-react';
+import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle, Laptop, CheckCircle2, XCircle, RefreshCw, KeyRound } from 'lucide-react';
 
 interface FullUser {
     id: string;
@@ -13,12 +13,33 @@ interface FullUser {
     permissions: UserPermissions;
 }
 
+interface AuthorizedDevice {
+    id: string;
+    user_email: string;
+    device_fingerprint: string;
+    device_name: string;
+    ip_address: string;
+    status: 'APPROVED' | 'PENDING' | 'REVOKED';
+    approved_by: string | null;
+    approved_at: string | null;
+    created_at: string | null;
+    last_access_at: string | null;
+}
+
 export const UsersPermissions: React.FC = () => {
     const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState<'USERS' | 'DEVICES'>('USERS');
+    
+    // Estados de Usuarios
     const [users, setUsers] = useState<FullUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Estados de Device Vault
+    const [devices, setDevices] = useState<AuthorizedDevice[]>([]);
+    const [loadingDevices, setLoadingDevices] = useState(false);
+    const [deviceActionLoading, setDeviceActionLoading] = useState<string | null>(null);
     
     // Estado para edición en línea
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -30,6 +51,7 @@ export const UsersPermissions: React.FC = () => {
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [newRole, setNewRole] = useState<'ADMIN' | 'USER'>('USER');
+
     const [newPerms, setNewPerms] = useState<UserPermissions>({
         multicotizador_spot: 'Visor',
         matriz_financiera: 'Visor',
@@ -64,11 +86,53 @@ export const UsersPermissions: React.FC = () => {
         }
     };
 
+    const loadDevices = async () => {
+        setLoadingDevices(true);
+        try {
+            const data = await AuthService.getDevices();
+            setDevices(data);
+        } catch (err: any) {
+            setError('Error al cargar dispositivos del Device Vault.');
+            console.error(err);
+        } finally {
+            setLoadingDevices(false);
+        }
+    };
+
     useEffect(() => {
         if (user?.role === 'ADMIN') {
             loadUsers();
+            loadDevices();
         }
     }, [user]);
+
+    const handleApproveDevice = async (deviceId: string) => {
+        if (!user?.email) return;
+        setDeviceActionLoading(deviceId);
+        try {
+            await AuthService.approveDevice(deviceId, user.email);
+            showNotification('Dispositivo autorizado con éxito para acceso permanente.', 'success');
+            loadDevices();
+        } catch (err: any) {
+            showNotification(err.response?.data?.detail || 'Error al autorizar dispositivo.', 'error');
+        } finally {
+            setDeviceActionLoading(null);
+        }
+    };
+
+    const handleRevokeDevice = async (deviceId: string) => {
+        if (!user?.email) return;
+        setDeviceActionLoading(deviceId);
+        try {
+            await AuthService.revokeDevice(deviceId, user.email);
+            showNotification('Acceso del dispositivo revocado y bloqueado.', 'success');
+            loadDevices();
+        } catch (err: any) {
+            showNotification(err.response?.data?.detail || 'Error al revocar dispositivo.', 'error');
+        } finally {
+            setDeviceActionLoading(null);
+        }
+    };
 
     if (!user || user.role !== 'ADMIN') {
         return (
@@ -93,6 +157,7 @@ export const UsersPermissions: React.FC = () => {
             setTimeout(() => setError(''), 4000);
         }
     };
+
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -206,22 +271,44 @@ export const UsersPermissions: React.FC = () => {
     ];
 
     return (
-        <MasterTemplate title="Gestión de Usuarios y Permisos" subtitle="Administración de accesos del Smart Dashboard" activeTab="users">
+        <MasterTemplate title="Seguridad, Usuarios y Bóveda de Dispositivos" subtitle="Administración central de accesos y hardware autorizado DELFOS" activeTab="users">
             
             <div className="flex-1 flex flex-col gap-6 max-w-full w-full">
                 
-                {/* Cabecera / Acciones */}
-                <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                    <div>
-                        <h2 className="text-base font-bold text-slate-800">Cuentas y Matriz de Roles</h2>
-                        <p className="text-xs text-slate-500">Configura accesos de tipo Editor, Visor o Nulo para cada persona.</p>
-                    </div>
-                    
-                    <button 
-                        onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 bg-[#0B2545] hover:bg-[#134074] text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all cursor-pointer"
+                {/* Selector de Pestañas Principales */}
+                <div className="flex border-b border-slate-200 gap-2 bg-slate-100/80 p-1.5 rounded-xl">
+                    <button
+                        onClick={() => setActiveTab('USERS')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            activeTab === 'USERS'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                        }`}
                     >
-                        <UserPlus size={14} /> Registrar Nuevo Usuario
+                        <UserIcon size={15} />
+                        <span>Usuarios y Matriz de Permisos</span>
+                        <span className="ml-1 bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-mono">{users.length}</span>
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setActiveTab('DEVICES');
+                            loadDevices();
+                        }}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            activeTab === 'DEVICES'
+                                ? 'bg-white text-slate-800 shadow-sm'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                        }`}
+                    >
+                        <Laptop size={15} />
+                        <span>Bóveda de Dispositivos (Device Vault)</span>
+                        {devices.filter(d => d.status === 'PENDING').length > 0 && (
+                            <span className="ml-1 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">
+                                {devices.filter(d => d.status === 'PENDING').length} pendientes
+                            </span>
+                        )}
+                        <span className="ml-1 bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-mono">{devices.length}</span>
                     </button>
                 </div>
 
@@ -236,6 +323,25 @@ export const UsersPermissions: React.FC = () => {
                         <Check size={16} /> {success}
                     </div>
                 )}
+
+                {activeTab === 'USERS' ? (
+                    /* === PESTAÑA 1: USUARIOS Y MATRIZ === */
+                    <>
+                        {/* Cabecera / Acciones */}
+                        <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <div>
+                                <h2 className="text-base font-bold text-slate-800">Cuentas y Matriz de Roles</h2>
+                                <p className="text-xs text-slate-500">Configura accesos de tipo Editor, Visor o Nulo para cada persona.</p>
+                            </div>
+                            
+                            <button 
+                                onClick={() => setShowModal(true)}
+                                className="flex items-center gap-2 bg-[#0B2545] hover:bg-[#134074] text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all cursor-pointer"
+                            >
+                                <UserPlus size={14} /> Registrar Nuevo Usuario
+                            </button>
+                        </div>
+
 
                 {/* Tabla de Usuarios */}
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -404,8 +510,145 @@ export const UsersPermissions: React.FC = () => {
                         </table>
                     </div>
                 </div>
+            </>
+        ) : (
+            /* === PESTAÑA 2: BÓVEDA DE DISPOSITIVOS (DEVICE VAULT) === */
+            <>
+                <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div>
+                        <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <Laptop className="text-blue-600" size={18} /> Dispositivos y Huellas de Hardware Registradas
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                            Control pericial de equipos que han iniciado sesión. Aprueba o revoca accesos de navegadores y estaciones de trabajo.
+                        </p>
+                    </div>
+                    
+                    <button 
+                        onClick={loadDevices}
+                        className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-250 transition-all cursor-pointer"
+                    >
+                        <RefreshCw size={13} className={loadingDevices ? 'animate-spin' : ''} /> Actualizar Dispositivos
+                    </button>
+                </div>
 
-            </div>
+                {/* Tabla de Dispositivos */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left border-collapse min-w-[900px]">
+                            <thead>
+                                <tr className="bg-slate-50/75 border-b border-slate-200">
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[120px]">Estado</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[200px]">Usuario Vinculado</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[240px]">Dispositivo / Sistema</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[170px]">Huella Hardware</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[130px]">IP Origen</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[150px]">Último Acceso</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right w-[150px]">Acción Admin</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-150">
+                                {loadingDevices ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-4 py-12 text-center text-slate-400 font-semibold">
+                                            <div className="animate-spin h-6 w-6 border-2 border-slate-400 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                            Consultando Bóveda de Dispositivos...
+                                        </td>
+                                    </tr>
+                                ) : devices.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-4 py-12 text-center text-slate-400 font-semibold">
+                                            No hay dispositivos registrados en la bóveda todavía.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    devices.map(dev => {
+                                        const isApproved = dev.status === 'APPROVED';
+                                        const isPending = dev.status === 'PENDING';
+                                        const isRevoked = dev.status === 'REVOKED';
+
+                                        return (
+                                            <tr key={dev.id} className="hover:bg-slate-50/50 transition-colors">
+                                                {/* Badge de Estado */}
+                                                <td className="px-4 py-3 text-xs">
+                                                    {isApproved && (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            <CheckCircle2 size={11} /> Autorizado
+                                                        </span>
+                                                    )}
+                                                    {isPending && (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                                                            <AlertCircle size={11} /> Pendiente
+                                                        </span>
+                                                    )}
+                                                    {isRevoked && (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
+                                                            <XCircle size={11} /> Revocado
+                                                        </span>
+                                                    )}
+                                                </td>
+
+                                                {/* Usuario */}
+                                                <td className="px-4 py-3 text-xs font-bold text-slate-800">
+                                                    {dev.user_email}
+                                                </td>
+
+                                                {/* Nombre Dispositivo */}
+                                                <td className="px-4 py-3 text-xs text-slate-700 font-medium">
+                                                    {dev.device_name || 'Navegador Web Desconocido'}
+                                                </td>
+
+                                                {/* Huella Digital */}
+                                                <td className="px-4 py-3 text-xs font-mono text-slate-600">
+                                                    <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-bold text-blue-800">
+                                                        {dev.device_fingerprint}
+                                                    </span>
+                                                </td>
+
+                                                {/* IP */}
+                                                <td className="px-4 py-3 text-xs font-mono text-slate-500">
+                                                    {dev.ip_address || '127.0.0.1'}
+                                                </td>
+
+                                                {/* Fechas */}
+                                                <td className="px-4 py-3 text-[11px] text-slate-500">
+                                                    {dev.last_access_at ? new Date(dev.last_access_at).toLocaleString() : (dev.created_at ? new Date(dev.created_at).toLocaleString() : '-')}
+                                                </td>
+
+                                                {/* Acciones */}
+                                                <td className="px-4 py-3 text-right text-xs">
+                                                    <div className="flex justify-end gap-1.5">
+                                                        {!isApproved ? (
+                                                            <button
+                                                                onClick={() => handleApproveDevice(dev.id)}
+                                                                disabled={deviceActionLoading === dev.id}
+                                                                className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                                            >
+                                                                <CheckCircle2 size={12} /> Autorizar
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleRevokeDevice(dev.id)}
+                                                                disabled={deviceActionLoading === dev.id}
+                                                                className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                                            >
+                                                                <XCircle size={12} /> Revocar
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </>
+        )}
+
+    </div>
 
             {/* Modal de Creación de Nuevo Usuario */}
             {showModal && (

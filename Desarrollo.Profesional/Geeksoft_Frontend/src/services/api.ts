@@ -330,8 +330,22 @@ export const AuthService = {
     changePassword: async (payload: any) => {
         const response = await api.post('/auth/change-password', payload);
         return response.data;
+    },
+    getDevices: async (email?: string) => {
+        const url = email ? `/auth/devices?email=${encodeURIComponent(email)}` : '/auth/devices';
+        const response = await api.get(url);
+        return response.data;
+    },
+    approveDevice: async (deviceId: string, adminEmail: string) => {
+        const response = await api.post(`/auth/devices/${deviceId}/approve`, { admin_email: adminEmail });
+        return response.data;
+    },
+    revokeDevice: async (deviceId: string, adminEmail: string) => {
+        const response = await api.post(`/auth/devices/${deviceId}/revoke`, { admin_email: adminEmail });
+        return response.data;
     }
 };
+
 
 
 

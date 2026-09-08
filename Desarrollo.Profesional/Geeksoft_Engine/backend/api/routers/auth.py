@@ -673,3 +673,49 @@ def change_password(payload: ChangePasswordRequest):
         cur.close()
         conn.close()
 
+
+# --- Endpoints de Administración de Bóveda de Dispositivos (Device Vault) ---
+
+class DeviceActionRequest(BaseModel):
+    admin_email: str
+
+@router.get("/auth/devices")
+def list_devices_endpoint(email: Optional[str] = None):
+    """
+    Lista los dispositivos registrados en el Device Vault (para uso del panel de Administración).
+    """
+    try:
+        return DeviceVaultService.list_devices(user_email=email)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al listar dispositivos: {e}"
+        )
+
+@router.post("/auth/devices/{device_id}/approve")
+def approve_device_endpoint(device_id: str, payload: DeviceActionRequest):
+    """
+    Aprueba un dispositivo para acceso permanente.
+    """
+    try:
+        return DeviceVaultService.approve_device(device_id=device_id, admin_email=payload.admin_email)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al aprobar dispositivo: {e}"
+        )
+
+@router.post("/auth/devices/{device_id}/revoke")
+def revoke_device_endpoint(device_id: str, payload: DeviceActionRequest):
+    """
+    Revoca el acceso de un dispositivo.
+    """
+    try:
+        return DeviceVaultService.revoke_device(device_id=device_id, admin_email=payload.admin_email)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al revocar dispositivo: {e}"
+        )
+
+

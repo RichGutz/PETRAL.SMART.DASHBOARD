@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ForecastProvider_V2 } from './context/ForecastContext_V2';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import type { UserPermissions } from './context/AuthContext';
+import { activateWebSecurityShield } from './utils/screenSecurityShield';
 
 import { ToolsLayout_V2 } from './layouts/ToolsLayout_V2';
 
@@ -73,9 +75,19 @@ const ProtectedRoute = ({
 };
 
 function App_V2() {
+  useEffect(() => {
+    const cleanup = activateWebSecurityShield({
+      enableClipboardShield: true,
+      enableFocusBlur: false,
+      enableInspectorBlock: false
+    });
+    return () => cleanup();
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
+
         <AuthProvider>
           <ForecastProvider_V2>
             <Routes>
