@@ -1,7 +1,7 @@
-# 40. Libreta Pericial de Benoit Blanc - Plan Maestro de Implementación de Autenticación 2FA en PETRAL (07.09.2026)
+# 40. Libreta Pericial de Benoit Blanc - Plan Maestro de Implementación de Seguridad Integral: Device Vault & Autenticación 2FA en DELFOS (07.09.2026)
 
 **Auditor a Cargo:** Detective Benoit Blanc (Auditor Pericial Implacable)  
-**Caso Oficial:** "La Doble Llave de Oro - Blindaje Criptográfico y Acceso Multifactor (2FA/OTP) para Naviera Petral"  
+**Caso Oficial:** "La Doble Llave y la Bóveda de Dispositivos - Blindaje Criptográfico de Hardware & MFA para DELFOS SHIPPING SOFTWARE"  
 **Fecha de Inicio:** 07 de Septiembre de 2026  
 **Safe Point Previo:** `PRE.2FA.AUTH.PETRAL.7.9.26`  
 **URL Producción en Vivo:** `https://forecast.geeksoft.tech`  
@@ -11,8 +11,10 @@
 
 ## 1. 🕵️ BEN (Declaración Pericial y Filosofía del Método)
 
-> *"Damas y caballeros del tribunal técnico: observen con detenimiento. En una plataforma naviera de alta sensibilidad financiera como PETRAL SMART DASHBOARD, donde se orquestan matrices millonarias, cotizaciones Spot y liquidaciones de fletamento, una puerta de entrada protegida por una simple contraseña estática es una invitación abierta al riesgo.  
-> Inspirados en las mejores prácticas corporativas y los estándares de seguridad implementados en el ecosistema APEFAC, iniciamos este peritaje para instaurar la **Autenticación en Dos Factores (2FA)**. No toleraremos cabos sueltos: cada token OTP de 6 dígitos, cada expiración temporal y cada transición visual en el login se ejecutará con precisión milimétrica, sin alterar el funcionamiento operativo del sistema."*
+> *"Damas y caballeros del tribunal técnico: observen con detenimiento. En una plataforma naviera y comercial de alta sensibilidad financiera como **DELFOS SHIPPING SOFTWARE**, donde se orquestan matrices millonarias, cotizaciones Spot y liquidaciones de fletamento, una puerta de entrada protegida por una simple contraseña estática es una invitación abierta al riesgo.  
+> Trasladando la arquitectura de seguridad probada en el ecosistema **APEFAC** (`ARQUITECTURA_PRESENTACION_ENCRIPTADA_2FA_DRM.md`), instauramos una defensa en profundidad de dos murallas inexpugnables:  
+> 1. **Device Vault (Bóveda de Dispositivos Autorizados)**: Detección determinística de huella de hardware (GPU/WebGL, Cores CPU, Screen, OS). Solo los equipos autorizados por el Administrador por única vez tienen permiso de operar.  
+> 2. **Autenticación en Dos Factores (2FA)**: Despacho de tokens transaccionales OTP de 6 dígitos con plantilla HTML de alta fidelidad emitida desde `petra@geeksoft.tech` con marca oficial **DELFOS**."*
 
 ---
 
@@ -30,10 +32,11 @@
 | #   | LUGAR DEL CRIMEN           | EVIDENCIA EXTRAÍDA DE LA ESCENA (LEGACY)             | RIESGO & CAUSA TÉCNICA RAÍZ                    |
 +-----+----------------------------+------------------------------------------------------+------------------------------------------------+
 | 1   | Flujo de Login             | Validación de credenciales en un solo paso           | Si se vulnera la contraseña, acceso total      |
-| 2   | Backend FastAPI            | `/auth/login` emite permisos y sesión de inmediato   | No existe estado intermedio 'PENDING_2FA'      |
-| 3   | Persistencia Frontend      | `localStorage.setItem('petral_session')` directo     | No hay validación de token de segundo factor   |
-| 4   | Esquema de Base de Datos   | Tabla `app_users` sin registro OTP ni secreto 2FA    | Falta de tabla para control de códigos y ttl   |
-| 5   | Notificación / Despacho    | Inexistencia de motor de despacho (Email/WhatsApp)   | No se enviaban códigos de verificación         |
+| 2   | Control de Equipos         | Cualquier máquina con credenciales puede entrar      | Inexistencia de Device Vault / Whitelist       |
+| 3   | Backend FastAPI            | `/auth/login` emite permisos y sesión de inmediato   | No existe estado intermedio 'PENDING_2FA'      |
+| 4   | Persistencia Frontend      | `localStorage.setItem('petral_session')` directo     | No hay validación de token de segundo factor   |
+| 5   | Esquema de Base de Datos   | Tabla `app_users` sin registro de equipos ni OTP     | Falta de tablas de bóveda y tokens temporales  |
+| 6   | Notificación / Despacho    | Inexistencia de motor de despacho transaccional      | No se enviaban códigos de verificación         |
 +-----+----------------------------+------------------------------------------------------+------------------------------------------------+
 ```
 
@@ -43,93 +46,127 @@
 
 Previo a cualquier cirugía de código, se establecen los siguientes puntos de salvaguarda inmutables:
 1. **Branch y Tag en Git**:
-   - `git checkout -b feature/2fa-auth-petral`
-   - `git tag -a "PRE.2FA.AUTH.PETRAL.7.9.26" -m "Safe Point: Previo a implementacion 2FA en PETRAL"`
+   - `git checkout -b feature/device-vault-2fa-delfos`
+   - `git tag -a "PRE.2FA.AUTH.PETRAL.7.9.26" -m "Safe Point: Previo a implementacion Device Vault y 2FA"`
 2. **Backups de Archivos Críticos**:
    - `Desarrollo.Profesional/Geeksoft_Engine/backend/api/routers/auth_LEGACY_PRE2FA.py`
    - `Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Auth/Login_LEGACY_PRE2FA.tsx`
 
 ---
 
-## 4. 📐 DIFF (Cirugía Quirúrgica y Plan de Implementación)
+## 4. 📐 DIFF (Cirugía Quirúrgica y Arquitectura Preparada)
 
-### 4.1. Base de Datos & Backend (FastAPI + PostgreSQL)
+### 4.1. Base de Datos & Migración SQL
+📁 **Archivo:** [`Desarrollo.Profesional/Geeksoft_Engine/migrations/create_device_vault_and_2fa_tables.sql`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/migrations/create_device_vault_and_2fa_tables.sql)
 
-1. **Tabla de Control 2FA (`user_2fa_tokens`)**:
-   ```sql
-   CREATE TABLE IF NOT EXISTS user_2fa_tokens (
-       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-       user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
-       token_temp VARCHAR(64) NOT NULL UNIQUE,
-       otp_code VARCHAR(6) NOT NULL,
-       attempts INT DEFAULT 0,
-       is_used BOOLEAN DEFAULT FALSE,
-       expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-   );
-   CREATE INDEX IF NOT EXISTS idx_user_2fa_tokens_temp ON user_2fa_tokens(token_temp);
-   ```
+```sql
+-- 1. Tabla de Bóveda de Dispositivos Autorizados (Device Vault)
+CREATE TABLE IF NOT EXISTS user_authorized_devices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_email VARCHAR(255) NOT NULL,
+    device_fingerprint VARCHAR(128) NOT NULL,
+    device_name VARCHAR(255),
+    ip_address VARCHAR(64),
+    status VARCHAR(20) DEFAULT 'PENDING', -- 'PENDING', 'APPROVED', 'REJECTED', 'REVOKED'
+    approved_by VARCHAR(255),
+    approved_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_access_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(user_email, device_fingerprint)
+);
 
-2. **Endpoints en [`auth.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/api/routers/auth.py)**:
-   - `POST /auth/login`:
-     - Valida `email` y `password` contra `app_users`.
-     - Si es correcto, genera un `temp_token` (UUID) y un `otp_code` de 6 dígitos numéricos (ej. `382914`).
-     - Despacha el código mediante el canal corporativo (Email SMTP / WhatsApp).
-     - Retorna:
-       ```json
-       {
-         "status": "REQUIRES_2FA",
-         "temp_token": "a1b2c3d4-...",
-         "masked_destination": "i***a@petral.com.pe"
-       }
-       ```
-   - `POST /auth/verify-2fa`:
-     - Recibe `{ "temp_token": "...", "otp_code": "382914" }`.
-     - Verifica validez, intentos (< 3) y expiración (5 min).
-     - Si es válido, marca `is_used = true` y retorna la sesión completa (`user` + `permissions`).
-   - `POST /auth/resend-2fa`:
-     - Genera un nuevo OTP respetando un tiempo de enfriamiento (cooldown) de 60 segundos.
-
----
-
-### 4.2. Frontend & Experiencia Visual (React + TypeScript + Tailwind)
-
-1. **Evolución del [`Login.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Auth/Login.tsx)**:
-   - **Paso 1 (Credenciales)**: Entrada limpia con correo y contraseña.
-   - **Paso 2 (Verificación OTP)**: Transición animada (Glassmorphism) con 6 inputs individuales interconectados (auto-focus al escribir/borrar), timer de 5 minutos, botón "Reenviar código" con cooldown visual y botón de "Regresar al Login".
-
-2. **Adaptación de [`AuthContext.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/context/AuthContext.tsx) y [`api.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/api.ts)**:
-   - Funciones `loginStepOne(email, password)` y `verify2FACode(tempToken, otpCode)`.
-   - Protección contra inyección de sesión hasta que el código 2FA sea validado exitosamente por el servidor.
-
----
-
-## 5. 🔬 QC (Quality Control & Protocolo de Verificación)
-
-```
-+-----+----------------------------------+------------------------------------------------+----------------------------------------+
-| #   | ESCENARIO DE PRUEBA              | COMPORTAMIENTO ESPERADO                        | CRITERIO DE APROBACIÓN                 |
-+-----+----------------------------------+------------------------------------------------+----------------------------------------+
-| 1   | Credenciales Inválidas           | Rechazo en Paso 1 con mensaje claro de error   | No se emite código OTP                 |
-| 2   | Credenciales Correctas           | Despacho instantáneo de OTP a destino          | Transición suave a vista de 6 dígitos  |
-| 3   | Código OTP Válido                | Verificación aprobada y carga de permisos      | Redirección al `/dashboard`            |
-| 4   | Código OTP Incorrecto            | Incremento de contador de intentos             | Mensaje de advertencia de error        |
-| 5   | Expiración de Tiempo (5 min)     | Código marcado como expirado                   | Obliga a reenviar código               |
-| 6   | Límite de 3 Intentos Fallidos    | Bloqueo del temp_token actual                  | Requiere reiniciar el login            |
-| 7   | Reenvío con Cooldown (60s)       | Deshabilita botón de reenvío durante 60 seg     | Evita spam de envíos                   |
-+-----+----------------------------------+------------------------------------------------+----------------------------------------+
+-- 2. Tabla de Códigos Transaccionales 2FA / OTP
+CREATE TABLE IF NOT EXISTS user_2fa_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    temp_token VARCHAR(64) NOT NULL UNIQUE,
+    otp_code VARCHAR(6) NOT NULL,
+    attempts INT DEFAULT 0,
+    is_used BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ---
 
-## 6. 📝 NOTA (Registro Pericial de Ejecución Paso a Paso)
+### 4.2. Servicios Backend Preparados
+1. **Servicio Device Vault:**  
+   📁 [`Desarrollo.Profesional/Geeksoft_Engine/backend/services/device_vault_service.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/services/device_vault_service.py)  
+   * `verify_or_register_device(user_email, device_fingerprint, device_name, ip_address)`: Valida si el equipo está `APPROVED`. Si es nuevo, lo registra en `PENDING`.
+   * `approve_device(device_id, admin_email)`: Autoriza el equipo de por vida para ese usuario.
+   * `revoke_device(device_id, admin_email)`: Revoca el acceso de inmediato.
+   * `list_devices(user_email)`: Lista dispositivos para la grilla de administración.
 
-| Paso | Tarea Técnica | Estado | Auditor Responsable |
-| :--- | :--- | :---: | :--- |
-| **Paso 1** | Creación de tabla `user_2fa_tokens` y modelos Pydantic en backend | ⏳ Pendiente | Detective Benoit Blanc |
-| **Paso 2** | Endpoints `/auth/login` (Step 1), `/auth/verify-2fa` y `/auth/resend-2fa` | ⏳ Pendiente | Detective Benoit Blanc |
-| **Paso 3** | Integración del canal de despacho (Email Corporativo / Notificación) | ⏳ Pendiente | Detective Benoit Blanc |
-| **Paso 4** | Desarrollo del componente visual 2FA interactivo en `Login.tsx` | ⏳ Pendiente | Detective Benoit Blanc |
-| **Paso 5** | Conexión de `AuthContext.tsx` y `api.ts` con manejo de estados intermedios | ⏳ Pendiente | Detective Benoit Blanc |
-| **Paso 6** | Auditoría QC con script terminal automatizado y pruebas e2e | ⏳ Pendiente | Detective Benoit Blanc |
-| **Paso 7** | Despliegue seguro a VPS de Producción (`https://forecast.geeksoft.tech`) | ⏳ Pendiente | Detective Benoit Blanc |
+2. **Generador de Plantilla HTML Oficial 2FA:**  
+   📁 [`Desarrollo.Profesional/Geeksoft_Engine/backend/services/email_template_2fa.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/services/email_template_2fa.py)  
+   * Marca: **DELFOS SHIPPING SOFTWARE**.
+   * Logo Oficial: `https://forecast.geeksoft.tech/LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg`.
+   * Formato OTP: `5  7  5  0  7  5` con tiempo de validez de 5 minutos y aviso de seguridad.
+
+3. **Módulo de Despacho de Correo Transaccional (Resend API):**  
+   📁 [`Desarrollo.Profesional/Geeksoft_Engine/backend/services/send_demo_email.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/services/send_demo_email.py)  
+   * Remitente Oficial: `DELFOS Security <petra@geeksoft.tech>`.
+   * Validado en vivo con entrega 200 OK a `rich@kaizencapital.pe`.
+
+---
+
+### 4.3. Módulo Frontend Preparado
+1. **Generador de Huella Digital de Hardware:**  
+   📁 [`Desarrollo.Profesional/Geeksoft_Frontend/src/utils/deviceFingerprint.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/utils/deviceFingerprint.ts)  
+   * Extrae señales de GPU (WebGL renderer), CPU cores, resolución de pantalla, User-Agent y plataforma para conformar el identificador `DEV-XXXX-XXXX`.
+
+---
+
+## 5. 🔬 QC (Quality Control & Evidencia en Terminal)
+
+📁 **Script de Auditoría Headless:** [`Desarrollo.Profesional/Geeksoft_Engine/test_qc_device_vault_2fa.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/test_qc_device_vault_2fa.py)
+
+```bash
+=================================================================
+  QC AUDIT: SIMULACIÓN DE FLUJO COMPLETO DEVICE VAULT & 2FA
+=================================================================
+
+[1. Extracción de Huella en Navegador]
+  >> Usuario: rich@kaizencapital.pe
+  >> Device Fingerprint: DEV-8F4A12B0-C7E901D4
+  >> Device Name: PC Windows (Chrome) - 1920x1080
+
+[2. Consulta a Bóveda Device Vault (Intento 1)]
+  >> Estado en BD: PENDING
+  >> ¿Acceso Permitido?: False
+  >> Acción UI: Bloqueo en pantalla + 'Solicitud enviada al Administrador'
+
+[3. Acción de Administrador]
+  >> Admin: izavala@petral.com.pe
+  >> Operación: approve_device(DEV-8F4A12B0-C7E901D4)
+  >> Nuevo Estado en BD: APPROVED ✓
+
+[4. Consulta a Bóveda Device Vault (Intento 2 - Post Aprobación)]
+  >> Estado en BD: APPROVED
+  >> ¿Acceso Permitido?: True ✓ (Autorizado de por vida)
+
+[5. Validación de Plantilla y Despacho 2FA]
+  >> HTML generado: 5263 caracteres
+  >> Marca Oficial: DELFOS SHIPPING SOFTWARE ✓
+  >> Logo Verificado: LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg ✓
+  >> Código OTP formateado: 5  7  5  0  7  5 ✓
+
+=================================================================
+  [EXITO] TODOS LOS TESTS DE DEVICE VAULT Y 2FA PASARON (100% OK)
+=================================================================
+```
+
+---
+
+## 6. 📝 NOTA (Inventario de Rutas y Estado de Módulos)
+
+| Componente | Ruta Exacta de Archivo | Estado |
+| :--- | :--- | :---: |
+| **Migración SQL** | [`create_device_vault_and_2fa_tables.sql`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/migrations/create_device_vault_and_2fa_tables.sql) | ✅ Listo |
+| **Servicio Backend Device Vault** | [`device_vault_service.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/services/device_vault_service.py) | ✅ Listo |
+| **Plantilla Correo 2FA DELFOS** | [`email_template_2fa.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/services/email_template_2fa.py) | ✅ Listo |
+| **Despacho Transaccional Resend** | [`send_demo_email.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/services/send_demo_email.py) | ✅ Listo |
+| **Fingerprint Hardware Frontend** | [`deviceFingerprint.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/utils/deviceFingerprint.ts) | ✅ Listo |
+| **Script Auditoría QC Headless** | [`test_qc_device_vault_2fa.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/test_qc_device_vault_2fa.py) | ✅ 100% OK |
+| **Despliegue a Producción (VPS)** | Servidor `https://forecast.geeksoft.tech` | 🛑 Congelado |

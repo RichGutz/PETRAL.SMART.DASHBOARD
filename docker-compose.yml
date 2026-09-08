@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # BACKEND FASTAPI (GEEKSOFT ENGINE / DELFOS)
+  # ============================================================================
+  backend:
+    build:
+      context: ./Desarrollo.Profesional/Geeksoft_Engine
+      dockerfile: Dockerfile
+    container_name: petral_backend_engine
+    restart: unless-stopped
+    environment:
+      - PORT=8000
+      - SUPABASE_URL=${SUPABASE_URL:-https://hjjxooxcpvlvbaxgifbn.supabase.co}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqanhvb3hjcHZsdmJheGdpZmJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI1MDk0NCwiZXhwIjoyMDk3ODI2OTQ0fQ.i8KkZtLSDEqaNo15NH3easZV6vhHIbqoYD7ps4pkOMc}
+      - SUPABASE_DB_PASSWORD=${SUPABASE_DB_PASSWORD:-VivaLaVida2026$}
+      - SUPABASE_DB_URI=${SUPABASE_DB_URI:-postgresql://postgres.hjjxooxcpvlvbaxgifbn:VivaLaVida2026$@aws-1-us-east-2.pooler.supabase.com:6543/postgres}
+    ports:
+      - "8000:8000"
+    networks:
+      - petral_network
+
+  # ============================================================================
+  # FRONTEND REACT 19 + NGINX (DELFOS SHIPPING SOFTWARE)
+  # ============================================================================
+  frontend:
+    build:
+      context: ./Desarrollo.Profesional/Geeksoft_Frontend
+      dockerfile: Dockerfile
+    container_name: petral_frontend_app
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - petral_network
+
+networks:
+  petral_network:
+    driver: bridge
