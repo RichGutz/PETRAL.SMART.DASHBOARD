@@ -311,71 +311,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold pointer-events-none">100%</span>
                     </button>
 
-                    {/* SECCIÓN 1: HERRAMIENTAS & ANÁLISIS */}
-                    {hasPermission && (hasPermission('multicotizador_spot', 'Visor') || hasPermission('matriz_financiera', 'Visor')) && (
-                        <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
-                            categoryTabs.herramientas.includes(activeTab) && !collapsedSections.herramientas 
-                                ? 'border-sky-300 ring-1 ring-sky-400/20' 
-                                : 'border-slate-200'
-                        }`}>
-                            <button
-                                onClick={() => toggleSection('herramientas')}
-                                className="w-full flex items-center justify-between text-[10.5px] font-black text-slate-700 uppercase tracking-wider px-1 cursor-pointer hover:text-slate-900 transition-colors select-none"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0 shadow-2xs"></span>
-                                    <span>🛠️ HERRAMIENTAS</span>
-                                    {categoryTabs.herramientas.includes(activeTab) && collapsedSections.herramientas && (
-                                        <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" title="Página activa aquí"></span>
-                                    )}
-                                </div>
-                                {!collapsedSections.herramientas ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
-                            </button>
-
-                            {!collapsedSections.herramientas && (
-                                <nav className="flex flex-col gap-1 transition-all pt-1 border-t border-slate-100">
-                                    {hasPermission('multicotizador_spot', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/multicotizador')}
-                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'multicotizador' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-xs">⛴️</span> Voyage Calculator
-                                        </button>
-                                    )}
-                                    {hasPermission('matriz_financiera', 'Visor') && (
-                                        <>
-                                            <button 
-                                                onClick={() => navigate('/dashboard')}
-                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'financial-matrix' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-xs">📊</span> Matriz Financiera
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/graphic-analysis')}
-                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'graphic-analysis' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-xs">📈</span> Análisis Gráfico
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/spaghetti-map')}
-                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'spaghetti-map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-xs">🗺️</span> Spaghetti Map
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/liquidations-graphic-analysis')}
-                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'liquidations-graphic-analysis' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-xs">📊</span> Análisis Liquidaciones
-                                            </button>
-                                        </>
-                                    )}
-                                </nav>
-                            )}
-                        </div>
-                    )}
-
-                    {/* SECCIÓN 2: MAESTROS FÍSICOS */}
+                    {/* SECCIÓN 1: MAESTROS FÍSICOS */}
                     {hasPermission && (hasPermission('maestro_buques', 'Visor') || hasPermission('maestro_puertos', 'Visor') || hasPermission('maestro_rutas', 'Visor')) && (
                         <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
                             categoryTabs.fisicos.includes(activeTab) && !collapsedSections.fisicos 
@@ -427,7 +363,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         </div>
                     )}
 
-                    {/* SECCIÓN 3: MAESTROS COMERCIALES */}
+                    {/* SECCIÓN 2: MAESTROS COMERCIALES */}
                     {hasPermission && (hasPermission('maestro_tarifas', 'Visor') || hasPermission('maestro_contratos', 'Visor') || hasPermission('maestro_rutas', 'Visor')) && (
                         <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
                             categoryTabs.comerciales.includes(activeTab) && !collapsedSections.comerciales 
@@ -495,7 +431,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         </div>
                     )}
 
-                    {/* SECCIÓN 4: MAESTROS DE COSTOS */}
+                    {/* SECCIÓN 3: MAESTROS DE COSTOS */}
                     {hasPermission && hasPermission('maestro_costos_agencia', 'Visor') && (
                         <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
                             categoryTabs.costos.includes(activeTab) && !collapsedSections.costos 
@@ -541,7 +477,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         </div>
                     )}
 
-                    {/* SECCIÓN 5: MERCADO & ORIGINACIÓN */}
+                    {/* SECCIÓN 4: MERCADO & ORIGINACIÓN */}
                     {hasPermission && (hasPermission('maestro_bunker', 'Visor') || hasPermission('maestro_rutas', 'Visor')) && (
                         <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
                             categoryTabs.mercado.includes(activeTab) && !collapsedSections.mercado 
@@ -579,6 +515,70 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                         >
                                             <span className="text-xs">⚙️</span> Maestro Originación
                                         </button>
+                                    )}
+                                </nav>
+                            )}
+                        </div>
+                    )}
+
+                    {/* SECCIÓN 5: HERRAMIENTAS & ANÁLISIS */}
+                    {hasPermission && (hasPermission('multicotizador_spot', 'Visor') || hasPermission('matriz_financiera', 'Visor')) && (
+                        <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
+                            categoryTabs.herramientas.includes(activeTab) && !collapsedSections.herramientas 
+                                ? 'border-sky-300 ring-1 ring-sky-400/20' 
+                                : 'border-slate-200'
+                        }`}>
+                            <button
+                                onClick={() => toggleSection('herramientas')}
+                                className="w-full flex items-center justify-between text-[10.5px] font-black text-slate-700 uppercase tracking-wider px-1 cursor-pointer hover:text-slate-900 transition-colors select-none"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0 shadow-2xs"></span>
+                                    <span>🛠️ HERRAMIENTAS</span>
+                                    {categoryTabs.herramientas.includes(activeTab) && collapsedSections.herramientas && (
+                                        <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" title="Página activa aquí"></span>
+                                    )}
+                                </div>
+                                {!collapsedSections.herramientas ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+                            </button>
+
+                            {!collapsedSections.herramientas && (
+                                <nav className="flex flex-col gap-1 transition-all pt-1 border-t border-slate-100">
+                                    {hasPermission('multicotizador_spot', 'Visor') && (
+                                        <button 
+                                            onClick={() => navigate('/multicotizador')}
+                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'multicotizador' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <span className="text-xs">⛴️</span> Voyage Calculator
+                                        </button>
+                                    )}
+                                    {hasPermission('matriz_financiera', 'Visor') && (
+                                        <>
+                                            <button 
+                                                onClick={() => navigate('/dashboard')}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'financial-matrix' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-xs">📊</span> Matriz Financiera
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/graphic-analysis')}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'graphic-analysis' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-xs">📈</span> Análisis Gráfico
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/spaghetti-map')}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'spaghetti-map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-xs">🗺️</span> Spaghetti Map
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/liquidations-graphic-analysis')}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'liquidations-graphic-analysis' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-xs">📊</span> Análisis Liquidaciones
+                                            </button>
+                                        </>
                                     )}
                                 </nav>
                             )}
