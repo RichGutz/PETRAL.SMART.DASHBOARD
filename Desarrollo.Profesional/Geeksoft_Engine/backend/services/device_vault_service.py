@@ -15,10 +15,12 @@ class DeviceVaultService:
         user_email: str,
         device_fingerprint: str,
         device_name: str,
-        ip_address: Optional[str] = None
+        ip_address: Optional[str] = None,
+        user_role: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Verifica el estado del dispositivo. Si no existe, lo registra en estado 'PENDING'.
+        Si es el primer dispositivo de un Administrador, se auto-aprueba (Bootstrap de Seguridad).
         Retorna:
         - status: 'APPROVED' (permite login), 'PENDING' (bloquea acceso), 'REJECTED', 'REVOKED'
         """
@@ -58,15 +60,33 @@ class DeviceVaultService:
                     "approved_at": str(approved_at) if approved_at else None
                 }
             else:
-                # Dispositivo nuevo -> Registrar como PENDING
+                # Verificar si es el primer dispositivo del Administrador
+                initial_status = "PENDING"
+                initial_approved_by = None
+                initial_approved_at = None
+
+                if user_role == "ADMIN":
+                    cur.execute(
+                        """
+                        SELECT COUNT(*) FROM user_authorized_devices 
+                        WHERE LOWER(user_email) = %s AND status = 'APPROVED';
+                        """,
+                        (email_clean,)
+                    )
+                    count_approved = cur.fetchone()[0]
+                    if count_approved == 0:
+                        initial_status = "APPROVED"
+                        initial_approved_by = "ADMIN_BOOTSTRAP"
+                        initial_approved_at = datetime.now(timezone.utc)
+
                 cur.execute(
                     """
                     INSERT INTO user_authorized_devices (
-                        user_email, device_fingerprint, device_name, ip_address, status
-                    ) VALUES (%s, %s, %s, %s, 'PENDING')
+                        user_email, device_fingerprint, device_name, ip_address, status, approved_by, approved_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                     RETURNING id, status, created_at;
                     """,
-                    (email_clean, device_fingerprint, device_name, ip_address)
+                    (email_clean, device_fingerprint, device_name, ip_address, initial_status, initial_approved_by, initial_approved_at)
                 )
                 new_row = cur.fetchone()
                 device_id, status, created_at = new_row
@@ -74,10 +94,11 @@ class DeviceVaultService:
                 
                 return {
                     "device_id": str(device_id),
-                    "status": "PENDING",
-                    "is_authorized": False,
+                    "status": status,
+                    "is_authorized": (status == "APPROVED"),
                     "device_name": device_name,
-                    "message": "Dispositivo nuevo registrado. Requiere autorización del Administrador."
+                    "approved_by": initial_approved_by,
+                    "message": "Dispositivo nuevo registrado. Requiere autorización del Administrador." if status != "APPROVED" else "Dispositivo Administrador Inicial Auto-Aprobado."
                 }
         finally:
             cur.close()

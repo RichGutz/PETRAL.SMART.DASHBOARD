@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
@@ -65,7 +65,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
         mercado: ['bunker', 'sources-sinks'],
-        admin: ['users', 'settings']
+        admin: ['users', 'device-vault', 'settings']
     };
 
     const getActiveCategory = (tab: string): string => {
@@ -608,12 +608,20 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         {!collapsedSections.admin && (
                             <nav className="flex flex-col gap-1 transition-all pt-1 border-t border-slate-100">
                                 {user?.role === 'ADMIN' && (
-                                    <button 
-                                        onClick={() => navigate('/users')}
-                                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                    >
-                                        <User size={14} /> Usuarios & Device Vault
-                                    </button>
+                                    <>
+                                        <button 
+                                            onClick={() => navigate('/users')}
+                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <User size={14} /> Gestión de Usuarios
+                                        </button>
+                                        <button 
+                                            onClick={() => navigate('/device-vault')}
+                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'device-vault' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <Laptop size={14} /> Device Vault (Equipos)
+                                        </button>
+                                    </>
                                 )}
                                 <button className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
                                     <Settings size={14} /> Temas y Estilos

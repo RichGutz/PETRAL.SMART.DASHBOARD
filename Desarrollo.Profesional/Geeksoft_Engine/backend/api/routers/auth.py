@@ -136,13 +136,29 @@ def login_step_one(payload: LoginRequest):
             
         user_id, email, full_name, role = row
 
+        # 2. Validar Bóveda de Dispositivos (Device Vault)
+        device_fp = payload.device_fingerprint or "DEV-UNKNOWN"
+        device_nm = payload.device_name or "Dispositivo Web Desconocido"
+        
+        device_check = DeviceVaultService.verify_or_register_device(
+            user_email=email,
+            device_fingerprint=device_fp,
+            device_name=device_nm,
+            user_role=role
+        )
 
-        # 2. Generar código OTP de 6 dígitos y token temporal
+        if not device_check.get("is_authorized", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Dispositivo no autorizado. Su equipo ({device_nm}) ha sido registrado como PENDIENTE en el Device Vault y requiere aprobación del Administrador para ingresar."
+            )
+
+        # 3. Generar código OTP de 6 dígitos y token temporal
         otp_code = f"{random.randint(100000, 999999)}"
         temp_token = str(uuid.uuid4())
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
-        # 3. Guardar en tabla user_2fa_tokens
+        # 4. Guardar en tabla user_2fa_tokens
         cur.execute(
             """
             INSERT INTO user_2fa_tokens (user_id, temp_token, otp_code, expires_at)
@@ -152,7 +168,7 @@ def login_step_one(payload: LoginRequest):
         )
         conn.commit()
 
-        # 4. Despachar correo transaccional desde petral@geeksoft.tech con plantilla oficial DELFOS
+        # 5. Despachar correo transaccional desde petral@geeksoft.tech con plantilla oficial DELFOS
         try:
             send_2fa_email(to_email=email, user_name=full_name, otp_code=otp_code)
         except Exception as e:

@@ -36,6 +36,7 @@ import { SourcesSinksMaster_V2 } from './pages/Masters/SourcesSinksMaster_V2';
 import { BunkerMaster } from './pages/Masters/BunkerMaster';
 import { Login } from './pages/Auth/Login';
 import { UsersPermissions } from './pages/Auth/UsersPermissions';
+import { DeviceVaultMaster } from './pages/Masters/DeviceVaultMaster';
 
 // Componente para proteger rutas privadas y validar permisos específicos
 const ProtectedRoute = ({ 
@@ -130,6 +131,7 @@ function App_V2() {
               
               {/* Panel de Gestión de Usuarios y Roles (Sólo ADMIN) */}
               <Route path="/users" element={<ProtectedRoute requireAdmin={true}><UsersPermissions /></ProtectedRoute>} />
+              <Route path="/device-vault" element={<ProtectedRoute requireAdmin={true}><DeviceVaultMaster /></ProtectedRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
