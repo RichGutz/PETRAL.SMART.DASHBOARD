@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck, BookOpen, GitGraph } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
@@ -59,12 +59,13 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         herramientas: [
             'financial-matrix', 'multicotizador', 'graphic-analysis', 
             'spaghetti-map', 'liquidations-graphic-analysis', 'liquidations-pdf-audit', 
-            'audit-ledger', 'audit-engine', 'audit-final', 'system-flowchart', 'system-documentation'
+            'audit-ledger', 'audit-engine', 'audit-final'
         ],
         fisicos: ['vessels', 'ports', 'routes'],
         comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
         mercado: ['bunker', 'sources-sinks'],
+        documentacion: ['system-documentation', 'system-flowchart'],
         admin: ['users', 'device-vault', 'audit-ledger', 'settings']
     };
 
@@ -85,6 +86,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
             comerciales: currentActiveCat !== 'comerciales',
             costos: currentActiveCat !== 'costos',
             mercado: currentActiveCat !== 'mercado',
+            documentacion: currentActiveCat !== 'documentacion',
             admin: currentActiveCat !== 'admin'
         };
     });
@@ -585,7 +587,45 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         </div>
                     )}
 
-                    {/* SECCIÓN 6: ADMINISTRACIÓN & SEGURIDAD */}
+                    {/* SECCIÓN 6: DOCUMENTACIÓN */}
+                    <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
+                        categoryTabs.documentacion.includes(activeTab) && !collapsedSections.documentacion 
+                            ? 'border-teal-300 ring-1 ring-teal-400/20' 
+                            : 'border-slate-200'
+                    }`}>
+                        <button
+                            onClick={() => toggleSection('documentacion')}
+                            className="w-full flex items-center justify-between text-[10.5px] font-black text-slate-700 uppercase tracking-wider px-1 cursor-pointer hover:text-slate-900 transition-colors select-none"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-teal-500 shrink-0 shadow-2xs"></span>
+                                <span>📚 DOCUMENTACIÓN</span>
+                                {categoryTabs.documentacion.includes(activeTab) && collapsedSections.documentacion && (
+                                    <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" title="Página activa aquí"></span>
+                                )}
+                            </div>
+                            {!collapsedSections.documentacion ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+                        </button>
+
+                        {!collapsedSections.documentacion && (
+                            <nav className="flex flex-col gap-1 transition-all pt-1 border-t border-slate-100">
+                                <button 
+                                    onClick={() => navigate('/system-documentation')}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'system-documentation' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                >
+                                    <BookOpen size={14} /> Docs as Code (Manual)
+                                </button>
+                                <button 
+                                    onClick={() => navigate('/system-flowchart')}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'system-flowchart' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                >
+                                    <GitGraph size={14} /> Flujograma del Sistema
+                                </button>
+                            </nav>
+                        )}
+                    </div>
+
+                    {/* SECCIÓN 7: ADMINISTRACIÓN & SEGURIDAD */}
                     <div className={`bg-white border rounded-xl shadow-2xs p-3 flex flex-col gap-2 transition-all ${
                         categoryTabs.admin.includes(activeTab) && !collapsedSections.admin 
                             ? 'border-slate-400 ring-1 ring-slate-400/20' 
