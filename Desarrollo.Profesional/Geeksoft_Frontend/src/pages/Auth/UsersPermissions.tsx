@@ -3,7 +3,7 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { AuthService } from '../../services/api';
 import type { UserPermissions, PermissionLevel } from '../../context/AuthContext';
 import { useAuth } from '../../context/AuthContext';
-import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle, Laptop, CheckCircle2, XCircle, RefreshCw, KeyRound } from 'lucide-react';
+import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle } from 'lucide-react';
 
 interface FullUser {
     id: string;
@@ -13,33 +13,14 @@ interface FullUser {
     permissions: UserPermissions;
 }
 
-interface AuthorizedDevice {
-    id: string;
-    user_email: string;
-    device_fingerprint: string;
-    device_name: string;
-    ip_address: string;
-    status: 'APPROVED' | 'PENDING' | 'REVOKED';
-    approved_by: string | null;
-    approved_at: string | null;
-    created_at: string | null;
-    last_access_at: string | null;
-}
-
 export const UsersPermissions: React.FC = () => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'USERS' | 'DEVICES'>('USERS');
     
     // Estados de Usuarios
     const [users, setUsers] = useState<FullUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-
-    // Estados de Device Vault
-    const [devices, setDevices] = useState<AuthorizedDevice[]>([]);
-    const [loadingDevices, setLoadingDevices] = useState(false);
-    const [deviceActionLoading, setDeviceActionLoading] = useState<string | null>(null);
     
     // Estado para edición en línea
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -86,53 +67,11 @@ export const UsersPermissions: React.FC = () => {
         }
     };
 
-    const loadDevices = async () => {
-        setLoadingDevices(true);
-        try {
-            const data = await AuthService.getDevices();
-            setDevices(data);
-        } catch (err: any) {
-            setError('Error al cargar dispositivos del Device Vault.');
-            console.error(err);
-        } finally {
-            setLoadingDevices(false);
-        }
-    };
-
     useEffect(() => {
         if (user?.role === 'ADMIN') {
             loadUsers();
-            loadDevices();
         }
     }, [user]);
-
-    const handleApproveDevice = async (deviceId: string) => {
-        if (!user?.email) return;
-        setDeviceActionLoading(deviceId);
-        try {
-            await AuthService.approveDevice(deviceId, user.email);
-            showNotification('Dispositivo autorizado con éxito para acceso permanente.', 'success');
-            loadDevices();
-        } catch (err: any) {
-            showNotification(err.response?.data?.detail || 'Error al autorizar dispositivo.', 'error');
-        } finally {
-            setDeviceActionLoading(null);
-        }
-    };
-
-    const handleRevokeDevice = async (deviceId: string) => {
-        if (!user?.email) return;
-        setDeviceActionLoading(deviceId);
-        try {
-            await AuthService.revokeDevice(deviceId, user.email);
-            showNotification('Acceso del dispositivo revocado y bloqueado.', 'success');
-            loadDevices();
-        } catch (err: any) {
-            showNotification(err.response?.data?.detail || 'Error al revocar dispositivo.', 'error');
-        } finally {
-            setDeviceActionLoading(null);
-        }
-    };
 
     if (!user || user.role !== 'ADMIN') {
         return (
@@ -158,34 +97,9 @@ export const UsersPermissions: React.FC = () => {
         }
     };
 
-
-    const handleCreateUser = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await AuthService.createUser({
-                full_name: newName,
-                email: newEmail,
-                password: newPassword,
-                role: newRole,
-                permissions: newPerms
-            });
-            showNotification('Usuario creado exitosamente', 'success');
-            setShowModal(false);
-            // Reset campos
-            setNewName('');
-            setNewEmail('');
-            setNewPassword('');
-            setNewRole('USER');
-            loadUsers();
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || 'Error al crear usuario.';
-            showNotification(msg, 'error');
-        }
-    };
-
-    const handleStartEdit = (user: FullUser) => {
-        setEditingUserId(user.id);
-        setEditingUser(JSON.parse(JSON.stringify(user))); // Clon profundo
+    const handleEditClick = (userToEdit: FullUser) => {
+        setEditingUserId(userToEdit.id);
+        setEditingUser(JSON.parse(JSON.stringify(userToEdit)));
     };
 
     const handleCancelEdit = () => {
@@ -201,52 +115,78 @@ export const UsersPermissions: React.FC = () => {
         });
     };
 
-    const handleEditPermissionChange = (module: keyof UserPermissions, value: PermissionLevel) => {
+    const handlePermChange = (moduleKey: string, level: PermissionLevel) => {
         if (!editingUser) return;
         setEditingUser({
             ...editingUser,
             permissions: {
                 ...editingUser.permissions,
-                [module]: value
+                [moduleKey]: level
             }
         });
     };
 
-    const handleSaveUser = async () => {
+    const handleSaveUser = async (userId: string) => {
         if (!editingUser) return;
         try {
-            await AuthService.updateUser(editingUser.id, {
+            await AuthService.updateUser(userId, {
                 full_name: editingUser.full_name,
                 email: editingUser.email,
                 role: editingUser.role,
                 permissions: editingUser.permissions
             });
-            showNotification('Usuario y permisos actualizados', 'success');
+            showNotification('Usuario actualizado exitosamente.', 'success');
             setEditingUserId(null);
             setEditingUser(null);
             loadUsers();
         } catch (err: any) {
-            const msg = err.response?.data?.detail || 'Error al actualizar usuario.';
-            showNotification(msg, 'error');
+            showNotification(err.response?.data?.detail || 'Error al actualizar usuario.', 'error');
         }
     };
 
-    const handleDeleteUser = async (id: string, name: string) => {
-        if (!confirm(`¿Está seguro de que desea eliminar permanentemente al usuario ${name}?`)) {
+    const handleDeleteUser = async (userId: string, email: string) => {
+        if (email === user.email) {
+            alert('No puedes eliminar tu propia cuenta de administrador.');
             return;
         }
+        if (!confirm(`¿Está seguro de eliminar permanentemente al usuario ${email}?`)) {
+            return;
+        }
+
         try {
-            await AuthService.deleteUser(id);
-            showNotification('Usuario eliminado del sistema', 'success');
+            await AuthService.deleteUser(userId);
+            showNotification('Usuario eliminado exitosamente.', 'success');
             loadUsers();
         } catch (err: any) {
-            showNotification('Error al eliminar usuario.', 'error');
+            showNotification(err.response?.data?.detail || 'Error al eliminar usuario.', 'error');
         }
     };
 
-    const modulesList: { key: keyof UserPermissions; label: string }[] = [
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await AuthService.createUser({
+                full_name: newName,
+                email: newEmail,
+                password: newPassword,
+                role: newRole,
+                permissions: newPerms
+            });
+            showNotification('Usuario creado exitosamente.', 'success');
+            setShowModal(false);
+            setNewName('');
+            setNewEmail('');
+            setNewPassword('');
+            setNewRole('USER');
+            loadUsers();
+        } catch (err: any) {
+            showNotification(err.response?.data?.detail || 'Error al crear usuario.', 'error');
+        }
+    };
+
+    const modulesList: { key: string; label: string }[] = [
         // Herramientas
-        { key: 'multicotizador_spot', label: 'Voyage Calculator' },
+        { key: 'multicotizador_spot', label: 'Voyage Calc' },
         { key: 'matriz_financiera', label: 'Matriz Financiera' },
         { key: 'analisis_grafico', label: 'Análisis Gráfico' },
         { key: 'spaghetti_map', label: 'Spaghetti Map' },
@@ -271,117 +211,88 @@ export const UsersPermissions: React.FC = () => {
     ];
 
     return (
-        <MasterTemplate title="Seguridad, Usuarios y Bóveda de Dispositivos" subtitle="Administración central de accesos y hardware autorizado DELFOS" activeTab="users">
-            
-            <div className="flex-1 flex flex-col gap-6 max-w-full w-full">
-                
-                {/* Selector de Pestañas Principales */}
-                <div className="flex border-b border-slate-200 gap-2 bg-slate-100/80 p-1.5 rounded-xl">
-                    <button
-                        onClick={() => setActiveTab('USERS')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                            activeTab === 'USERS'
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                        }`}
+        <MasterTemplate 
+            title="GESTIÓN DE USUARIOS Y MATRIZ DE PERMISOS" 
+            subtitle="Administración centralizada de cuentas de acceso, roles y niveles de privilegio en DELFOS" 
+            activeTab="users"
+        >
+            <div className="flex-1 flex flex-col gap-4 max-w-full w-full">
+                {/* Cabecera / Acciones */}
+                <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-200/80">
+                            <UserIcon size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black tracking-wide text-slate-800 uppercase flex items-center gap-2">
+                                Cuentas y Matriz de Roles
+                                <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                                    {users.length} Registrados
+                                </span>
+                            </h2>
+                            <p className="text-xs text-slate-500">Configura accesos de tipo Editor, Visor o Nulo para cada módulo del sistema.</p>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        onClick={() => setShowModal(true)}
+                        className="flex items-center gap-1.5 bg-[#0B2545] hover:bg-[#134074] text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition-all cursor-pointer"
                     >
-                        <UserIcon size={15} />
-                        <span>Usuarios y Matriz de Permisos</span>
-                        <span className="ml-1 bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-mono">{users.length}</span>
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            setActiveTab('DEVICES');
-                            loadDevices();
-                        }}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                            activeTab === 'DEVICES'
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                        }`}
-                    >
-                        <Laptop size={15} />
-                        <span>Bóveda de Dispositivos (Device Vault)</span>
-                        {devices.filter(d => d.status === 'PENDING').length > 0 && (
-                            <span className="ml-1 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">
-                                {devices.filter(d => d.status === 'PENDING').length} pendientes
-                            </span>
-                        )}
-                        <span className="ml-1 bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-mono">{devices.length}</span>
+                        <UserPlus size={14} /> Registrar Nuevo Usuario
                     </button>
                 </div>
 
                 {/* Notificaciones */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-xs font-semibold flex items-center gap-2 animate-shake">
-                        <AlertCircle size={16} /> {error}
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                        <AlertCircle size={15} /> {error}
                     </div>
                 )}
                 {success && (
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-4 text-xs font-semibold flex items-center gap-2">
-                        <Check size={16} /> {success}
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                        <Check size={15} /> {success}
                     </div>
                 )}
 
-                {activeTab === 'USERS' ? (
-                    /* === PESTAÑA 1: USUARIOS Y MATRIZ === */
-                    <>
-                        {/* Cabecera / Acciones */}
-                        <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                            <div>
-                                <h2 className="text-base font-bold text-slate-800">Cuentas y Matriz de Roles</h2>
-                                <p className="text-xs text-slate-500">Configura accesos de tipo Editor, Visor o Nulo para cada persona.</p>
-                            </div>
-                            
-                            <button 
-                                onClick={() => setShowModal(true)}
-                                className="flex items-center gap-2 bg-[#0B2545] hover:bg-[#134074] text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all cursor-pointer"
-                            >
-                                <UserPlus size={14} /> Registrar Nuevo Usuario
-                            </button>
-                        </div>
-
-
                 {/* Tabla de Usuarios */}
-                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left border-collapse min-w-[1000px]">
-                            <thead>
-                                <tr className="bg-slate-50/75 border-b border-slate-200">
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[180px]">Nombre Completo</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[220px]">Correo / Email</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[110px]">Rol Principal</th>
+                <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden flex-1 flex flex-col min-h-0">
+                    <div className="overflow-auto flex-1">
+                        <table className="w-full text-left border-collapse min-w-[1000px] text-xs">
+                            <thead className="bg-slate-50/90 border-b border-slate-200 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3 text-[10.5px] font-black text-slate-600 uppercase tracking-wider w-[180px]">Nombre Completo</th>
+                                    <th className="px-4 py-3 text-[10.5px] font-black text-slate-600 uppercase tracking-wider w-[220px]">Correo Electrónico</th>
+                                    <th className="px-4 py-3 text-[10.5px] font-black text-slate-600 uppercase tracking-wider w-[110px]">Rol</th>
                                     {modulesList.map(mod => (
-                                        <th key={mod.key} className="px-3 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center w-[120px]">
+                                        <th key={mod.key} className="px-3 py-3 text-[10px] font-black text-slate-600 uppercase tracking-wider text-center w-[115px]">
                                             {mod.label}
                                         </th>
                                     ))}
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right w-[110px]">Acciones</th>
+                                    <th className="px-4 py-3 text-[10.5px] font-black text-slate-600 uppercase tracking-wider text-right w-[110px]">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-150">
+                            <tbody className="divide-y divide-slate-100">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={12} className="px-4 py-12 text-center text-slate-400 font-semibold">
+                                        <td colSpan={modulesList.length + 4} className="px-4 py-12 text-center text-slate-400 font-semibold">
                                             <div className="animate-spin h-6 w-6 border-2 border-slate-400 border-t-transparent rounded-full mx-auto mb-2"></div>
                                             Cargando usuarios...
                                         </td>
                                     </tr>
                                 ) : users.length === 0 ? (
                                     <tr>
-                                        <td colSpan={12} className="px-4 py-12 text-center text-slate-400 font-semibold">
+                                        <td colSpan={modulesList.length + 4} className="px-4 py-12 text-center text-slate-400 font-semibold">
                                             No se encontraron usuarios en la base de datos.
                                         </td>
                                     </tr>
                                 ) : (
-                                    users.map(user => {
-                                        const isEditing = editingUserId === user.id;
-                                        const currentUser = isEditing ? editingUser! : user;
+                                    users.map(userItem => {
+                                        const isEditing = editingUserId === userItem.id;
+                                        const currentUser = isEditing ? editingUser! : userItem;
                                         const isAdmin = currentUser.role === 'ADMIN';
 
                                         return (
-                                            <tr key={user.id} className={`hover:bg-slate-50/50 transition-colors ${isEditing ? 'bg-blue-50/30' : ''}`}>
+                                            <tr key={userItem.id} className={`hover:bg-slate-50/80 transition-colors ${isEditing ? 'bg-blue-50/30' : ''}`}>
                                                 {/* Nombre */}
                                                 <td className="px-4 py-3 text-xs font-bold text-slate-800">
                                                     {isEditing ? (
@@ -389,7 +300,7 @@ export const UsersPermissions: React.FC = () => {
                                                             type="text" 
                                                             value={currentUser.full_name} 
                                                             onChange={(e) => handleEditChange('full_name', e.target.value)} 
-                                                            className="w-full border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 font-normal bg-white"
+                                                            className="w-full border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 font-normal bg-white text-xs"
                                                         />
                                                     ) : (
                                                         currentUser.full_name
@@ -403,7 +314,7 @@ export const UsersPermissions: React.FC = () => {
                                                             type="email" 
                                                             value={currentUser.email} 
                                                             onChange={(e) => handleEditChange('email', e.target.value)} 
-                                                            className="w-full border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 font-normal bg-white font-mono"
+                                                            className="w-full border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500 font-normal bg-white text-xs"
                                                         />
                                                     ) : (
                                                         currentUser.email
@@ -413,49 +324,52 @@ export const UsersPermissions: React.FC = () => {
                                                 {/* Rol */}
                                                 <td className="px-4 py-3 text-xs">
                                                     {isEditing ? (
-                                                        <select 
-                                                            value={currentUser.role} 
-                                                            onChange={(e) => handleEditChange('role', e.target.value)}
-                                                            className="border border-slate-300 rounded px-1.5 py-1 focus:outline-none focus:border-blue-500 bg-white"
+                                                        <select
+                                                            value={currentUser.role}
+                                                            onChange={(e) => handleEditChange('role', e.target.value as 'ADMIN' | 'USER')}
+                                                            className="border border-slate-300 rounded px-2 py-1 bg-white font-bold text-xs"
                                                         >
                                                             <option value="USER">USER</option>
                                                             <option value="ADMIN">ADMIN</option>
                                                         </select>
                                                     ) : (
-                                                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isAdmin ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
-                                                            {isAdmin ? <Shield size={10} /> : <UserIcon size={10} />}
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${currentUser.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-slate-100 text-slate-600'}`}>
                                                             {currentUser.role}
                                                         </span>
                                                     )}
                                                 </td>
 
-                                                {/* Permisos Dinámicos */}
+                                                {/* Permisos por Módulo */}
                                                 {modulesList.map(mod => {
-                                                    const permVal = isAdmin ? 'Editor' : currentUser.permissions[mod.key] || 'Visor';
-                                                    
+                                                    const permLevel = currentUser.permissions ? currentUser.permissions[mod.key] || 'Visor' : 'Visor';
+
                                                     return (
-                                                        <td key={mod.key} className="px-3 py-3 text-center text-xs">
+                                                        <td key={mod.key} className="px-3 py-3 text-center">
                                                             {isAdmin ? (
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase italic">Total</span>
+                                                                <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100" title="ADMIN tiene acceso total (Editor)">
+                                                                    Editor
+                                                                </span>
                                                             ) : isEditing ? (
                                                                 <select
-                                                                    value={permVal}
-                                                                    onChange={(e) => handleEditPermissionChange(mod.key, e.target.value as PermissionLevel)}
-                                                                    className="border border-slate-300 rounded px-1 py-0.5 focus:outline-none focus:border-blue-500 bg-white text-xs"
+                                                                    value={permLevel}
+                                                                    onChange={(e) => handlePermChange(mod.key, e.target.value as PermissionLevel)}
+                                                                    className={`text-[11px] font-bold rounded px-1.5 py-0.5 border cursor-pointer ${
+                                                                        permLevel === 'Editor' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                                                                        permLevel === 'Visor' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                                                                        'bg-slate-100 text-slate-400 border-slate-200'
+                                                                    }`}
                                                                 >
                                                                     <option value="Editor">Editor</option>
                                                                     <option value="Visor">Visor</option>
                                                                     <option value="Nulo">Nulo</option>
                                                                 </select>
                                                             ) : (
-                                                                <span className={`inline-block px-2.5 py-1 rounded text-[10px] font-bold tracking-tight w-20 text-center ${
-                                                                    permVal === 'Editor' 
-                                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' 
-                                                                        : permVal === 'Visor' 
-                                                                            ? 'bg-amber-50 text-amber-700 border border-amber-150' 
-                                                                            : 'bg-red-50 text-red-700 border border-red-150'
+                                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                                                    permLevel === 'Editor' ? 'bg-emerald-100 text-emerald-800' :
+                                                                    permLevel === 'Visor' ? 'bg-blue-100 text-blue-800' :
+                                                                    'bg-slate-100 text-slate-400'
                                                                 }`}>
-                                                                    {permVal}
+                                                                    {permLevel}
                                                                 </span>
                                                             )}
                                                         </td>
@@ -464,39 +378,39 @@ export const UsersPermissions: React.FC = () => {
 
                                                 {/* Acciones */}
                                                 <td className="px-4 py-3 text-right text-xs">
-                                                    <div className="flex justify-end gap-1.5">
+                                                    <div className="flex justify-end items-center gap-1.5">
                                                         {isEditing ? (
                                                             <>
                                                                 <button 
-                                                                    onClick={handleSaveUser}
-                                                                    className="p-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors cursor-pointer"
-                                                                    title="Guardar"
+                                                                    onClick={() => handleSaveUser(userItem.id)}
+                                                                    className="p-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded transition-colors"
+                                                                    title="Guardar Cambios"
                                                                 >
-                                                                    <Save size={14} />
+                                                                    <Save size={13} />
                                                                 </button>
                                                                 <button 
                                                                     onClick={handleCancelEdit}
-                                                                    className="p-1.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300 transition-colors cursor-pointer"
+                                                                    className="p-1 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded transition-colors"
                                                                     title="Cancelar"
                                                                 >
-                                                                    <X size={14} />
+                                                                    <X size={13} />
                                                                 </button>
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <button 
-                                                                    onClick={() => handleStartEdit(user)}
-                                                                    className="p-1.5 rounded bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
-                                                                    title="Editar"
+                                                                    onClick={() => handleEditClick(userItem)}
+                                                                    className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                    title="Editar Usuario y Permisos"
                                                                 >
-                                                                    <Edit2 size={14} />
+                                                                    <Edit2 size={13} />
                                                                 </button>
                                                                 <button 
-                                                                    onClick={() => handleDeleteUser(user.id, user.full_name)}
-                                                                    className="p-1.5 rounded bg-red-50 hover:bg-red-100 text-red-600 border border-red-150 transition-colors cursor-pointer"
-                                                                    title="Eliminar"
+                                                                    onClick={() => handleDeleteUser(userItem.id, userItem.email)}
+                                                                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                    title="Eliminar Usuario"
                                                                 >
-                                                                    <Trash2 size={14} />
+                                                                    <Trash2 size={13} />
                                                                 </button>
                                                             </>
                                                         )}
@@ -510,150 +424,12 @@ export const UsersPermissions: React.FC = () => {
                         </table>
                     </div>
                 </div>
-            </>
-        ) : (
-            /* === PESTAÑA 2: BÓVEDA DE DISPOSITIVOS (DEVICE VAULT) === */
-            <>
-                <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                    <div>
-                        <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <Laptop className="text-blue-600" size={18} /> Dispositivos y Huellas de Hardware Registradas
-                        </h2>
-                        <p className="text-xs text-slate-500">
-                            Control pericial de equipos que han iniciado sesión. Aprueba o revoca accesos de navegadores y estaciones de trabajo.
-                        </p>
-                    </div>
-                    
-                    <button 
-                        onClick={loadDevices}
-                        className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-250 transition-all cursor-pointer"
-                    >
-                        <RefreshCw size={13} className={loadingDevices ? 'animate-spin' : ''} /> Actualizar Dispositivos
-                    </button>
-                </div>
-
-                {/* Tabla de Dispositivos */}
-                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto w-full">
-                        <table className="w-full text-left border-collapse min-w-[900px]">
-                            <thead>
-                                <tr className="bg-slate-50/75 border-b border-slate-200">
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[120px]">Estado</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[200px]">Usuario Vinculado</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[240px]">Dispositivo / Sistema</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[170px]">Huella Hardware</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[130px]">IP Origen</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-[150px]">Último Acceso</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right w-[150px]">Acción Admin</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-150">
-                                {loadingDevices ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-4 py-12 text-center text-slate-400 font-semibold">
-                                            <div className="animate-spin h-6 w-6 border-2 border-slate-400 border-t-transparent rounded-full mx-auto mb-2"></div>
-                                            Consultando Bóveda de Dispositivos...
-                                        </td>
-                                    </tr>
-                                ) : devices.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-4 py-12 text-center text-slate-400 font-semibold">
-                                            No hay dispositivos registrados en la bóveda todavía.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    devices.map(dev => {
-                                        const isApproved = dev.status === 'APPROVED';
-                                        const isPending = dev.status === 'PENDING';
-                                        const isRevoked = dev.status === 'REVOKED';
-
-                                        return (
-                                            <tr key={dev.id} className="hover:bg-slate-50/50 transition-colors">
-                                                {/* Badge de Estado */}
-                                                <td className="px-4 py-3 text-xs">
-                                                    {isApproved && (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                            <CheckCircle2 size={11} /> Autorizado
-                                                        </span>
-                                                    )}
-                                                    {isPending && (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-                                                            <AlertCircle size={11} /> Pendiente
-                                                        </span>
-                                                    )}
-                                                    {isRevoked && (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
-                                                            <XCircle size={11} /> Revocado
-                                                        </span>
-                                                    )}
-                                                </td>
-
-                                                {/* Usuario */}
-                                                <td className="px-4 py-3 text-xs font-bold text-slate-800">
-                                                    {dev.user_email}
-                                                </td>
-
-                                                {/* Nombre Dispositivo */}
-                                                <td className="px-4 py-3 text-xs text-slate-700 font-medium">
-                                                    {dev.device_name || 'Navegador Web Desconocido'}
-                                                </td>
-
-                                                {/* Huella Digital */}
-                                                <td className="px-4 py-3 text-xs font-mono text-slate-600">
-                                                    <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-bold text-blue-800">
-                                                        {dev.device_fingerprint}
-                                                    </span>
-                                                </td>
-
-                                                {/* IP */}
-                                                <td className="px-4 py-3 text-xs font-mono text-slate-500">
-                                                    {dev.ip_address || '127.0.0.1'}
-                                                </td>
-
-                                                {/* Fechas */}
-                                                <td className="px-4 py-3 text-[11px] text-slate-500">
-                                                    {dev.last_access_at ? new Date(dev.last_access_at).toLocaleString() : (dev.created_at ? new Date(dev.created_at).toLocaleString() : '-')}
-                                                </td>
-
-                                                {/* Acciones */}
-                                                <td className="px-4 py-3 text-right text-xs">
-                                                    <div className="flex justify-end gap-1.5">
-                                                        {!isApproved ? (
-                                                            <button
-                                                                onClick={() => handleApproveDevice(dev.id)}
-                                                                disabled={deviceActionLoading === dev.id}
-                                                                className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                                                            >
-                                                                <CheckCircle2 size={12} /> Autorizar
-                                                            </button>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => handleRevokeDevice(dev.id)}
-                                                                disabled={deviceActionLoading === dev.id}
-                                                                className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                                                            >
-                                                                <XCircle size={12} /> Revocar
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </>
-        )}
-
-    </div>
+            </div>
 
             {/* Modal de Creación de Nuevo Usuario */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fadeIn">
-                    <div className="bg-white rounded-2xl w-full max-w-[620px] shadow-2xl relative border border-slate-100 overflow-hidden">
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-white rounded-2xl w-full max-w-[620px] shadow-2xl relative border border-slate-200 overflow-hidden">
                         
                         {/* Header Modal */}
                         <div className="flex justify-between items-center bg-slate-50 border-b border-slate-200 px-6 py-4">
@@ -664,7 +440,7 @@ export const UsersPermissions: React.FC = () => {
                                 onClick={() => setShowModal(false)} 
                                 className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                             >
-                                <X size={20} />
+                                <X size={18} />
                             </button>
                         </div>
                         
@@ -677,7 +453,7 @@ export const UsersPermissions: React.FC = () => {
                                         type="text" 
                                         value={newName} 
                                         onChange={(e) => setNewName(e.target.value)} 
-                                        className="w-full border border-slate-350 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500" 
+                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500" 
                                         placeholder="Ej. Jorge Neyra" 
                                         required 
                                     />
@@ -688,7 +464,7 @@ export const UsersPermissions: React.FC = () => {
                                         type="email" 
                                         value={newEmail} 
                                         onChange={(e) => setNewEmail(e.target.value)} 
-                                        className="w-full border border-slate-350 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500" 
+                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500" 
                                         placeholder="ejemplo@petral.com.pe" 
                                         required 
                                     />
@@ -699,7 +475,7 @@ export const UsersPermissions: React.FC = () => {
                                         type="password" 
                                         value={newPassword} 
                                         onChange={(e) => setNewPassword(e.target.value)} 
-                                        className="w-full border border-slate-350 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500" 
+                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500" 
                                         placeholder="••••••••" 
                                         required 
                                     />
@@ -709,7 +485,7 @@ export const UsersPermissions: React.FC = () => {
                                     <select 
                                         value={newRole} 
                                         onChange={(e) => setNewRole(e.target.value as 'ADMIN' | 'USER')}
-                                        className="w-full border border-slate-350 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500"
+                                        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:border-blue-500"
                                     >
                                         <option value="USER">USER (Acceso por matriz de permisos)</option>
                                         <option value="ADMIN">ADMIN (Acceso Total Bypass)</option>
@@ -721,17 +497,17 @@ export const UsersPermissions: React.FC = () => {
                             {newRole === 'USER' && (
                                 <div className="border-t border-slate-200 pt-4 mt-2">
                                     <h4 className="text-xs font-bold text-slate-700 mb-3">Definir Permisos Iniciales:</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 rounded-xl p-3 border border-slate-150">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 rounded-xl p-3 border border-slate-200">
                                         {modulesList.map(mod => (
                                             <div key={mod.key} className="flex flex-col gap-1">
-                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{mod.label}</label>
+                                                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">{mod.label}</label>
                                                 <select
                                                     value={newPerms[mod.key]}
                                                     onChange={(e) => setNewPerms({
                                                         ...newPerms,
                                                         [mod.key]: e.target.value as PermissionLevel
                                                     })}
-                                                    className="border border-slate-300 rounded px-1 py-0.5 bg-white text-[11px]"
+                                                    className="border border-slate-300 rounded px-1.5 py-1 bg-white text-[11px] font-bold"
                                                 >
                                                     <option value="Editor">Editor</option>
                                                     <option value="Visor">Visor</option>
@@ -763,7 +539,6 @@ export const UsersPermissions: React.FC = () => {
                     </div>
                 </div>
             )}
-            
         </MasterTemplate>
     );
 };
