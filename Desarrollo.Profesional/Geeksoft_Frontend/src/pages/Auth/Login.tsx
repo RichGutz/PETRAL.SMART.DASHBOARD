@@ -9,9 +9,10 @@ export const Login: React.FC = () => {
     
     // Estados de flujo
     const [step, setStep] = useState<'EMAIL_ENTRY' | '2FA_OTP'>('EMAIL_ENTRY');
-    const [email, setEmail] = useState('izavala@petral.com.pe');
+    const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
 
     // Estados de 2FA
     const [tempToken, setTempToken] = useState('');

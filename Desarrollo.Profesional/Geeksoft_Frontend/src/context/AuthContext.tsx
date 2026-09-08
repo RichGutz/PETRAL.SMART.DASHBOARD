@@ -112,18 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const loginStepOne = async (email: string, password?: string, device_fingerprint?: string, device_name?: string): Promise<LoginStep1Result> => {
-        setLoading(true);
-        try {
-            const data = await AuthService.loginStep1({ email, password, device_fingerprint, device_name });
-            return data;
-        } finally {
-            setLoading(false);
-        }
+        const data = await AuthService.loginStep1({ email, password, device_fingerprint, device_name });
+        return data;
     };
 
 
     const verifyTwoFactor = async (temp_token: string, otp_code: string): Promise<void> => {
-        setLoading(true);
         try {
             const data = await AuthService.verify2FA({ temp_token, otp_code });
             const loggedUser: User = data.user;
@@ -139,8 +133,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             logout();
             throw error;
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -149,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const login = async (email: string, password: string) => {
-        setLoading(true);
         try {
             const data = await AuthService.login({ email, password });
             if (data.user && data.permissions) {
@@ -167,10 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             logout();
             throw error;
-        } finally {
-            setLoading(false);
         }
     };
+
 
     const logout = () => {
         setUser(null);
