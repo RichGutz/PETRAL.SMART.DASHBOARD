@@ -1,4 +1,29 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-09-07 (Cierre de Sesión)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Arquitectura de Menú Lateral & Colapso Inteligente:
+   - Implementación de auto-expansión contextual (Estilo APEFAC) con persistencia en localStorage.
+   - Reorganización de secciones: Mercado & Originación y Herramientas reubicadas.
+
+2. Bóveda de Dispositivos (Device Vault) & Hardware Enforcement en Login:
+   - Verificación estricta de device_fingerprint en login_step_one con auto-bootstrap seguro para el primer administrador.
+   - Creación de DeviceVaultMaster.tsx como herramienta independiente en el menú lateral bajo SEGURIDAD & ADMIN con look & feel corporativo claro (blanco/teal).
+   - Purga total de pestañas residuales en UsersPermissions.tsx.
+
+3. Módulo de Bitácora de Auditoría Forense (/audit-ledger):
+   - Integración de AuditMaster_V2.tsx bajo SEGURIDAD & ADMIN (exclusivo Administradores).
+   - Purga completa de datos simulados/mock; conexión en vivo a la tabla audit_logs de PostgreSQL.
+   - Registro automático de inicios de sesión 2FA y aprobaciones de dispositivos.
+
+4. Despliegue en Producción VPS (91.108.125.253):
+   - Compilación exitosa de frontend Vite (12.88s, 0 errores).
+   - Sincronización SFTP y recarga de servicios FastAPI & Nginx completada con código 0.
+   - Verificación de rutas /users, /device-vault, /audit-ledger con HTTP 200 OK en https://forecast.geeksoft.tech.
+================================================================================
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-08-04
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
