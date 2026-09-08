@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Download, Search, ChevronRight, ChevronDown, Anchor, Compass, Database, Building2, FileText, MapPin, Receipt, Coins, Scale, Zap, Layers, ShoppingCart, BarChart3, LineChart, Map, FileCode, Sparkles, Lock, CheckCircle2, AlertCircle, RefreshCw, X, ShieldCheck } from 'lucide-react';
+import { Download, Search, ChevronRight, ChevronDown, Anchor, Compass, Database, Building2, FileText, MapPin, Receipt, Coins, Scale, Zap, Layers, ShoppingCart, BarChart3, LineChart, Map, FileCode, Sparkles, Lock, CheckCircle2, AlertCircle, RefreshCw, X, ShieldCheck, Laptop } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 
 interface DocChapter {
@@ -866,6 +866,83 @@ export const SystemDocumentation_V2: React.FC = () => {
                                     Abre el cuadro de impresión para descargar el manual editorial oficial con logo membretado de Naviera Petral.
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h8',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'SEGURIDAD & ADMIN',
+            chapterNum: 19,
+            title: 'Device Vault (Bóveda de Dispositivos) & 2FA',
+            subtitle: 'Arquitectura Zero-Trust, huella digital de hardware (GPU, CPU, Monitor), auto-registro PENDING y autorización',
+            icon: <Laptop size={16} />,
+            badge: 'Módulo de Seguridad',
+            keywords: ['device', 'vault', 'boveda', 'dispositivos', 'seguridad', 'hardware', '2fa', 'otp', 'fingerprint', 'gpu', 'cores', 'autorizar', 'revocar', 'pending', 'approved'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">19.1 Arquitectura de Seguridad Zero-Trust por Hardware</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            El módulo <strong>Device Vault</strong> implementa un blindaje de <em>Confianza Cero (Zero-Trust)</em>. Ningún usuario u operador puede iniciar sesión en la plataforma comercial de Petral, aun teniendo acceso al correo o credenciales, salvo que esté físicamente conectado desde una <strong>computadora o estación de trabajo previamente autorizada por el Administrador</strong>.
+                        </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">19.2 Extracción de Señales de Hardware (Device Fingerprint)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-6">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-indigo-700 flex items-center gap-1.5">
+                                    <span>🎮</span> GPU Renderer (WebGL)
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Identifica el chipset gráfico exacto mediante <code>UNMASKED_RENDERER_WEBGL</code> (ej. Intel Iris Xe, Nvidia RTX, Apple M1/M2).
+                                </p>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-teal-700 flex items-center gap-1.5">
+                                    <span>⚙️</span> Cores de CPU &amp; Monitor
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Extrae la concurrencia de núcleos (<code>hardwareConcurrency</code>), resolución física de pantalla y profundidad de color.
+                                </p>
+                            </div>
+                        </div>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">19.3 Matriz de Estados y Flujo Operativo</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-1">
+                                <div className="font-bold text-amber-900 flex items-center gap-1.5">
+                                    <span>⏳</span> Estado PENDING
+                                </div>
+                                <p className="text-amber-800 text-[11px]">
+                                    Dispositivo nuevo detectado. El login se congela y bloquea el envío de OTP hasta que el Administrador lo apruebe.
+                                </p>
+                            </div>
+                            <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 space-y-1">
+                                <div className="font-bold text-emerald-900 flex items-center gap-1.5">
+                                    <span>✅</span> Estado APPROVED
+                                </div>
+                                <p className="text-emerald-800 text-[11px]">
+                                    Equipo autorizado. El backend despacha el código OTP de 6 dígitos con vigencia de 5 minutos al correo corporativo.
+                                </p>
+                            </div>
+                            <div className="bg-rose-50 p-3 rounded-lg border border-rose-200 space-y-1">
+                                <div className="font-bold text-rose-900 flex items-center gap-1.5">
+                                    <span>⛔</span> Estado REVOKED
+                                </div>
+                                <p className="text-rose-800 text-[11px]">
+                                    Equipo bloqueado ante reporte de pérdida, robo o desvinculación laboral. Acceso permanentemente revocado.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 p-4 bg-white rounded-lg border border-slate-200 text-xs font-mono">
+                            <span className="font-bold text-slate-800 block mb-1 font-sans">💡 Protocolo de Resolución Rápida de Incidentes:</span>
+                            <ul className="list-disc pl-4 space-y-1 text-slate-600 text-[11px]">
+                                <li><strong>¿No llega el código OTP?</strong> Ingrese a <code>/device-vault</code> en el menú lateral y pulse <strong>✔ Autorizar</strong> sobre el registro del usuario.</li>
+                                <li><strong>¿Cambio de laptop/monitor?</strong> El sistema genera un nuevo hash <code>DEV-XXXX-XXXX</code> en estado <code>PENDING</code> para validación pericial del Admin.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
