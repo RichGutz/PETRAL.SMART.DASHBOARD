@@ -996,29 +996,59 @@ def save_vessel(request: dict):
         from backend.services.forecast_service import clear_forecast_cache
         sb = get_supabase()
         # Supabase upsert requires the primary key (vessel_id)
-        if "vessel_id" not in request:
+        if "vessel_id" not in request or not request["vessel_id"]:
             raise HTTPException(status_code=400, detail="vessel_id is required")
         
+        # Ensure default for required DB constraint consumption_port_ifo
+        if "consumption_port_ifo" not in request or request["consumption_port_ifo"] is None:
+            request["consumption_port_ifo"] = request.get("consumption_idle_ifo") or 0.0
+
         # Ensure correct types for numeric fields to avoid DB errors
         numeric_fields = ["grt", "dwt", "dwcc", "vessel_speed", "tce_required", 
                          "length", "beam", "vessel_max_load_intake_limit", "vessel_pump_discharge_rate",
                          "max_capacity_ifo", "consumption_sea_ifo", "consumption_port_ifo", "consumption_idle_ifo", "consumption_load_ifo", "consumption_disch_ifo",
-                         "max_capacity_mdo", "consumption_sea_mdo", "consumption_port_mdo", "consumption_idle_mdo", "consumption_load_mdo", "consumption_disch_mdo"]
+                         "max_capacity_mdo", "consumption_sea_mdo", "consumption_idle_mdo", "consumption_load_mdo", "consumption_disch_mdo",
+                         "draft_m", "display_order"]
         
         for field in numeric_fields:
-            if field in request and request[field] is not None:
-                try:
-                    request[field] = float(request[field])
-                except (ValueError, TypeError):
+            if field in request:
+                if request[field] is None or request[field] == "":
                     request[field] = 0.0
+                else:
+                    try:
+                        request[field] = float(request[field])
+                    except (ValueError, TypeError):
+                        request[field] = 0.0
 
-        res = sb.table("vessels").upsert(request).execute()
+        if "built" in request:
+            if request["built"] is None or request["built"] == "":
+                request["built"] = None
+            else:
+                try:
+                    request["built"] = int(request["built"])
+                except (ValueError, TypeError):
+                    request["built"] = None
+
+        # Filter only valid columns in vessels table to prevent schema mismatch errors
+        valid_columns = {
+            'vessel_id', 'vessel_name', 'flag', 'built', 'dwt', 'vessel_speed',
+            'vessel_max_load_intake_limit', 'vessel_pump_discharge_rate', 'consumption_sea_ifo',
+            'consumption_port_ifo', 'max_capacity_ifo', 'max_capacity_mdo', 'tce_required',
+            'dwcc', 'consumption_idle_ifo', 'consumption_load_ifo', 'consumption_disch_ifo',
+            'consumption_sea_mdo', 'consumption_idle_mdo', 'consumption_load_mdo',
+            'consumption_disch_mdo', 'color_hex', 'length', 'beam', 'grt', 'imo', 'mmsi',
+            'flag_ais', 'ais_type', 'draft_m', 'display_order', 'image_url'
+        }
+        filtered_payload = {k: v for k, v in request.items() if k in valid_columns}
+
+        res = sb.table("vessels").upsert(filtered_payload).execute()
         
         # Invalidar cache para que el próximo GET /vessels traiga datos frescos de Supabase
         clear_forecast_cache()
             
         return {"status": "success", "vessel_id": request["vessel_id"]}
     except Exception as e:
+        print(f"Error in save_vessel: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 from pydantic import BaseModel

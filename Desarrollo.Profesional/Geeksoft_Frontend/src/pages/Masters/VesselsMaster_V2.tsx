@@ -414,9 +414,10 @@ export const VesselsMaster: React.FC = () => {
                                                             if (activeVesselId === 'NUEVO') {
                                                                 setActiveVesselId(editFormData.vessel_id || data[data.length - 1]?.vessel_id);
                                                             }
-                                                        } catch (error) {
+                                                        } catch (error: any) {
                                                             console.error("Error al guardar barco:", error);
-                                                            alert("Error al guardar barco");
+                                                            const errMsg = error?.response?.data?.detail || error?.message || "Error al guardar barco";
+                                                            alert(`Error al guardar barco: ${errMsg}`);
                                                         } finally {
                                                             setIsSaving(false);
                                                         }
