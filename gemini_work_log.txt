@@ -557,3 +557,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-08 08:42:00] Integración de nueva sección lateral DOCUMENTACIÓN en MasterTemplate_V2.tsx (Docs as Code y Flujograma del Sistema) con soporte para auto-apertura contextual de acordeones. Validado con npx vite build (22.89s, Exit Code 0).
 [2026-09-08 08:49:08] Despliegue exitoso al VPS de Producción (91.108.125.253 - https://forecast.geeksoft.tech) con la nueva sección lateral DOCUMENTACIÓN publicada en vivo.
 [2026-09-08 09:08:02] Despliegue exitoso al VPS de Producción (91.108.125.253 - https://forecast.geeksoft.tech) con el modal y disparador de Sincronización Docs-as-Code protegido con clave 061121 publicado en vivo.
+[2026-09-08 09:16:52] Fix pericial de pestaña Motor BAF en SystemFlowchartViewer_V2.tsx (agregada clave emerald y fallback seguro en COLOR_MAP). Validado con npx vite build (14.10s) y desplegado al VPS de Producción https://forecast.geeksoft.tech.
