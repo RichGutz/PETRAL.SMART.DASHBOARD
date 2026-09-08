@@ -15,7 +15,8 @@ import {
     CheckCircle2, 
     Database,
     Laptop,
-    History
+    History,
+    RefreshCw
 } from 'lucide-react';
 import { AuthService } from '../../services/api';
 
@@ -23,7 +24,7 @@ export interface AuditLogItem {
     id: string | number;
     table_name: string;
     record_id: string;
-    action: 'INSERT' | 'UPDATE' | 'DELETE' | 'UPLOAD' | 'EXPORT' | 'LOGIN';
+    action: 'INSERT' | 'UPDATE' | 'DELETE' | 'UPLOAD' | 'EXPORT' | 'LOGIN' | 'EVENT';
     user_email: string;
     user_name?: string;
     user_role?: string;
@@ -35,125 +36,65 @@ export interface AuditLogItem {
     created_at: string;
 }
 
-// Datos iniciales de auditoría forense con trazabilidad real
-const INITIAL_AUDIT_DATA: AuditLogItem[] = [
-    {
-        id: 101,
-        table_name: 'Maestro de Precios de Bunker',
-        record_id: 'BUNKER-2026-07-02',
-        action: 'UPLOAD',
-        user_email: 'izavala@petral.com.pe',
-        user_name: 'Iosef Zavala',
-        user_role: 'ADMIN',
-        ip_address: '190.235.14.88',
-        diff_data: {
-            price_mdo: { old: 1480.00, new: 1528.26 },
-            provider: { old: 'OIL TRADING S.A.C.', new: 'OIL TRADING S.A.C.' },
-            homologation_rule: { old: 'MGO', new: 'MDO (Unificado)' }
-        },
-        metadata: { archivo_cargado: 'FACTURA_BUNKER_OIL_TRADING_9821.pdf', parser_status: 'PARSED_100_OK' },
-        created_at: '2026-09-07T14:45:00-05:00'
-    },
-    {
-        id: 102,
-        table_name: 'Matriz Financiera',
-        record_id: 'ESC-BASE-2027',
-        action: 'EXPORT',
-        user_email: 'rgutierrez@petral.com.pe',
-        user_name: 'Richard Gutiérrez',
-        user_role: 'ADMIN',
-        ip_address: '190.237.99.12',
-        metadata: { formato: 'PDF Horizontal (El Reporte Bello)', paginas: 7, zoom: '65%' },
-        created_at: '2026-09-07T14:10:00-05:00'
-    },
-    {
-        id: 103,
-        table_name: 'Costos Portuarios & Gastos de Escala',
-        record_id: 'PORT-CALLAO-092',
-        action: 'UPLOAD',
-        user_email: 'operaciones@petral.com.pe',
-        user_name: 'Patricia Yong (Operaciones)',
-        user_role: 'USER',
-        ip_address: '181.65.201.44',
-        metadata: { archivo_cargado: 'GASTO_ESCALA_CALLAO_EXPERTA.pdf', total_cost_usd: 18450.00 },
-        created_at: '2026-09-07T13:40:00-05:00'
-    },
-    {
-        id: 104,
-        table_name: 'Maestro de Contratos & Fletes',
-        record_id: 'CONT-NEXA-004',
-        action: 'UPDATE',
-        user_email: 'operaciones@petral.com.pe',
-        user_name: 'Patricia Yong (Operaciones)',
-        user_role: 'USER',
-        ip_address: '181.65.201.44',
-        diff_data: {
-            freight_rate_usd: { old: 24.50, new: 26.80 },
-            demurrage_rate_day: { old: 8500.00, new: 9200.00 },
-            status: { old: 'DRAFT', new: 'APPROVED' }
-        },
-        metadata: { aprobado_por: 'Iosef Zavala', ruta: 'CALLAO -> MATARANI' },
-        created_at: '2026-09-07T13:25:00-05:00'
-    },
-    {
-        id: 105,
-        table_name: 'Bóveda de Dispositivos (Device Vault)',
-        record_id: 'DEV-8F4A12B0-C7E901D4',
-        action: 'INSERT',
-        user_email: 'izavala@petral.com.pe',
-        user_name: 'Iosef Zavala',
-        user_role: 'ADMIN',
-        ip_address: '190.235.14.88',
-        new_data: {
-            device_name: 'PC Windows (Chrome 128) - 1920x1080',
-            status: 'APPROVED',
-            approved_by: 'izavala@petral.com.pe'
-        },
-        created_at: '2026-09-07T12:00:00-05:00'
-    },
-    {
-        id: 106,
-        table_name: 'Autenticación 2FA',
-        record_id: 'AUTH-OTP-575075',
-        action: 'LOGIN',
-        user_email: 'operaciones@petral.com.pe',
-        user_name: 'Patricia Yong (Operaciones)',
-        user_role: 'USER',
-        ip_address: '181.65.201.44',
-        metadata: { canal: 'Email (petra@geeksoft.tech)', device: 'Dell Latitude 5420' },
-        created_at: '2026-09-07T09:02:00-05:00'
-    }
-];
-
 export const UserAuditLedgerViewer: React.FC = () => {
-    const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(INITIAL_AUDIT_DATA);
+    const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
     const [selectedUserTab, setSelectedUserTab] = useState<string>('ALL');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [actionFilter, setActionFilter] = useState<string>('ALL');
     const [selectedLogForModal, setSelectedLogForModal] = useState<AuditLogItem | null>(null);
     const [usersList, setUsersList] = useState<Array<{ email: string; name: string; role: string }>>([]);
 
-    // Cargar usuarios para los tabs
-    useEffect(() => {
-        const loadUsers = async () => {
-            try {
-                const data = await AuthService.getUsers();
-                if (data && Array.isArray(data)) {
-                    setUsersList(data.map((u: any) => ({
-                        email: u.email,
-                        name: u.full_name || u.email.split('@')[0],
-                        role: u.role
-                    })));
-                }
-            } catch (e) {
-                // Fallback con usuarios del log
-                setUsersList([
-                    { email: 'izavala@petral.com.pe', name: 'Iosef Zavala', role: 'ADMIN' },
-                    { email: 'rgutierrez@petral.com.pe', name: 'Richard Gutiérrez', role: 'ADMIN' },
-                    { email: 'operaciones@petral.com.pe', name: 'Patricia Yong', role: 'USER' }
-                ]);
+    // Cargar bitácora real desde la base de datos
+    const loadAuditLogs = async () => {
+        setLoading(true);
+        try {
+            const data = await AuthService.getAuditLogs({ limit: 200 });
+            if (Array.isArray(data)) {
+                const formatted: AuditLogItem[] = data.map((d: any) => ({
+                    id: d.id,
+                    table_name: d.entity || d.table_name || 'General',
+                    record_id: d.record_id || 'N/A',
+                    action: d.action || 'EVENT',
+                    user_email: d.user || d.user_email || 'SYSTEM',
+                    user_name: d.user_name || (d.user || d.user_email || '').split('@')[0],
+                    ip_address: d.ip || d.ip_address,
+                    old_data: d.old_data,
+                    new_data: d.new_data,
+                    diff_data: d.diff || d.diff_data,
+                    metadata: d.metadata,
+                    created_at: d.timestamp || d.created_at || new Date().toISOString()
+                }));
+                setAuditLogs(formatted);
+            } else {
+                setAuditLogs([]);
             }
-        };
+        } catch (err) {
+            console.error('Error fetching real audit logs:', err);
+            setAuditLogs([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Cargar usuarios registrados para los tabs
+    const loadUsers = async () => {
+        try {
+            const data = await AuthService.getUsers();
+            if (data && Array.isArray(data)) {
+                setUsersList(data.map((u: any) => ({
+                    email: u.email,
+                    name: u.full_name || u.email.split('@')[0],
+                    role: u.role
+                })));
+            }
+        } catch (e) {
+            console.error('Error cargando usuarios:', e);
+        }
+    };
+
+    useEffect(() => {
+        loadAuditLogs();
         loadUsers();
     }, []);
 
@@ -163,7 +104,7 @@ export const UserAuditLedgerViewer: React.FC = () => {
         
         // Contar eventos por usuario
         auditLogs.forEach(log => {
-            const email = log.user_email.toLowerCase();
+            const email = (log.user_email || 'SYSTEM').toLowerCase();
             const existing = map.get(email);
             if (existing) {
                 existing.count++;
@@ -177,7 +118,7 @@ export const UserAuditLedgerViewer: React.FC = () => {
             }
         });
 
-        // Asegurar que aparezcan los usuarios registrados aunque tengan 0 eventos
+        // Asegurar que aparezcan los usuarios registrados del sistema aunque tengan 0 eventos
         usersList.forEach(u => {
             const email = u.email.toLowerCase();
             if (!map.has(email)) {
@@ -253,37 +194,45 @@ export const UserAuditLedgerViewer: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col gap-5 p-6 bg-slate-50 min-h-screen font-sans">
-            
-            {/* 1. Cabecera Ejecutiva & Banner de Identidad */}
-            <div className="bg-white rounded-2xl p-6 shadow-xs border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-4 font-sans text-slate-800">
+            {/* 1. Header Hero con KPIs */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#0b2545] to-[#0284c7] flex items-center justify-center text-white shadow-md">
-                        <ShieldCheck size={28} />
+                    <div className="h-12 w-12 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm">
+                        <ShieldCheck size={26} />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                            <h1 className="text-base font-extrabold text-slate-900 tracking-tight">
                                 Módulo de Auditoría Forense &amp; Trazabilidad
                             </h1>
-                            <span className="bg-blue-50 text-blue-700 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-blue-200">
+                            <span className="bg-teal-50 text-teal-700 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-teal-200">
                                 DELFOS SECURITY VAULT
                             </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            Registro pericial inmutable de acciones: quién hizo qué, cuándo y qué valores exactos fueron modificados.
+                            Bitácora inmutable en vivo: quién hizo qué, cuándo y qué valores exactos fueron modificados.
                         </p>
                     </div>
                 </div>
 
-                {/* Resumen KPIs */}
+                {/* Resumen KPIs & Botón Refrescar */}
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={loadAuditLogs}
+                        disabled={loading}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                        title="Refrescar Bitácora"
+                    >
+                        <RefreshCw size={13} className={loading ? 'animate-spin text-teal-600' : ''} />
+                        <span>Actualizar</span>
+                    </button>
                     <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-center">
                         <div className="text-[10px] uppercase font-bold text-slate-400">Total Eventos</div>
                         <div className="text-lg font-black text-slate-800">{auditLogs.length}</div>
                     </div>
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-center">
-                        <div className="text-[10px] uppercase font-bold text-emerald-600">Usuarios Auditados</div>
+                        <div className="text-[10px] uppercase font-bold text-emerald-600">Usuarios Registrados</div>
                         <div className="text-lg font-black text-emerald-800">{userTabs.length}</div>
                     </div>
                 </div>
@@ -295,7 +244,7 @@ export const UserAuditLedgerViewer: React.FC = () => {
                     onClick={() => setSelectedUserTab('ALL')}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs whitespace-nowrap cursor-pointer ${
                         selectedUserTab === 'ALL'
-                            ? 'bg-[#0b2545] text-white shadow-md'
+                            ? 'bg-[#0B2545] text-white shadow-md'
                             : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                     }`}
                 >
@@ -314,14 +263,14 @@ export const UserAuditLedgerViewer: React.FC = () => {
                         onClick={() => setSelectedUserTab(u.email)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs whitespace-nowrap cursor-pointer ${
                             selectedUserTab === u.email
-                                ? 'bg-[#0b2545] text-white shadow-md'
+                                ? 'bg-[#0B2545] text-white shadow-md'
                                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                         }`}
                     >
                         <User size={14} className={u.role === 'ADMIN' ? 'text-amber-400' : 'text-slate-400'} />
                         <span>{u.name}</span>
                         {u.role === 'ADMIN' && (
-                            <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-1.5 rounded">
+                            <span className="text-[9px] font-black bg-amber-500/20 text-amber-600 px-1.5 rounded">
                                 ADMIN
                             </span>
                         )}
@@ -343,7 +292,7 @@ export const UserAuditLedgerViewer: React.FC = () => {
                             type="text"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            placeholder="Buscar por tabla, código de registro, buque, usuario..."
+                            placeholder="Buscar por tabla, código de registro, usuario..."
                             className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-slate-800 focus:bg-white transition-all"
                         />
                     </div>
@@ -382,11 +331,21 @@ export const UserAuditLedgerViewer: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredLogs.length === 0 ? (
+                            {loading ? (
                                 <tr>
                                     <td colSpan={7} className="py-12 text-center text-slate-400">
-                                        <History size={32} className="mx-auto mb-2 text-slate-300" />
-                                        <p className="font-bold">No se encontraron eventos para el filtro seleccionado.</p>
+                                        <div className="animate-spin h-6 w-6 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                        <p className="font-bold">Consultando bitácora forense en tiempo real...</p>
+                                    </td>
+                                </tr>
+                            ) : filteredLogs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="py-16 text-center text-slate-400">
+                                        <History size={36} className="mx-auto mb-2 text-slate-300" />
+                                        <p className="font-bold text-slate-600 text-sm">No hay registros de auditoría aún</p>
+                                        <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                                            Las modificaciones de tarifas, cargas de documentos, accesos y cambios realizados por los usuarios se registrarán automáticamente aquí en tiempo real.
+                                        </p>
                                     </td>
                                 </tr>
                             ) : (
@@ -448,22 +407,22 @@ export const UserAuditLedgerViewer: React.FC = () => {
                                                     ))}
                                                 </div>
                                             ) : log.metadata ? (
-                                                <div className="text-[11px] text-slate-500 font-mono bg-slate-50 p-1.5 rounded border border-slate-100">
+                                                <div className="text-[11px] font-mono text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200 truncate max-w-[380px]" title={JSON.stringify(log.metadata)}>
                                                     {JSON.stringify(log.metadata)}
                                                 </div>
                                             ) : (
-                                                <span className="text-slate-400 text-[11px] italic">Sin delta numérico</span>
+                                                <span className="text-slate-400 italic text-[11px]">Sin delta numérico</span>
                                             )}
                                         </td>
 
-                                        {/* Botón Ver Detalle */}
+                                        {/* Botón Ver Modal */}
                                         <td className="py-3.5 px-4 text-center whitespace-nowrap">
                                             <button
                                                 onClick={() => setSelectedLogForModal(log)}
-                                                className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
-                                                title="Ver detalle forense completo"
+                                                className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+                                                title="Ver Ficha Forense Completa"
                                             >
-                                                <Eye size={16} />
+                                                <Eye size={15} />
                                             </button>
                                         </td>
                                     </tr>
@@ -474,57 +433,74 @@ export const UserAuditLedgerViewer: React.FC = () => {
                 </div>
             </div>
 
-            {/* 5. Modal Forense Detallado de Registro */}
+            {/* Modal Pericial de Detalle */}
             {selectedLogForModal && (
-                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                            <div className="flex items-center gap-2.5">
-                                <ShieldCheck className="text-blue-600" size={22} />
-                                <h3 className="font-extrabold text-slate-900 text-base">
-                                    Ficha Forense de Auditoría #{selectedLogForModal.id}
-                                </h3>
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="bg-[#0B2545] p-5 text-white flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white/10 rounded-xl">
+                                    <ShieldCheck size={20} className="text-teal-400" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-base">Ficha Pericial de Auditoría #{selectedLogForModal.id}</h3>
+                                    <p className="text-xs text-blue-200">Trazabilidad inmutable de evento transaccional</p>
+                                </div>
                             </div>
                             <button
                                 onClick={() => setSelectedLogForModal(null)}
-                                className="text-slate-400 hover:text-slate-700 text-lg font-bold cursor-pointer"
+                                className="text-slate-300 hover:text-white text-lg font-bold p-1 cursor-pointer"
                             >
                                 ✕
                             </button>
                         </div>
 
-                        <div className="mt-4 space-y-3 text-xs">
-                            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+                            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <div>
-                                    <span className="text-slate-400 font-bold block text-[10px] uppercase">Usuario:</span>
-                                    <span className="font-bold text-slate-800">{selectedLogForModal.user_name || selectedLogForModal.user_email}</span>
+                                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Usuario</span>
+                                    <span className="font-bold text-slate-800 text-sm">{selectedLogForModal.user_name || selectedLogForModal.user_email}</span>
+                                    <span className="text-slate-500 font-mono block text-[11px]">{selectedLogForModal.user_email}</span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 font-bold block text-[10px] uppercase">Dirección IP:</span>
-                                    <span className="font-mono font-bold text-slate-800">{selectedLogForModal.ip_address || '127.0.0.1'}</span>
+                                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Fecha / Hora</span>
+                                    <span className="font-bold text-slate-800">{formatDate(selectedLogForModal.created_at)}</span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 font-bold block text-[10px] uppercase">Entidad Afectada:</span>
-                                    <span className="font-bold text-blue-700">{selectedLogForModal.table_name}</span>
+                                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Acción Realizada</span>
+                                    <div className="mt-1">{getActionBadge(selectedLogForModal.action)}</div>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 font-bold block text-[10px] uppercase">Fecha / Hora:</span>
-                                    <span className="font-mono text-slate-700">{formatDate(selectedLogForModal.created_at)}</span>
+                                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Dirección IP</span>
+                                    <span className="font-mono text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block mt-1">
+                                        {selectedLogForModal.ip_address || '127.0.0.1 (Local)'}
+                                    </span>
                                 </div>
                             </div>
 
+                            {/* Desglose JSON */}
                             <div>
-                                <span className="font-bold text-slate-700 mb-1 block">Payload Crudo (JSONB):</span>
-                                <pre className="bg-slate-900 text-emerald-400 p-3.5 rounded-xl font-mono text-[11px] overflow-x-auto max-h-48 scrollbar-thin">
-                                    {JSON.stringify(selectedLogForModal, null, 2)}
+                                <h4 className="font-bold text-slate-700 mb-2">Metadatos &amp; Datos Transaccionales</h4>
+                                <pre className="bg-slate-900 text-emerald-400 p-4 rounded-xl font-mono text-[11px] overflow-x-auto">
+                                    {JSON.stringify({
+                                        id: selectedLogForModal.id,
+                                        entity: selectedLogForModal.table_name,
+                                        record_id: selectedLogForModal.record_id,
+                                        action: selectedLogForModal.action,
+                                        user: selectedLogForModal.user_email,
+                                        diff: selectedLogForModal.diff_data,
+                                        old_data: selectedLogForModal.old_data,
+                                        new_data: selectedLogForModal.new_data,
+                                        metadata: selectedLogForModal.metadata
+                                    }, null, 2)}
                                 </pre>
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end">
+                        <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-end">
                             <button
                                 onClick={() => setSelectedLogForModal(null)}
-                                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer"
+                                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs cursor-pointer transition-colors"
                             >
                                 Cerrar Ficha
                             </button>
@@ -532,7 +508,6 @@ export const UserAuditLedgerViewer: React.FC = () => {
                     </div>
                 </div>
             )}
-
         </div>
     );
 };

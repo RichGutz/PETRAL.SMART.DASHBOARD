@@ -343,6 +343,19 @@ export const AuthService = {
     revokeDevice: async (deviceId: string, adminEmail: string) => {
         const response = await api.post(`/auth/devices/${deviceId}/revoke`, { admin_email: adminEmail });
         return response.data;
+    },
+    getAuditLogs: async (params?: { entity_name?: string; user_email?: string; limit?: number }) => {
+        const query = new URLSearchParams();
+        if (params?.entity_name) query.append('entity_name', params.entity_name);
+        if (params?.user_email) query.append('user_email', params.user_email);
+        if (params?.limit) query.append('limit', String(params.limit));
+        const url = `/auth/audit/logs${query.toString() ? `?${query.toString()}` : ''}`;
+        const response = await api.get(url);
+        return response.data;
+    },
+    createAuditLog: async (payload: any) => {
+        const response = await api.post('/auth/audit/logs', payload);
+        return response.data;
     }
 };
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel
 from typing import Optional, Dict, List, Any
 import random
@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from backend.database import get_db_connection
 from backend.services.send_demo_email import send_2fa_email
 from backend.services.device_vault_service import DeviceVaultService
+from backend.services.audit_service import AuditService
 
 router = APIRouter(tags=["auth"])
 
@@ -290,6 +291,17 @@ def verify_two_factor(payload: Verify2FARequest):
                 }
             else:
                 permissions = DEFAULT_PERMISSIONS
+
+        try:
+            AuditService.log_event(
+                user_email=email,
+                action="LOGIN",
+                entity_name="Autenticación 2FA",
+                entity_id=f"2FA-{email}",
+                metadata={"user_name": full_name, "role": role}
+            )
+        except Exception as ae:
+            print(f"[AUDIT LOG WARN] {ae}")
 
         return {
             "user": {
@@ -714,7 +726,18 @@ def approve_device_endpoint(device_id: str, payload: DeviceActionRequest):
     Aprueba un dispositivo para acceso permanente.
     """
     try:
-        return DeviceVaultService.approve_device(device_id=device_id, admin_email=payload.admin_email)
+        res = DeviceVaultService.approve_device(device_id=device_id, admin_email=payload.admin_email)
+        try:
+            AuditService.log_event(
+                user_email=payload.admin_email,
+                action="UPDATE",
+                entity_name="Bóveda de Dispositivos (Device Vault)",
+                entity_id=device_id,
+                metadata={"accion": "APROBAR_DISPOSITIVO", "status": "APPROVED"}
+            )
+        except Exception as ae:
+            print(f"[AUDIT LOG WARN] {ae}")
+        return res
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -727,11 +750,68 @@ def revoke_device_endpoint(device_id: str, payload: DeviceActionRequest):
     Revoca el acceso de un dispositivo.
     """
     try:
-        return DeviceVaultService.revoke_device(device_id=device_id, admin_email=payload.admin_email)
+        res = DeviceVaultService.revoke_device(device_id=device_id, admin_email=payload.admin_email)
+        try:
+            AuditService.log_event(
+                user_email=payload.admin_email,
+                action="UPDATE",
+                entity_name="Bóveda de Dispositivos (Device Vault)",
+                entity_id=device_id,
+                metadata={"accion": "REVOCAR_DISPOSITIVO", "status": "REVOKED"}
+            )
+        except Exception as ae:
+            print(f"[AUDIT LOG WARN] {ae}")
+        return res
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error al revocar dispositivo: {e}"
         )
+
+
+# --- Endpoints del Libro de Auditoría Forense (Audit Logs) ---
+
+@router.get("/auth/audit/logs")
+def list_audit_logs_endpoint(
+    entity_name: Optional[str] = None,
+    user_email: Optional[str] = None,
+    limit: int = 100
+):
+    """
+    Retorna la bitácora real de auditoría forense desde la base de datos PostgreSQL.
+    """
+    try:
+        return AuditService.get_audit_trail(entity_name=entity_name, user_email=user_email, limit=limit)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener logs de auditoría: {e}"
+        )
+
+@router.post("/auth/audit/logs")
+def create_audit_log_endpoint(payload: Dict[str, Any], request: Request):
+    """
+    Registra un evento de auditoría en tiempo real.
+    """
+    try:
+        ip = request.client.host if request.client else None
+        ua = request.headers.get("user-agent")
+        return AuditService.log_event(
+            user_email=payload.get("user_email", "SYSTEM"),
+            action=payload.get("action", "EVENT"),
+            entity_name=payload.get("table_name") or payload.get("entity_name", "General"),
+            entity_id=payload.get("record_id") or payload.get("entity_id"),
+            old_data=payload.get("old_data"),
+            new_data=payload.get("new_data"),
+            metadata=payload.get("metadata"),
+            ip_address=ip,
+            user_agent=ua
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al registrar log: {e}"
+        )
+
 
 
