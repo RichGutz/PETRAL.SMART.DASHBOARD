@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
@@ -65,7 +65,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
         mercado: ['bunker', 'sources-sinks'],
-        admin: ['users', 'device-vault', 'settings']
+        admin: ['users', 'device-vault', 'audit-ledger', 'settings']
     };
 
     const getActiveCategory = (tab: string): string => {
@@ -620,6 +620,12 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                             className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'device-vault' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                         >
                                             <Laptop size={14} /> Device Vault (Equipos)
+                                        </button>
+                                        <button 
+                                            onClick={() => navigate('/audit-ledger')}
+                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'audit-ledger' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <ShieldCheck size={14} /> Libro de Auditoría (Logs)
                                         </button>
                                     </>
                                 )}

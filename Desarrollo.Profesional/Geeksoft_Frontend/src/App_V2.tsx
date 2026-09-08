@@ -37,6 +37,7 @@ import { BunkerMaster } from './pages/Masters/BunkerMaster';
 import { Login } from './pages/Auth/Login';
 import { UsersPermissions } from './pages/Auth/UsersPermissions';
 import { DeviceVaultMaster } from './pages/Masters/DeviceVaultMaster';
+import { AuditMaster_V2 } from './pages/Masters/AuditMaster_V2';
 
 // Componente para proteger rutas privadas y validar permisos específicos
 const ProtectedRoute = ({ 
@@ -120,18 +121,16 @@ function App_V2() {
                   <Route path="/liquidations-graphic-analysis" element={<LiquidationsGraphicAnalysis_V2 />} />
                   <Route path="/liquidations-pdf-audit" element={<LiquidationsAuditPdf_V2 />} />
                   <Route path="/spaghetti-map" element={<SpaghettiMap_V2 />} />
-                  <Route path="/audit-ledger" element={<AuditLedger_V2 />} />
                   <Route path="/audit-engine" element={<AuditEngine_V2 />} />
                   <Route path="/audit-final" element={<AuditFinal_V2 />} />
                   <Route path="/system-flowchart" element={<SystemFlowchartViewer_V2 />} />
                   <Route path="/system-documentation" element={<SystemDocumentation_V2 />} />
               </Route>
 
-
-              
-              {/* Panel de Gestión de Usuarios y Roles (Sólo ADMIN) */}
+              {/* Panel de Gestión de Seguridad y Administración (Sólo ADMIN) */}
               <Route path="/users" element={<ProtectedRoute requireAdmin={true}><UsersPermissions /></ProtectedRoute>} />
               <Route path="/device-vault" element={<ProtectedRoute requireAdmin={true}><DeviceVaultMaster /></ProtectedRoute>} />
+              <Route path="/audit-ledger" element={<ProtectedRoute requireAdmin={true}><AuditMaster_V2 /></ProtectedRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
