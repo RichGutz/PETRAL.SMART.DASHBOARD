@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck, BookOpen, GitGraph } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck, BookOpen, GitGraph, Building2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
@@ -65,7 +65,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
         mercado: ['bunker', 'sources-sinks'],
-        documentacion: ['system-documentation', 'system-flowchart'],
+        documentacion: ['system-documentation', 'system-flowchart', 'company-organigram', 'mof-manual'],
         admin: ['users', 'device-vault', 'audit-ledger', 'settings']
     };
 
@@ -620,6 +620,18 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'system-flowchart' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                 >
                                     <GitGraph size={14} /> Flujograma del Sistema
+                                </button>
+                                <button 
+                                    onClick={() => navigate('/company-organigram')}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'company-organigram' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                >
+                                    <Building2 size={14} /> Organigrama de Empresa
+                                </button>
+                                <button 
+                                    onClick={() => navigate('/mof-manual')}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'mof-manual' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                >
+                                    <FileText size={14} /> Manual MOF (Puestos &amp; ERP)
                                 </button>
                             </nav>
                         )}

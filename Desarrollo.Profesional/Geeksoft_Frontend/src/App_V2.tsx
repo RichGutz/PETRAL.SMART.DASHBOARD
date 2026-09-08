@@ -19,6 +19,8 @@ import { MultiCotizador_V2 } from './pages/Tools/MultiCotizador_V2';
 import { SystemFlowchartViewer_V2 } from './pages/Tools/SystemFlowchartViewer_V2';
 // [HIDDEN FROM UI] import { StaticVsDynamicPortCost } from './pages/Tools/StaticVsDynamicPortCost_V2';
 import { SystemDocumentation_V2 } from './pages/Tools/SystemDocumentation_V2';
+import { CompanyOrganigram_V2 } from './pages/Tools/CompanyOrganigram_V2';
+import { MofManual_V2 } from './pages/Tools/MofManual_V2';
 
 
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
@@ -125,6 +127,8 @@ function App_V2() {
                   <Route path="/audit-final" element={<AuditFinal_V2 />} />
                   <Route path="/system-flowchart" element={<SystemFlowchartViewer_V2 />} />
                   <Route path="/system-documentation" element={<SystemDocumentation_V2 />} />
+                  <Route path="/company-organigram" element={<CompanyOrganigram_V2 />} />
+                  <Route path="/mof-manual" element={<MofManual_V2 />} />
               </Route>
 
               {/* Panel de Gestión de Seguridad y Administración (Sólo ADMIN) */}

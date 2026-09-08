@@ -25,6 +25,8 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/system-flowchart')) activeTab = 'system-flowchart';
     else if (location.pathname.includes('/static-vs-dynamic-port-cost')) activeTab = 'static-vs-dynamic-port-cost';
     else if (location.pathname.includes('/system-documentation')) activeTab = 'system-documentation';
+    else if (location.pathname.includes('/company-organigram')) activeTab = 'company-organigram';
+    else if (location.pathname.includes('/mof-manual')) activeTab = 'mof-manual';
 
 
 
@@ -33,7 +35,7 @@ export const ToolsLayout_V2: React.FC = () => {
             
             <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 h-full">
                 {/* 1. Builder Bar (Shared across interactive modeling tools) */}
-                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && (
+                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'company-organigram' && activeTab !== 'mof-manual' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && (
                     <div className="print:hidden">
                     <ForecastBuilder 
                         currentStartDate={context.startDate}
