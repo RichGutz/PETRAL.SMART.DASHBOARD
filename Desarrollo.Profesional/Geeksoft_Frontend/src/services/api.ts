@@ -299,6 +299,18 @@ export const AuthService = {
         const response = await api.post('/auth/login', payload);
         return response.data;
     },
+    loginStep1: async (payload: { email: string; password: string; device_fingerprint?: string; device_name?: string }) => {
+        const response = await api.post('/auth/login', payload);
+        return response.data;
+    },
+    verify2FA: async (payload: { temp_token: string; otp_code: string }) => {
+        const response = await api.post('/auth/verify-2fa', payload);
+        return response.data;
+    },
+    resend2FA: async (payload: { temp_token: string }) => {
+        const response = await api.post('/auth/resend-2fa', payload);
+        return response.data;
+    },
     getUsers: async () => {
         const response = await api.get('/users');
         return response.data;
@@ -320,5 +332,6 @@ export const AuthService = {
         return response.data;
     }
 };
+
 
 

@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
+import random
+import uuid
+from datetime import datetime, timedelta, timezone
 from backend.database import get_db_connection
+from backend.services.send_demo_email import send_2fa_email
+from backend.services.device_vault_service import DeviceVaultService
 
 router = APIRouter(tags=["auth"])
 
@@ -9,6 +14,21 @@ router = APIRouter(tags=["auth"])
 class LoginRequest(BaseModel):
     email: str
     password: str
+    device_fingerprint: Optional[str] = None
+    device_name: Optional[str] = None
+
+class LoginStep1Response(BaseModel):
+    status: str # "REQUIRES_2FA"
+    temp_token: str
+    masked_destination: str
+    user_name: str
+
+class Verify2FARequest(BaseModel):
+    temp_token: str
+    otp_code: str
+
+class Resend2FARequest(BaseModel):
+    temp_token: str
 
 class UserResponse(BaseModel):
     id: str
@@ -71,18 +91,33 @@ ADMIN_PERMISSIONS = {
     "maestro_costos_agencia": "Editor"
 }
 
+def mask_email(email: str) -> str:
+    parts = email.split("@")
+    if len(parts) != 2:
+        return email
+    user, domain = parts
+    if len(user) <= 2:
+        masked_user = user[0] + "*"
+    else:
+        masked_user = user[0] + "*" * (len(user) - 2) + user[-1]
+    return f"{masked_user}@{domain}"
 
-# --- Endpoints ---
 
-@router.post("/auth/login", response_model=LoginResponse)
-def login(payload: LoginRequest):
+# --- Endpoints de Autenticación 2FA & Device Vault ---
+
+@router.post("/auth/login", response_model=LoginStep1Response)
+def login_step_one(payload: LoginRequest):
+    """
+    Paso 1 del Login: Valida credenciales, genera OTP de 6 dígitos, lo despacha vía correo
+    y retorna un temp_token para completar el segundo factor.
+    """
     email_clean = payload.email.strip().lower()
     
     conn = get_db_connection()
     cur = conn.cursor()
     
     try:
-        # Validar credenciales usando la función crypt de PostgreSQL
+        # 1. Validar credenciales usando la función crypt de PostgreSQL
         cur.execute(
             """
             SELECT id, email, full_name, role 
@@ -100,7 +135,116 @@ def login(payload: LoginRequest):
             )
             
         user_id, email, full_name, role = row
-        
+
+        # 2. Generar código OTP de 6 dígitos y token temporal
+        otp_code = f"{random.randint(100000, 999999)}"
+        temp_token = str(uuid.uuid4())
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+
+        # 3. Guardar en tabla user_2fa_tokens
+        cur.execute(
+            """
+            INSERT INTO user_2fa_tokens (user_id, temp_token, otp_code, expires_at)
+            VALUES (%s, %s, %s, %s);
+            """,
+            (user_id, temp_token, otp_code, expires_at)
+        )
+        conn.commit()
+
+        # 4. Despachar correo transaccional desde petral@geeksoft.tech con plantilla oficial DELFOS
+        try:
+            send_2fa_email(to_email=email, user_name=full_name, otp_code=otp_code)
+        except Exception as e:
+            print(f"[AUTH 2FA WARN] Error enviando correo: {e}")
+
+        return {
+            "status": "REQUIRES_2FA",
+            "temp_token": temp_token,
+            "masked_destination": mask_email(email),
+            "user_name": full_name
+        }
+    finally:
+        cur.close()
+        conn.close()
+
+
+@router.post("/auth/verify-2fa", response_model=LoginResponse)
+def verify_two_factor(payload: Verify2FARequest):
+    """
+    Paso 2 del Login: Valida el código OTP de 6 dígitos ingresado por el usuario.
+    Si es correcto y no ha expirado, emite la sesión definitiva con usuario y permisos.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # 1. Buscar token temporal
+        cur.execute(
+            """
+            SELECT t.id, t.user_id, t.otp_code, t.attempts, t.is_used, t.expires_at,
+                   u.email, u.full_name, u.role
+            FROM user_2fa_tokens t
+            JOIN app_users u ON t.user_id = u.id
+            WHERE t.temp_token = %s;
+            """,
+            (payload.temp_token,)
+        )
+        row = cur.fetchone()
+
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sesión de verificación inválida o no encontrada. Por favor inicie sesión nuevamente."
+            )
+
+        token_id, user_id, expected_otp, attempts, is_used, expires_at, email, full_name, role = row
+
+        # Validar si ya fue usado
+        if is_used:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Este código de verificación ya fue utilizado. Solicite uno nuevo."
+            )
+
+        # Validar intentos máximos (3)
+        if attempts >= 3:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ha superado el límite de intentos permitidos (3). Por favor reinicie su inicio de sesión."
+            )
+
+        # Validar expiración (5 min)
+        now_utc = datetime.now(timezone.utc)
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if now_utc > expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El código de verificación ha expirado (5 minutos de validez). Solicite un nuevo código."
+            )
+
+        # Validar código OTP
+        if payload.otp_code.strip() != expected_otp:
+            # Incrementar intentos
+            cur.execute(
+                "UPDATE user_2fa_tokens SET attempts = attempts + 1 WHERE id = %s;",
+                (token_id,)
+            )
+            conn.commit()
+            remaining = 3 - (attempts + 1)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Código de verificación incorrecto. Le quedan {remaining} intento(s)."
+            )
+
+        # Marcar token como utilizado
+        cur.execute(
+            "UPDATE user_2fa_tokens SET is_used = TRUE WHERE id = %s;",
+            (token_id,)
+        )
+        conn.commit()
+
         # Cargar permisos
         permissions = {}
         if role == "ADMIN":
@@ -129,7 +273,7 @@ def login(payload: LoginRequest):
                 }
             else:
                 permissions = DEFAULT_PERMISSIONS
-                
+
         return {
             "user": {
                 "id": str(user_id),
@@ -139,6 +283,56 @@ def login(payload: LoginRequest):
             },
             "permissions": permissions
         }
+    finally:
+        cur.close()
+        conn.close()
+
+
+@router.post("/auth/resend-2fa")
+def resend_two_factor(payload: Resend2FARequest):
+    """
+    Reenvía un nuevo código OTP al correo del usuario.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT t.user_id, u.email, u.full_name
+            FROM user_2fa_tokens t
+            JOIN app_users u ON t.user_id = u.id
+            WHERE t.temp_token = %s;
+            """,
+            (payload.temp_token,)
+        )
+        row = cur.fetchone()
+
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sesión no válida para reenvío."
+            )
+
+        user_id, email, full_name = row
+        new_otp = f"{random.randint(100000, 999999)}"
+        new_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+
+        # Actualizar con nuevo OTP
+        cur.execute(
+            """
+            UPDATE user_2fa_tokens
+            SET otp_code = %s, attempts = 0, is_used = FALSE, expires_at = %s
+            WHERE temp_token = %s;
+            """,
+            (new_otp, new_expires_at, payload.temp_token)
+        )
+        conn.commit()
+
+        # Despachar nuevo correo
+        send_2fa_email(to_email=email, user_name=full_name, otp_code=new_otp)
+
+        return {"message": "Nuevo código de verificación enviado exitosamente."}
     finally:
         cur.close()
         conn.close()

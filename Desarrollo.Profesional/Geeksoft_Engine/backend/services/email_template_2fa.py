@@ -97,7 +97,7 @@ def generate_2fa_email_html(user_name: str, otp_code: str, valid_minutes: int = 
                 DELFOS SHIPPING SOFTWARE • GEEKSOFT TECHNOLOGY PARTNER
               </p>
               <p style="margin:0;font-size:10px;color:#94a3b8;line-height:1.4;">
-                Remitente Oficial: <span style="color:#38bdf8;">petra@geeksoft.tech</span> • Cifrado TLS 1.3 de Extremo a Extremo<br>
+                Remitente Oficial: <span style="color:#38bdf8;">petral@geeksoft.tech</span> • Cifrado TLS 1.3 de Extremo a Extremo<br>
                 Todos los derechos reservados © 2026.
               </p>
             </td>

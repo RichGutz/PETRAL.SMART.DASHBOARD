@@ -32,12 +32,22 @@ export interface UserPermissions {
     [key: string]: PermissionLevel | undefined; // Firma de índice para acceso dinámico
 }
 
+export interface LoginStep1Result {
+    status: string;
+    temp_token: string;
+    masked_destination: string;
+    user_name: string;
+}
+
 interface AuthContextType {
     user: User | null;
     permissions: UserPermissions | null;
     isAuthenticated: boolean;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
+    loginStepOne: (email: string, password: string, device_fingerprint?: string, device_name?: string) => Promise<LoginStep1Result>;
+    verifyTwoFactor: (temp_token: string, otp_code: string) => Promise<void>;
+    resendTwoFactor: (temp_token: string) => Promise<any>;
     logout: () => void;
     hasPermission: (module: keyof UserPermissions, required: 'Editor' | 'Visor') => boolean;
 }
@@ -54,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedUser = localStorage.getItem('petral_user');
         const storedPermissions = localStorage.getItem('petral_permissions');
         const isAuth = localStorage.getItem('petral_session') === 'authenticated';
+        const hasExplicitlyLoggedOut = localStorage.getItem('petral_explicit_logout') === 'true';
 
         if (isAuth && storedUser && storedPermissions) {
             try {
@@ -63,8 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.error("Error al cargar la sesión persistida:", e);
                 logout();
             }
-        } else if (import.meta.env.DEV) {
-            // Auto-login automático en entorno local de desarrollo
+        } else if (import.meta.env.DEV && !hasExplicitlyLoggedOut) {
+            // Auto-login automático en entorno local de desarrollo solo si no hizo logout explícito
             const devUser: User = {
                 id: 'dev-admin',
                 email: 'izavala@petral.com.pe',
@@ -100,19 +111,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const loginStepOne = async (email: string, password: string, device_fingerprint?: string, device_name?: string): Promise<LoginStep1Result> => {
         setLoading(true);
         try {
-            const data = await AuthService.login({ email, password });
+            const data = await AuthService.loginStep1({ email, password, device_fingerprint, device_name });
+            return data;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyTwoFactor = async (temp_token: string, otp_code: string): Promise<void> => {
+        setLoading(true);
+        try {
+            const data = await AuthService.verify2FA({ temp_token, otp_code });
             const loggedUser: User = data.user;
             const userPerms: UserPermissions = data.permissions;
 
             setUser(loggedUser);
             setPermissions(userPerms);
-            
+
+            localStorage.removeItem('petral_explicit_logout');
             localStorage.setItem('petral_user', JSON.stringify(loggedUser));
             localStorage.setItem('petral_permissions', JSON.stringify(userPerms));
             localStorage.setItem('petral_session', 'authenticated');
+        } catch (error) {
+            logout();
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resendTwoFactor = async (temp_token: string) => {
+        return await AuthService.resend2FA({ temp_token });
+    };
+
+    const login = async (email: string, password: string) => {
+        setLoading(true);
+        try {
+            const data = await AuthService.login({ email, password });
+            if (data.user && data.permissions) {
+                const loggedUser: User = data.user;
+                const userPerms: UserPermissions = data.permissions;
+
+                setUser(loggedUser);
+                setPermissions(userPerms);
+                
+                localStorage.removeItem('petral_explicit_logout');
+                localStorage.setItem('petral_user', JSON.stringify(loggedUser));
+                localStorage.setItem('petral_permissions', JSON.stringify(userPerms));
+                localStorage.setItem('petral_session', 'authenticated');
+            }
         } catch (error) {
             logout();
             throw error;
@@ -127,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('petral_user');
         localStorage.removeItem('petral_permissions');
         localStorage.removeItem('petral_session');
+        localStorage.setItem('petral_explicit_logout', 'true');
     };
 
     // Validación granular de accesos
@@ -153,7 +204,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isAuthenticated = !!user;
 
     return (
-        <AuthContext.Provider value={{ user, permissions, isAuthenticated, loading, login, logout, hasPermission }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            permissions, 
+            isAuthenticated, 
+            loading, 
+            login, 
+            loginStepOne, 
+            verifyTwoFactor, 
+            resendTwoFactor, 
+            logout, 
+            hasPermission 
+        }}>
             {!loading && children}
         </AuthContext.Provider>
     );
@@ -166,3 +228,4 @@ export const useAuth = () => {
     }
     return context;
 };
+
