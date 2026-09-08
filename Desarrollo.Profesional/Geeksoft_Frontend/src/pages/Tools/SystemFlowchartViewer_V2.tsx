@@ -111,11 +111,15 @@ const TABS: FlowchartTab[] = [
 
 
 const COLOR_MAP: Record<string, { active: string; badge: string; icon: string }> = {
-    blue:   { active: 'bg-white text-blue-700 border-blue-200 shadow-sm',   badge: 'bg-blue-50 text-blue-600 border-blue-200',   icon: 'bg-blue-50 border-blue-200 text-blue-600' },
-    amber:  { active: 'bg-white text-amber-700 border-amber-200 shadow-sm', badge: 'bg-amber-50 text-amber-600 border-amber-200', icon: 'bg-amber-50 border-amber-200 text-amber-600' },
-    teal:   { active: 'bg-white text-teal-700 border-teal-200 shadow-sm',   badge: 'bg-teal-50 text-teal-600 border-teal-200',   icon: 'bg-teal-50 border-teal-200 text-teal-600' },
-    orange: { active: 'bg-white text-orange-700 border-orange-200 shadow-sm', badge: 'bg-orange-50 text-orange-600 border-orange-200', icon: 'bg-orange-50 border-orange-200 text-orange-600' },
-    slate:  { active: 'bg-white text-slate-700 border-slate-300 shadow-sm', badge: 'bg-slate-100 text-slate-600 border-slate-200', icon: 'bg-slate-100 border-slate-200 text-slate-600' },
+    blue:    { active: 'bg-white text-blue-700 border-blue-200 shadow-sm',     badge: 'bg-blue-50 text-blue-600 border-blue-200',     icon: 'bg-blue-50 border-blue-200 text-blue-600' },
+    amber:   { active: 'bg-white text-amber-700 border-amber-200 shadow-sm',   badge: 'bg-amber-50 text-amber-600 border-amber-200',   icon: 'bg-amber-50 border-amber-200 text-amber-600' },
+    emerald: { active: 'bg-white text-emerald-700 border-emerald-200 shadow-sm', badge: 'bg-emerald-50 text-emerald-600 border-emerald-200', icon: 'bg-emerald-50 border-emerald-200 text-emerald-600' },
+    teal:    { active: 'bg-white text-teal-700 border-teal-200 shadow-sm',     badge: 'bg-teal-50 text-teal-600 border-teal-200',     icon: 'bg-teal-50 border-teal-200 text-teal-600' },
+    orange:  { active: 'bg-white text-orange-700 border-orange-200 shadow-sm', badge: 'bg-orange-50 text-orange-600 border-orange-200', icon: 'bg-orange-50 border-orange-200 text-orange-600' },
+    purple:  { active: 'bg-white text-purple-700 border-purple-200 shadow-sm', badge: 'bg-purple-50 text-purple-600 border-purple-200', icon: 'bg-purple-50 border-purple-200 text-purple-600' },
+    indigo:  { active: 'bg-white text-indigo-700 border-indigo-200 shadow-sm', badge: 'bg-indigo-50 text-indigo-600 border-indigo-200', icon: 'bg-indigo-50 border-indigo-200 text-indigo-600' },
+    rose:    { active: 'bg-white text-rose-700 border-rose-200 shadow-sm',     badge: 'bg-rose-50 text-rose-600 border-rose-200',     icon: 'bg-rose-50 border-rose-200 text-rose-600' },
+    slate:   { active: 'bg-white text-slate-700 border-slate-300 shadow-sm',   badge: 'bg-slate-100 text-slate-600 border-slate-200',   icon: 'bg-slate-100 border-slate-200 text-slate-600' },
 };
 
 export const SystemFlowchartViewer_V2: React.FC = () => {
@@ -123,7 +127,7 @@ export const SystemFlowchartViewer_V2: React.FC = () => {
     const [activeTab, setActiveTab] = useState<string>('arquitectura');
 
     const currentTab = TABS.find(t => t.id === activeTab) ?? TABS[0];
-    const colors = COLOR_MAP[currentTab.color];
+    const colors = COLOR_MAP[currentTab.color] || COLOR_MAP.blue;
 
     const handleZoomIn    = () => setZoomLevel(prev => Math.min(prev + 20, 250));
     const handleZoomOut   = () => setZoomLevel(prev => Math.max(prev - 20, 40));
@@ -147,7 +151,7 @@ export const SystemFlowchartViewer_V2: React.FC = () => {
                 <div className="flex items-center gap-1 p-2 bg-slate-50 border-b border-slate-200 overflow-x-auto">
                     {TABS.map(tab => {
                         const isActive = activeTab === tab.id;
-                        const c = COLOR_MAP[tab.color];
+                        const c = COLOR_MAP[tab.color] || COLOR_MAP.blue;
                         return (
                             <button
                                 key={tab.id}
