@@ -45,7 +45,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    loginStepOne: (email: string, password: string, device_fingerprint?: string, device_name?: string) => Promise<LoginStep1Result>;
+    loginStepOne: (email: string, password?: string, device_fingerprint?: string, device_name?: string) => Promise<LoginStep1Result>;
     verifyTwoFactor: (temp_token: string, otp_code: string) => Promise<void>;
     resendTwoFactor: (temp_token: string) => Promise<any>;
     logout: () => void;
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
     }, []);
 
-    const loginStepOne = async (email: string, password: string, device_fingerprint?: string, device_name?: string): Promise<LoginStep1Result> => {
+    const loginStepOne = async (email: string, password?: string, device_fingerprint?: string, device_name?: string): Promise<LoginStep1Result> => {
         setLoading(true);
         try {
             const data = await AuthService.loginStep1({ email, password, device_fingerprint, device_name });
@@ -120,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
         }
     };
+
 
     const verifyTwoFactor = async (temp_token: string, otp_code: string): Promise<void> => {
         setLoading(true);

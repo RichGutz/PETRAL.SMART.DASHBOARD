@@ -8,9 +8,8 @@ export const Login: React.FC = () => {
     const { loginStepOne, verifyTwoFactor, resendTwoFactor } = useAuth();
     
     // Estados de flujo
-    const [step, setStep] = useState<'CREDENTIALS' | '2FA_OTP'>('CREDENTIALS');
+    const [step, setStep] = useState<'EMAIL_ENTRY' | '2FA_OTP'>('EMAIL_ENTRY');
     const [email, setEmail] = useState('izavala@petral.com.pe');
-    const [password, setPassword] = useState('petral2026');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -62,8 +61,8 @@ export const Login: React.FC = () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Paso 1: Enviar credenciales
-    const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    // Paso 1: Enviar Email para recibir OTP
+    const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
@@ -72,7 +71,7 @@ export const Login: React.FC = () => {
             const deviceInfo = generateDeviceFingerprint(email);
             const response = await loginStepOne(
                 email, 
-                password, 
+                undefined, // Sin contraseña (Passwordless)
                 deviceInfo.fingerprint, 
                 deviceInfo.deviceName
             );
@@ -100,7 +99,6 @@ export const Login: React.FC = () => {
 
     // Manejo de entrada de cada dígito OTP
     const handleDigitChange = (index: number, value: string) => {
-        // Solo aceptar dígitos
         const cleanVal = value.replace(/[^0-9]/g, '');
         if (!cleanVal) {
             const newDigits = [...otpDigits];
@@ -207,7 +205,7 @@ export const Login: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F]/60 via-[#0B2545]/50 to-[#0F1E36]/65 z-0" />
 
             {/* Tarjeta Flotante Central (Glassmorphism Premium) */}
-            <div className="relative w-full max-w-[450px] mx-4 bg-[#F8FAFC]/95 backdrop-blur-md border border-white/40 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4),0_30px_60px_-30px_rgba(0,0,0,0.5)] p-8 md:p-9 z-10 flex flex-col justify-between">
+            <div className="relative w-full max-w-[440px] mx-4 bg-[#F8FAFC]/95 backdrop-blur-md border border-white/40 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4),0_30px_60px_-30px_rgba(0,0,0,0.5)] p-8 md:p-9 z-10 flex flex-col justify-between">
                 <div>
                     {/* Header Logo */}
                     <div className="flex items-center justify-center mb-5">
@@ -218,65 +216,66 @@ export const Login: React.FC = () => {
                         />
                     </div>
 
-                    {step === 'CREDENTIALS' ? (
-                        /* === PASO 1: CREDENCIALES === */
+                    {step === 'EMAIL_ENTRY' ? (
+                        /* === PASO 1: ENTRADA DE CORREO PASSWORDLESS === */
                         <>
                             <h2 className="text-2xl font-extrabold text-slate-800 text-center mb-1 tracking-tight">
-                                Iniciar sesión
+                                Acceso Seguro DELFOS
                             </h2>
                             <p className="text-xs text-slate-500 text-center mb-6 font-medium">
-                                Sistema Integral de Gestión Naviera DELFOS
+                                Autenticación 2FA sin contraseñas vía código OTP
                             </p>
 
-                            <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+                            <form onSubmit={handleEmailSubmit} className="space-y-4">
                                 {error && (
                                     <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs font-semibold leading-relaxed animate-shake">
                                         {error}
                                     </div>
                                 )}
 
-                                <div className="space-y-1">
-                                    <label htmlFor="email" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                        Correo Electrónico
+                                <div className="space-y-1.5">
+                                    <label htmlFor="email" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                                        Correo Electrónico Corporativo
                                     </label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="nombre@petral.com.pe"
-                                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label htmlFor="password" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                        Contraseña
-                                    </label>
-                                    <input
-                                        type="password"
-                                        id="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="••••••••"
-                                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10"
-                                        required
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="nombre@petral.com.pe"
+                                            className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-3 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/15 font-medium"
+                                            required
+                                            autoFocus
+                                        />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-slate-400 leading-tight pt-1">
+                                        Recibirás un código de verificación seguro de un solo uso (OTP).
+                                    </p>
                                 </div>
 
                                 <button
                                     type="submit"
-                                    disabled={loading}
-                                    className="w-full bg-[#0B2545] hover:bg-[#134074] active:bg-[#0B2545] text-white py-3 px-4 rounded-lg font-bold text-sm transition-all duration-200 shadow-md mt-6 cursor-pointer flex items-center justify-center gap-2"
+                                    disabled={loading || !email}
+                                    className="w-full bg-[#0B2545] hover:bg-[#134074] active:bg-[#0B2545] text-white py-3.5 px-4 rounded-lg font-bold text-sm transition-all duration-200 shadow-md mt-6 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                                 >
                                     {loading ? (
                                         <>
                                             <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                            <span>Validando credenciales...</span>
+                                            <span>Enviando código de seguridad...</span>
                                         </>
                                     ) : (
-                                        <span>Continuar con 2FA</span>
+                                        <>
+                                            <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            <span>Enviar Código de Acceso</span>
+                                        </>
                                     )}
                                 </button>
                             </form>
@@ -294,7 +293,7 @@ export const Login: React.FC = () => {
                                     Código de Seguridad
                                 </h2>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    Hola <strong className="text-slate-700">{userName}</strong>, enviamos un código de 6 dígitos a:
+                                    Hola <strong className="text-slate-700">{userName}</strong>, enviamos tu código de 6 dígitos a:
                                 </p>
                                 <p className="text-xs font-mono font-bold text-blue-700 bg-blue-50/70 border border-blue-100 rounded px-2.5 py-1 mt-1 inline-block">
                                     {maskedEmail}
@@ -360,31 +359,31 @@ export const Login: React.FC = () => {
                                 type="button"
                                 onClick={() => handleVerifyOtp()}
                                 disabled={loading || otpDigits.some(d => d === '')}
-                                className={`w-full bg-[#0B2545] hover:bg-[#134074] active:bg-[#0B2545] text-white py-3 px-4 rounded-lg font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
+                                className={`w-full bg-[#0B2545] hover:bg-[#134074] active:bg-[#0B2545] text-white py-3.5 px-4 rounded-lg font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${
                                     otpDigits.some(d => d === '') ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
                                 }`}
                             >
                                 {loading ? (
                                     <>
                                         <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                        <span>Verificando...</span>
+                                        <span>Verificando código...</span>
                                     </>
                                 ) : (
                                     <span>Verificar y Entrar</span>
                                 )}
                             </button>
 
-                            {/* Volver a credenciales */}
+                            {/* Volver a ingresar email */}
                             <div className="text-center mt-3">
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setStep('CREDENTIALS');
+                                        setStep('EMAIL_ENTRY');
                                         setError('');
                                     }}
                                     className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
                                 >
-                                    ← Volver e ingresar con otra cuenta
+                                    ← Cambiar correo corporativo
                                 </button>
                             </div>
                         </div>

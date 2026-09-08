@@ -13,7 +13,7 @@ router = APIRouter(tags=["auth"])
 # --- Modelos de Pydantic ---
 class LoginRequest(BaseModel):
     email: str
-    password: str
+    password: Optional[str] = None
     device_fingerprint: Optional[str] = None
     device_name: Optional[str] = None
 
@@ -108,8 +108,8 @@ def mask_email(email: str) -> str:
 @router.post("/auth/login", response_model=LoginStep1Response)
 def login_step_one(payload: LoginRequest):
     """
-    Paso 1 del Login: Valida credenciales, genera OTP de 6 dígitos, lo despacha vía correo
-    y retorna un temp_token para completar el segundo factor.
+    Paso 1 del Login Passwordless: Valida que el email exista, genera OTP de 6 dígitos,
+    lo despacha vía correo y retorna un temp_token para completar la verificación.
     """
     email_clean = payload.email.strip().lower()
     
@@ -117,24 +117,25 @@ def login_step_one(payload: LoginRequest):
     cur = conn.cursor()
     
     try:
-        # 1. Validar credenciales usando la función crypt de PostgreSQL
+        # 1. Validar existencia del usuario registrado en el sistema
         cur.execute(
             """
             SELECT id, email, full_name, role 
             FROM app_users 
-            WHERE LOWER(email) = %s AND password_hash = crypt(%s, password_hash);
+            WHERE LOWER(email) = %s;
             """,
-            (email_clean, payload.password)
+            (email_clean,)
         )
         row = cur.fetchone()
         
         if not row:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Correo electrónico o contraseña incorrectos."
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"El correo '{payload.email}' no se encuentra registrado en DELFOS."
             )
             
         user_id, email, full_name, role = row
+
 
         # 2. Generar código OTP de 6 dígitos y token temporal
         otp_code = f"{random.randint(100000, 999999)}"
