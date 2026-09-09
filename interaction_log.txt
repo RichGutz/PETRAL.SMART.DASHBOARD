@@ -27,6 +27,12 @@ TAREAS Y MODIFICACIONES REALIZADAS:
    - Script run_qc_e2e_callao_bunkering_matrix_loop.py ejecutado con éxito.
    - Coexistencia simultánea y consistente de rutas regulares ('ILO-MARCONA') y rutas con bunkering ('ILO-MARCONA-CALLAO(B)') en la matriz financiera con convergencia matemática al 100%.
 
+6. Despliegue en Producción VPS (91.108.125.253):
+   - Merge de FEAT.CALLAO.BUNKERING.MATRIZ a main y Git Push a origin/main.
+   - Compilación Vite de producción completada en 13.19s (0 errores).
+   - Despliegue automatizado SFTP/SSH, reinicio de servicios FastAPI (geeksoft-engine) y reload de Nginx completados con código 0.
+   - En vivo en: https://forecast.geeksoft.tech
+
 ================================================================================
 REGISTRO DE SESIÓN: 2026-09-07 (Cierre de Sesión)
 ================================================================================
