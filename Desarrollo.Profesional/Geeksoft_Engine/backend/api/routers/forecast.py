@@ -1003,12 +1003,12 @@ def save_vessel(request: dict):
         if "consumption_port_ifo" not in request or request["consumption_port_ifo"] is None:
             request["consumption_port_ifo"] = request.get("consumption_idle_ifo") or 0.0
 
-        # Ensure correct types for numeric fields to avoid DB errors
+        # Ensure correct types for numeric fields (float / numeric in Postgres) to avoid DB errors
         numeric_fields = ["grt", "dwt", "dwcc", "vessel_speed", "tce_required", 
                          "length", "beam", "vessel_max_load_intake_limit", "vessel_pump_discharge_rate",
                          "max_capacity_ifo", "consumption_sea_ifo", "consumption_port_ifo", "consumption_idle_ifo", "consumption_load_ifo", "consumption_disch_ifo",
                          "max_capacity_mdo", "consumption_sea_mdo", "consumption_idle_mdo", "consumption_load_mdo", "consumption_disch_mdo",
-                         "draft_m", "display_order"]
+                         "draft_m"]
         
         for field in numeric_fields:
             if field in request:
@@ -1020,14 +1020,20 @@ def save_vessel(request: dict):
                     except (ValueError, TypeError):
                         request[field] = 0.0
 
-        if "built" in request:
-            if request["built"] is None or request["built"] == "":
-                request["built"] = None
-            else:
-                try:
-                    request["built"] = int(request["built"])
-                except (ValueError, TypeError):
-                    request["built"] = None
+        # Integer fields in Postgres (int4)
+        int_fields = ["built", "display_order"]
+        for field in int_fields:
+            if field in request:
+                if request[field] is None or request[field] == "":
+                    if field == "display_order":
+                        request[field] = 99
+                    else:
+                        request[field] = None
+                else:
+                    try:
+                        request[field] = int(float(request[field]))
+                    except (ValueError, TypeError):
+                        request[field] = 99 if field == "display_order" else None
 
         # Filter only valid columns in vessels table to prevent schema mismatch errors
         valid_columns = {
