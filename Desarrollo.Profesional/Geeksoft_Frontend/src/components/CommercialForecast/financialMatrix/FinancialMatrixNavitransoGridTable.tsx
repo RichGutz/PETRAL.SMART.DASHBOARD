@@ -35,11 +35,35 @@ const getCellColor = (type: 'client' | 'route' | 'vessel' | undefined, name: str
 
 const renderCellContent = (name: string, isSubtotal?: boolean) => {
     if (isSubtotal || !name) return name;
-    if (name.includes('CALLAO(B)')) {
+    const isBunk = name.includes('CALLAO(B)');
+    const cleanKey = name.replace('-CALLAO(B)', '');
+    const ports = cleanKey.split('-');
+
+    if (ports.length > 2) {
         return (
-            <div className="flex flex-col items-center justify-center gap-1 py-1">
-                <span className="font-extrabold">{name.replace('-CALLAO(B)', '')}</span>
-                <span className="text-[8px] bg-amber-400 text-amber-950 px-1.5 py-0.5 rounded font-black tracking-tight shadow-sm whitespace-nowrap" style={{ writingMode: 'horizontal-tb', transform: 'none' }}>
+            <div className="flex flex-col items-center justify-center gap-0.5 py-1" style={{ writingMode: 'horizontal-tb', transform: 'none' }}>
+                <div className="flex flex-col items-center leading-tight font-extrabold text-[10px]">
+                    {ports.map((p, idx) => (
+                        <React.Fragment key={idx}>
+                            <span>{p}</span>
+                            {idx < ports.length - 1 && <span className="text-[8px] opacity-70">↓</span>}
+                        </React.Fragment>
+                    ))}
+                </div>
+                {isBunk && (
+                    <span className="text-[8px] bg-amber-400 text-amber-950 px-1.5 py-0.5 rounded font-black tracking-tight shadow-sm whitespace-nowrap mt-0.5">
+                        ⛽ CALLAO(b)
+                    </span>
+                )}
+            </div>
+        );
+    }
+
+    if (isBunk) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-1 py-1" style={{ writingMode: 'horizontal-tb', transform: 'none' }}>
+                <span className="font-extrabold">{cleanKey}</span>
+                <span className="text-[8px] bg-amber-400 text-amber-950 px-1.5 py-0.5 rounded font-black tracking-tight shadow-sm whitespace-nowrap">
                     ⛽ CALLAO(b)
                 </span>
             </div>

@@ -656,31 +656,16 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         if not spot_route:
             if (line.origin_port_id == "SPOT"):
                 spot_id = line.destination_port_id
-                spot_route = next((s for s in routes_master_data if s and (s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id)), {})
+                spot_route = next((s for s in (routes_prospects_data + routes_master_data) if s and (s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id)), {})
+                if spot_route:
+                    is_spot_route = True
             else:
                 lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
                 spot_route = next((s for s in routes_master_data if s and (s.get("name", "").upper() == lookup_key)), None)
                 
-                if not spot_route:
-                    # Buscar primero en cotizaciones vivas (routes_quotes) para priorizar precios de búnker cotizados ($1100/$1700)
-                    for s in (routes_prospects_data + routes_master_data):
-                        if not s:
-                            continue
-                        s_name = (s.get("name") or "").upper()
-                        if client.upper() not in s_name:
-                            continue
-                        tramos_list = (s.get("legs_data") or {}).get("tramos", [])
-                        laden_tramos = [t for t in tramos_list if t and t.get("type", "").upper() == "LADEN"]
-                        if laden_tramos:
-                            first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
-                            last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                            if (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
-                                spot_route = s
-                                break
-
                 if spot_route:
                     is_spot_route = True
-                    spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
+                    spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data") or {}
@@ -1042,8 +1027,25 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 for t in tramos_cfg
             ) or "BUNKER" in str(spot_route.get("name", "")).upper() or "-CALLAO(B)" in str(line.destination_port_id).upper()
 
+            # Detección y armado de secuencia Multi-Drop (POL - POD1 - POD2 ...)
+            laden_tramos_list = [t for t in tramos_cfg if t and str(t.get("type", "")).upper() == "LADEN"]
+            multi_drop_ports = []
+            if len(laden_tramos_list) > 1:
+                first_orig = str(laden_tramos_list[0].get("origin_port_id") or "").strip().upper()
+                if first_orig:
+                    multi_drop_ports.append(first_orig)
+                for t in laden_tramos_list:
+                    dest_p = str(t.get("destination_port_id") or "").strip().upper()
+                    if dest_p and dest_p not in multi_drop_ports:
+                        multi_drop_ports.append(dest_p)
+
+            is_multi_drop = len(multi_drop_ports) >= 3
+
             if line.origin_port_id == "SPOT":
                 route_key = f"SPOT-{spot_id}"
+            elif is_multi_drop:
+                base_multi_key = "-".join(multi_drop_ports)
+                route_key = f"{base_multi_key}-CALLAO(B)" if has_callao_bunkering else base_multi_key
             elif has_callao_bunkering:
                 route_key = f"{line.origin_port_id}-{line.destination_port_id}-CALLAO(B)"
             else:
@@ -1370,32 +1372,18 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 spot_id = quote_id
         
         if not spot_route:
-            if is_spot_route:
+            if (line.origin_port_id == "SPOT"):
                 spot_id = line.destination_port_id
-                spot_route = next((s for s in routes_master_data if s and (s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id)), {})
-            else:
-                lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
-                spot_route = next((s for s in routes_master_data if s and s.get("name", "").upper() == lookup_key), None)
-                
-                if not spot_route:
-                    for s in routes_master_data:
-                        if not s:
-                            continue
-                        s_name = (s.get("name") or "").upper()
-                        if not s_name.startswith(f"{client.upper()}."):
-                            continue
-                        tramos_list = (s.get("legs_data") or {}).get("tramos", [])
-                        laden_tramos = [t for t in tramos_list if t and t.get("type", "").upper() == "LADEN"]
-                        if laden_tramos:
-                            first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
-                            last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                            if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
-                                spot_route = s
-                                break
-
+                spot_route = next((s for s in (routes_prospects_data + routes_master_data) if s and (s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id)), {})
                 if spot_route:
                     is_spot_route = True
-                    spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
+            else:
+                lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
+                spot_route = next((s for s in routes_master_data if s and (s.get("name", "").upper() == lookup_key)), None)
+                
+                if spot_route:
+                    is_spot_route = True
+                    spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data", {})
@@ -1643,8 +1631,25 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 for t in tramos_cfg
             ) or "BUNKER" in str(spot_route.get("name", "")).upper() or "-CALLAO(B)" in str(line.destination_port_id).upper()
 
+            # Detección y armado de secuencia Multi-Drop (POL - POD1 - POD2 ...)
+            laden_tramos_list = [t for t in tramos_cfg if t and str(t.get("type", "")).upper() == "LADEN"]
+            multi_drop_ports = []
+            if len(laden_tramos_list) > 1:
+                first_orig = str(laden_tramos_list[0].get("origin_port_id") or "").strip().upper()
+                if first_orig:
+                    multi_drop_ports.append(first_orig)
+                for t in laden_tramos_list:
+                    dest_p = str(t.get("destination_port_id") or "").strip().upper()
+                    if dest_p and dest_p not in multi_drop_ports:
+                        multi_drop_ports.append(dest_p)
+
+            is_multi_drop = len(multi_drop_ports) >= 3
+
             if line.origin_port_id == "SPOT":
                 route_key = f"SPOT-{spot_id}"
+            elif is_multi_drop:
+                base_multi_key = "-".join(multi_drop_ports)
+                route_key = f"{base_multi_key}-CALLAO(B)" if has_callao_bunkering else base_multi_key
             elif has_callao_bunkering:
                 route_key = f"{line.origin_port_id}-{line.destination_port_id}-CALLAO(B)"
             else:

@@ -8,7 +8,8 @@ CONCURRENCY & QC SUMMARY:
 - Frontend Matrix UI: Soporte visual en FinancialMatrixGridTable y FinancialMatrixNavitransoGridTable con badge estilizado '⛽ CALLAO(b)'.
 - Frontend Build: npx vite build (SUCCESS, 0 ERRORS, 20.59s / 13.19s).
 - Loop QC Script: run_qc_e2e_callao_bunkering_matrix_loop.py (100% PASS en rutas SPCC TABLONES y MOQUEGUA, segregación de rutas sin colisión y convergencia matemática al centavo).
-- VPS Deployment Status: LIVE at https://forecast.geeksoft.tech (SFTP/SSH Deploy & FastAPI Restart completado con Código 0).
+- Multi-Drop POL-POD-POD Support: Soporte nativo para rutas multi-descarga (CALLAO-MARCONA-MATARANI) en Backend y Frontend, con convergencia matemática al 100% (run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py PASS, Delta P&L = $0.00 USD).
+- Frontend Build: npx vite build (SUCCESS, 0 ERRORS, 13.61s).
 ================================================================================
 GEMINI WORK LOG: 2026-08-04
 ================================================================================

@@ -33,6 +33,15 @@ TAREAS Y MODIFICACIONES REALIZADAS:
    - Despliegue automatizado SFTP/SSH, reinicio de servicios FastAPI (geeksoft-engine) y reload de Nginx completados con código 0.
    - En vivo en: https://forecast.geeksoft.tech
 
+7. Caso Multi-Drop POL-POD-POD (NEXA MARCOBRE Y QUILLA):
+   - Safe Point Git: Branch FEAT.MULTIDROP.POL.POD.POD.MATRIZ, Tag SAFEPOINT.PRE.MULTIDROP.9.9.26.
+   - Backend: Detección de secuencias multi-puerto LADEN generando route_key canónica [POL]-[POD1]-[POD2] (ej. CALLAO-MARCONA-MATARANI).
+   - Aislamiento estricto de rutas de contrato vs cotizaciones vivas (eliminación de falsos positivos en fallback).
+   - Frontend: Mapeo multi-drop en ForecastBuilder_V2 con auto-completado de toneladas reales (13,500 MT) y yield ponderado ($32.11).
+   - UI Grilla: Renderizado vertical estructurado con conectores 'CALLAO ↓ MARCONA ↓ MATARANI'.
+   - Build Vite: npx vite build exitoso en 13.61s (0 errores).
+   - Loop QC: Script run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py ejecutado con éxito (Delta P&L = $0.00 USD frente a $166,101.84 del Multicotizador).
+
 ================================================================================
 REGISTRO DE SESIÓN: 2026-09-07 (Cierre de Sesión)
 ================================================================================

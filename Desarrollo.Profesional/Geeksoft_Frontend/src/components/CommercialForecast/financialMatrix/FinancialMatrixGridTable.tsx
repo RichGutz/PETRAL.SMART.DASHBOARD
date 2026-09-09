@@ -181,16 +181,41 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                                         {clientId}
                                     </td>
                                     <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getRouteColor(routeKey)}`}>
-                                        {routeKey.includes('CALLAO(B)') ? (
-                                            <div className="flex flex-col items-center justify-center gap-0.5">
-                                                <span>{routeKey.replace('-CALLAO(B)', '')}</span>
-                                                <span className="text-[9px] bg-amber-400 text-amber-950 px-1 py-0.5 rounded font-black tracking-tight shadow-2xs">
-                                                    ⛽ CALLAO(b)
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            routeKey
-                                        )}
+                                        {(() => {
+                                            const isBunk = routeKey.includes('CALLAO(B)');
+                                            const cleanKey = routeKey.replace('-CALLAO(B)', '');
+                                            const ports = cleanKey.split('-');
+                                            if (ports.length > 2) {
+                                                return (
+                                                    <div className="flex flex-col items-center justify-center gap-0.5 py-1">
+                                                        <div className="flex flex-col items-center leading-tight font-extrabold text-[11px]">
+                                                            {ports.map((p, idx) => (
+                                                                <React.Fragment key={idx}>
+                                                                    <span>{p}</span>
+                                                                    {idx < ports.length - 1 && <span className="text-[9px] opacity-70">↓</span>}
+                                                                </React.Fragment>
+                                                            ))}
+                                                        </div>
+                                                        {isBunk && (
+                                                            <span className="text-[9px] bg-amber-400 text-amber-950 px-1 py-0.5 rounded font-black tracking-tight shadow-2xs mt-0.5">
+                                                                ⛽ CALLAO(b)
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            }
+                                            if (isBunk) {
+                                                return (
+                                                    <div className="flex flex-col items-center justify-center gap-0.5">
+                                                        <span>{cleanKey}</span>
+                                                        <span className="text-[9px] bg-amber-400 text-amber-950 px-1 py-0.5 rounded font-black tracking-tight shadow-2xs">
+                                                            ⛽ CALLAO(b)
+                                                        </span>
+                                                    </div>
+                                                );
+                                            }
+                                            return routeKey;
+                                        })()}
                                     </td>
                                     <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getVesselColor(vesselId)}`}>
                                         {vesselId}

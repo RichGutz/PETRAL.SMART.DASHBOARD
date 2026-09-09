@@ -236,15 +236,22 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             const bunkSuffix = hasCallaoBunkering ? '-CALLAO(B)' : '';
             let key = '';
             const sId = s.name || s.spot_id || s.route_id || s.contract_id || s.id;
-            if (laden.length > 0) {
-                const orig = laden[0].origin_port_id;
-                const dest = laden[laden.length - 1].destination_port_id;
-                key = `QUOTE:${sId}:${orig}-${dest}${bunkSuffix}`;
+            
+            // Detección Multi-Drop (POL - POD1 - POD2 ...)
+            let routePortsStr = '';
+            if (laden.length > 1) {
+                const portsSeq = [laden[0].origin_port_id, ...laden.map((t: any) => t.destination_port_id)].filter(Boolean);
+                const uniquePorts = portsSeq.filter((p: string, idx: number) => idx === 0 || p !== portsSeq[idx - 1]);
+                routePortsStr = uniquePorts.join('-');
+            } else if (laden.length === 1) {
+                routePortsStr = `${laden[0].origin_port_id}-${laden[0].destination_port_id}`;
             } else if (s.origin_port_id && s.destination_port_id) {
-                key = `QUOTE:${sId}:${s.origin_port_id}-${s.destination_port_id}${bunkSuffix}`;
+                routePortsStr = `${s.origin_port_id}-${s.destination_port_id}`;
             } else {
-                key = `QUOTE:${sId}:UNK-UNK${bunkSuffix}`;
+                routePortsStr = 'UNK-UNK';
             }
+
+            key = `QUOTE:${sId}:${routePortsStr}${bunkSuffix}`;
 
             if (!addedKeys.has(key)) {
                 addedKeys.add(key);
@@ -271,18 +278,19 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 setVessel(savedVessel);
             }
 
-            // 2. Calcular cantidad total de la ruta compleja (suma de tramos LADEN)
+            // 2. Calcular cantidad total de la ruta compleja (suma de tramos LADEN o financial_summary)
+            const finSummary = legs.financial_summary || {};
             const tramos = legs.tramos || [];
-            const totalQty = tramos.reduce((acc: number, tr: any) => 
-                acc + (tr.type?.toUpperCase() === 'LADEN' ? (Number(tr.quantity) || 0) : 0), 0
-            );
+            const ladenTramos = tramos.filter((tr: any) => tr.type?.toUpperCase() === 'LADEN');
+            const sumLadenQty = ladenTramos.reduce((acc: number, tr: any) => acc + (Number(tr.quantity) || 0), 0);
+            const totalQty = finSummary.totalQuantity || sumLadenQty || 0;
             if (totalQty > 0) {
                 setQuantity(String(totalQty));
             }
 
             // 3. Calcular flete ponderado (Yield Flete)
-            const totalRevenue = tramos.reduce((acc: number, tr: any) => 
-                acc + (tr.type?.toUpperCase() === 'LADEN' ? (Number(tr.quantity) || 0) * (Number(tr.freight_rate) || 0) : 0), 0
+            const totalRevenue = finSummary.totalFreight || ladenTramos.reduce((acc: number, tr: any) => 
+                acc + ((Number(tr.quantity) || 0) * (Number(tr.freight_rate) || 0)), 0
             );
             const yieldFlete = totalQty > 0 ? (totalRevenue / totalQty) : 0;
             if (yieldFlete > 0) {
@@ -369,9 +377,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 const parts = route.split(':');
                 const rawQuoteId = parts[1];
                 quote_id = isNaN(Number(rawQuoteId)) ? (rawQuoteId as any) : parseInt(rawQuoteId);
-                const ports = parts[2].split('-');
+                const portsClean = parts[2].replace('-CALLAO(B)', '');
+                const ports = portsClean.split('-');
                 origin_port_id = ports[0];
-                destination_port_id = ports[1];
+                destination_port_id = ports.length > 2 ? ports.slice(1).join('-') : ports[1];
             } else {
                 origin_port_id = route.split('-')[0];
                 destination_port_id = route.split('-')[1];
