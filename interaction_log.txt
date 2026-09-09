@@ -50,6 +50,12 @@ TAREAS Y MODIFICACIONES REALIZADAS:
      • run_qc_e2e_mec_consolidado_loop.py
      • test_convergence_all_routes.py
 
+9. Despliegue en Producción VPS (91.108.125.253):
+   - Merge de FEAT.MULTIDROP.POL.POD.POD.MATRIZ a main y Git Push a origin/main (Commit c17e408).
+   - Compilación Vite de producción completada en 13.18s (0 errores, 1110 módulos).
+   - Despliegue automatizado SFTP/SSH, reinicio de servicios FastAPI (geeksoft-engine) y reload de Nginx completados con código 0.
+   - En vivo y certificado en: https://forecast.geeksoft.tech
+
 ================================================================================
 REGISTRO DE SESIÓN: 2026-09-07 (Cierre de Sesión)
 ================================================================================
