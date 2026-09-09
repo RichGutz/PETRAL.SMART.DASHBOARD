@@ -1031,8 +1031,21 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 "freight_rate": freight_rate  # yield ponderado (multi) o custom_tariff (tradicional)
             }
             
+            puertos_cfg = legs_data.get("puertosConfig", []) if isinstance(legs_data, dict) else []
+            tramos_cfg = legs_data.get("tramos", []) if isinstance(legs_data, dict) else []
+            has_callao_bunkering = any(
+                (str(p.get("port_id") or p.get("port") or "").upper() == "CALLAO" or p.get("action") == "BUNKERING" or p.get("operation") == "BUNKERING")
+                for p in puertos_cfg if (p.get("action") == "BUNKERING" or p.get("operation") == "BUNKERING")
+            ) or any(
+                (str(t.get("origin_port_id") or "").upper() == "CALLAO" or str(t.get("destination_port_id") or "").upper() == "CALLAO") and 
+                (t.get("destination_action") == "BUNKERING" or "BUNKER" in str(t.get("type", "")).upper())
+                for t in tramos_cfg
+            ) or "BUNKER" in str(spot_route.get("name", "")).upper() or "-CALLAO(B)" in str(line.destination_port_id).upper()
+
             if line.origin_port_id == "SPOT":
                 route_key = f"SPOT-{spot_id}"
+            elif has_callao_bunkering:
+                route_key = f"{line.origin_port_id}-{line.destination_port_id}-CALLAO(B)"
             else:
                 route_key = f"{line.origin_port_id}-{line.destination_port_id}"
             
@@ -1324,34 +1337,65 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         else:
             p_mdo = 0.0
         
-        is_spot_route = (line.origin_port_id == "SPOT")
+        # Determinar si es una ruta spot o cotización
+        quote_id = getattr(line, 'quote_id', None)
+        is_spot_route = (line.origin_port_id == "SPOT") or (quote_id is not None)
         spot_route = None
         spot_id = None
         
-        if is_spot_route:
-            spot_id = line.destination_port_id
-            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id), {})
-        else:
-            lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
-            spot_route = next((s for s in routes_master_data if s.get("name", "").upper() == lookup_key), None)
+        if quote_id is not None:
+            raw_q_id = str(quote_id)
+            clean_q_id = raw_q_id.replace("QUOTE:", "").split(":")[0].strip()
             
+            # 1. Búsqueda por Coincidencia Total Exacta de Nombre o ID en Cotizaciones Vivas (routes_prospects_data)
+            spot_route = next((s for s in routes_prospects_data if s and (
+                str(s.get("name", "")).strip().upper() == clean_q_id.upper() or
+                str(s.get("spot_id", "")).strip() == clean_q_id or 
+                str(s.get("route_id", "")).strip() == clean_q_id or 
+                str(s.get("id", "")).strip() == clean_q_id
+            )), None)
+            
+            # 2. Si no está en routes_prospects_data, Coincidencia Total Exacta en Maestro General
             if not spot_route:
-                for s in routes_master_data:
-                    s_name = (s.get("name") or "").upper()
-                    if not s_name.startswith(f"{client.upper()}."):
-                        continue
-                    tramos_list = s.get("legs_data", {}).get("tramos", [])
-                    laden_tramos = [t for t in tramos_list if t.get("type", "").upper() == "LADEN"]
-                    if laden_tramos:
-                        first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
-                        last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                        if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
-                            spot_route = s
-                            break
-
+                spot_route = next((s for s in routes_master_data if s and (
+                    str(s.get("name", "")).strip().upper() == clean_q_id.upper() or
+                    str(s.get("name", "")).strip().upper() == raw_q_id.upper() or
+                    str(s.get("spot_id", "")).strip() == clean_q_id or 
+                    str(s.get("route_id", "")).strip() == clean_q_id or 
+                    str(s.get("contract_id", "")).strip() == clean_q_id
+                )), None)
+                
             if spot_route:
                 is_spot_route = True
-                spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
+                spot_id = quote_id
+        
+        if not spot_route:
+            if is_spot_route:
+                spot_id = line.destination_port_id
+                spot_route = next((s for s in routes_master_data if s and (s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id)), {})
+            else:
+                lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
+                spot_route = next((s for s in routes_master_data if s and s.get("name", "").upper() == lookup_key), None)
+                
+                if not spot_route:
+                    for s in routes_master_data:
+                        if not s:
+                            continue
+                        s_name = (s.get("name") or "").upper()
+                        if not s_name.startswith(f"{client.upper()}."):
+                            continue
+                        tramos_list = (s.get("legs_data") or {}).get("tramos", [])
+                        laden_tramos = [t for t in tramos_list if t and t.get("type", "").upper() == "LADEN"]
+                        if laden_tramos:
+                            first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
+                            last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
+                            if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
+                                spot_route = s
+                                break
+
+                if spot_route:
+                    is_spot_route = True
+                    spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data", {})
@@ -1414,7 +1458,15 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
 
                 payload = {
                     "vessel_params": vparams,
-                    "tramos": tramos_copy
+                    "tramos": tramos_copy,
+                    "puertosConfig": legs_data.get("puertosConfig", []),
+                    "refacturarMuellajeMap": legs_data.get("refacturarMuellajeMap", {}),
+                    "financial_summary": legs_data.get("financial_summary", {}),
+                    "bunker_price_ifo": final_p_ifo,
+                    "bunker_price_mdo": final_p_mdo,
+                    "port_cost_mode": request.port_cost_mode,
+                    "client_id": client,
+                    "vessel_id": vessel
                 }
 
                 from backend.spot_engine import calculate_multicotizador_simulation
@@ -1424,49 +1476,91 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 addr_comm_pct = float(legs_data.get("addressCommPct", 0))
                 broker_comm_pct = float(legs_data.get("brokerCommPct", 0))
                 total_comm_pct = addr_comm_pct + broker_comm_pct
-
-                # --- SMOKING GUN FIX: leer muellaje directamente de puertosConfig ---
                 puertos_cfg_list = legs_data.get("puertosConfig", [])
                 sum_muellaje = sum(float(p.get("muellaje_cost") or 0.0) for p in puertos_cfg_list) if puertos_cfg_list else 0.0
 
-                tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
-                tot_dockage = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or 0.0)
-                gross_revenue = tot_freight_rev + tot_dockage
+                fin_summary = legs_data.get("financial_summary") or {}
+                original_vessel_id = legs_data.get("vessel_id") or (legs_data.get("vesselParams") or {}).get("vessel_id")
+                has_valid_snapshot = bool(fin_summary and (float(fin_summary.get("grandBunkerTotal", 0)) > 0 or float(fin_summary.get("totalDays", 0)) > 0))
+                is_same_vessel = bool(vessel and original_vessel_id and vessel.strip().upper() == str(original_vessel_id).strip().upper())
+                
+                orig_freight_rate = (float(fin_summary.get("totalFreight", 0)) / (total_laden_qty if total_laden_qty > 0 else line.quantity)) if (fin_summary and float(fin_summary.get("totalFreight", 0)) > 0) else yield_flete
+                has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0 and abs(float(line.custom_tariff) - orig_freight_rate) > 0.01)
+                has_bunker_override = bool((line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) or (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0))
 
-                total_commissions = gross_revenue * (total_comm_pct / 100)
-                net_revenue = gross_revenue - total_commissions
-                pnl_after_comm = net_revenue - consolidated.get("total_port_costs", 0) - consolidated.get("total_bunker_costs", 0)
-                total_days = consolidated.get("total_days", 0)
-                tce_real = (pnl_after_comm / total_days) if total_days > 0 else 0
+                if is_same_vessel and has_valid_snapshot:
+                    if has_tariff_override:
+                        tot_freight_rev = float((total_laden_qty if total_laden_qty > 0 else line.quantity) * float(line.custom_tariff))
+                    else:
+                        tot_freight_rev = float(fin_summary.get("totalFreight", consolidated.get("total_freight_revenue", 0)))
+
+                    tot_refact_muell = float(fin_summary.get("refacturacionMuellaje", sum_muellaje))
+                    tot_demurrage_rev = float(fin_summary.get("demurrageRevenue", consolidated.get("demurrage_revenue", 0.0)))
+                    tot_demurrage_days = float(fin_summary.get("totalDemurrageDays", consolidated.get("demurrage_days", 0.0)))
+                    gross_revenue = float(tot_freight_rev + tot_refact_muell + tot_demurrage_rev)
+                    total_commissions = float(gross_revenue * (total_comm_pct / 100))
+                    net_revenue = gross_revenue - total_commissions
+                    tot_port_costs = float(fin_summary.get("totalPortCosts", consolidated.get("total_port_costs", 0)))
+
+                    bunker_ifo_ton = float(fin_summary.get("totalIfoTons") or fin_summary.get("grandIfoTons") or consolidated.get("bunker_ifo_tonnage", 0))
+                    bunker_mdo_ton = float(fin_summary.get("totalMdoTons") or fin_summary.get("grandMdoTons") or consolidated.get("bunker_mdo_tonnage", 0))
+                    if has_bunker_override:
+                        tot_bunker_costs = (bunker_ifo_ton * final_p_ifo) + (bunker_mdo_ton * final_p_mdo)
+                    else:
+                        tot_bunker_costs = float(fin_summary.get("grandBunkerTotal") or (float(fin_summary.get("ifoCost", 0)) + float(fin_summary.get("mdoCost", 0))) or consolidated.get("total_bunker_costs", 0))
+
+                    total_days = float(fin_summary.get("totalDays", consolidated.get("total_days", 0)))
+                    sea_days_val = float(fin_summary.get("totalSeaDays", consolidated.get("total_sea_days", 0)))
+                    port_days_val = float(fin_summary.get("totalPortDays", consolidated.get("total_port_days", 0)))
+                    pnl_after_comm = float(net_revenue - tot_port_costs - tot_bunker_costs)
+                    tce_real = (net_revenue - tot_port_costs - tot_bunker_costs) / total_days if total_days > 0 else 0
+                    tce_req = float(fin_summary.get("tceReq", tce_req))
+                else:
+                    tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
+                    tot_refact_muell = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or consolidated.get("refacturacion_muellaje", 0))
+                    tot_demurrage_rev = float(consolidated.get("demurrage_revenue", 0.0) or consolidated.get("demurrage_total", 0.0))
+                    tot_demurrage_days = float(consolidated.get("demurrage_days", 0.0))
+                    gross_revenue = float(tot_freight_rev + tot_refact_muell + tot_demurrage_rev)
+                    total_commissions = gross_revenue * (total_comm_pct / 100)
+                    net_revenue = gross_revenue - total_commissions
+                    tot_port_costs = float(consolidated.get("total_port_costs", 0))
+                    tot_bunker_costs = float(consolidated.get("total_bunker_costs", 0))
+                    total_days = float(consolidated.get("total_days", 0))
+                    tce_real = (net_revenue - tot_port_costs - tot_bunker_costs) / total_days if total_days > 0 else 0
+                    pnl_after_comm = net_revenue - tot_port_costs - tot_bunker_costs
+                    sea_days_val = float(consolidated.get("total_sea_days", 0))
+                    port_days_val = float(consolidated.get("total_port_days", 0))
+                    bunker_ifo_ton = float(consolidated.get("bunker_ifo_tonnage", 0))
+                    bunker_mdo_ton = float(consolidated.get("bunker_mdo_tonnage", 0))
 
                 unit_result = {
                     "gross_income": round(tot_freight_rev, 2),
                     "freight_revenue": round(tot_freight_rev, 2),
                     "freight_revenue_unit": round(tot_freight_rev, 2),
-                    "dockage_revenue": round(tot_dockage, 2),
-                    "dockage_revenue_unit": round(tot_dockage, 2),
-                    "refacturacion_muellaje": round(tot_dockage, 2),
-                    "refacturacion_muellaje_unit": round(tot_dockage, 2),
+                    "dockage_revenue": round(tot_refact_muell, 2),
+                    "dockage_revenue_unit": round(tot_refact_muell, 2),
+                    "refacturacion_muellaje": round(tot_refact_muell, 2),
+                    "refacturacion_muellaje_unit": round(tot_refact_muell, 2),
                     "gross_revenue_total": round(gross_revenue, 2),
                     "gross_revenue_total_unit": round(gross_revenue, 2),
                     "net_income": round(gross_revenue, 2),
                     "total_commissions": round(total_commissions, 2),
                     "net_revenue_after_comm": round(net_revenue, 2),
-                    "total_port_costs": consolidated.get("total_port_costs", 0),
-                    "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
+                    "total_port_costs": tot_port_costs,
+                    "total_bunker_costs": tot_bunker_costs,
                     "voyage_result": round(pnl_after_comm, 2),
                     "pl_vs_required": round(pnl_after_comm - (total_days * tce_req), 2),
                     "tce_real": round(tce_real, 2),
                     "total_duration": total_days,
-                    "sea_days": consolidated.get("total_sea_days", 0),
-                    "port_days": consolidated.get("total_port_days", 0),
-                    "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
-                    "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
+                    "sea_days": sea_days_val,
+                    "port_days": port_days_val,
+                    "bunker_ifo_tonnage": bunker_ifo_ton,
+                    "bunker_mdo_tonnage": bunker_mdo_ton,
                     "pcm_projected": round(tce_real - tce_req, 2),
                     "audit_trail": {
                         "bunker_costs": {
                             "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
-                            "values": f"IFO: {consolidated.get('bunker_ifo_tonnage', 0)} t, MDO: {consolidated.get('bunker_mdo_tonnage', 0)} t"
+                            "values": f"IFO: {bunker_ifo_ton} t, MDO: {bunker_mdo_ton} t"
                         },
                         "commissions": {
                             "formula": f"Gross Revenue × ({addr_comm_pct}% addr + {broker_comm_pct}% broker)",
@@ -1538,8 +1632,21 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 "quantity": total_laden_qty if ("tramos" in legs_data and total_laden_qty > 0) else line.quantity,
                 "freight_rate": freight_rate
             }
+            puertos_cfg = legs_data.get("puertosConfig", []) if isinstance(legs_data, dict) else []
+            tramos_cfg = legs_data.get("tramos", []) if isinstance(legs_data, dict) else []
+            has_callao_bunkering = any(
+                (str(p.get("port_id") or p.get("port") or "").upper() == "CALLAO" or p.get("action") == "BUNKERING" or p.get("operation") == "BUNKERING")
+                for p in puertos_cfg if (p.get("action") == "BUNKERING" or p.get("operation") == "BUNKERING")
+            ) or any(
+                (str(t.get("origin_port_id") or "").upper() == "CALLAO" or str(t.get("destination_port_id") or "").upper() == "CALLAO") and 
+                (t.get("destination_action") == "BUNKERING" or "BUNKER" in str(t.get("type", "")).upper())
+                for t in tramos_cfg
+            ) or "BUNKER" in str(spot_route.get("name", "")).upper() or "-CALLAO(B)" in str(line.destination_port_id).upper()
+
             if line.origin_port_id == "SPOT":
                 route_key = f"SPOT-{spot_id}"
+            elif has_callao_bunkering:
+                route_key = f"{line.origin_port_id}-{line.destination_port_id}-CALLAO(B)"
             else:
                 route_key = f"{line.origin_port_id}-{line.destination_port_id}"
             

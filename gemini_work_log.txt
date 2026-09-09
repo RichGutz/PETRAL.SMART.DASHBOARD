@@ -1,4 +1,14 @@
 ================================================================================
+GEMINI WORK LOG: 2026-09-09
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Safe Point Git: Branch 'FEAT.CALLAO.BUNKERING.MATRIZ', Tag 'SAFEPOINT.PRE.CALLAO.BUNKERING.9.9.26'.
+- Audio Transcripción: Whisper transcription de 'conflicto.callao.bunkering.ogg'.
+- Backend Multi-Quote Resolution: Soporte y resolución nativa por quote_id con detección de escala técnica de búnker en Callao (action == 'BUNKERING') generando route_key segregada '[ORIGEN]-[DESTINO]-CALLAO(B)'.
+- Frontend Matrix UI: Soporte visual en FinancialMatrixGridTable y FinancialMatrixNavitransoGridTable con badge estilizado '⛽ CALLAO(b)'.
+- Frontend Build: npx vite build (SUCCESS, 0 ERRORS, 20.59s).
+- Loop QC Script: run_qc_e2e_callao_bunkering_matrix_loop.py (100% PASS en rutas SPCC TABLONES y MOQUEGUA, segregación de rutas sin colisión y convergencia matemática al centavo).
+================================================================================
 GEMINI WORK LOG: 2026-08-04
 ================================================================================
 CONCURRENCY & QC SUMMARY:
@@ -538,6 +548,12 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-02 16:31] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Exportación Excel Matriz PETRAL (zoomScale 65%, totales desplegados y ancho neto) publicado en vivo.
 [2026-09-02 16:51] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Exportación Excel Matriz PETRAL (zoomScale 65%, 15 filas totales y anchos netos) auditado y publicado en vivo.
 [2026-09-02 17:09] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Corrección de variable accumGross en ForecastGrid.tsx publicada en vivo.
+[2026-09-09 14:25] SAFE POINT CREADO: Tag 'SAFEPOINT.PRE.CALLAO.BUNKERING.9.9.26' y nuevo branch 'FEAT.CALLAO.BUNKERING.MATRIZ'.
+[2026-09-09 14:27] CASO PERICIAL: RUTAS ESPECIALES DE BUNKERING (CALLAO) EN MATRIZ FINANCIERA.
+- Transcripción de audio completada con Whisper.
+- Diagnóstico forense confirmado: colisión de 'route_key' en backend y frontend (las rutas con escala de bunkering en Callao se reducen a ORIGEN-DESTINO y colisionan con rutas estándar).
+- Inspeccionadas rutas reales en Supabase (ej. SPCC.ILO.MARCONA.CALLAO.ILO.BUNKER TABLONES con tramos LADEN ILO->MARCONA y BALLAST MARCONA->CALLAO->ILO).
+- Plan LEG / CLON / DIFF / QC en ejecución.
 [2026-09-02 17:25] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Servicios independientes PDF y Excel para Matriz NAVITRANSO (zoomScale 65%, 4 bloques contables y anchos netos) publicados en vivo.
 [2026-09-02 17:47] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Corrección de PDF NAVITRANSO (matriz 2D ocupada, ajuste 12 meses A4 landscape y eliminación de desbordes) publicada en vivo.
 [2026-09-02 18:01] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Corrección pericial definitiva de títulos de métricas (HIRE, DEMORAS, COMBUSTIBLE, GASTOS DE PUERTO), normalización de alturas de filas (eliminada elongación de Margen Bruto) y calibración A4 Landscape con fuente 7.5px publicada en vivo.

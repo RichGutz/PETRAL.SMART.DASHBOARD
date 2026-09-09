@@ -1,4 +1,33 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-09-09
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Transcripción y Diagnóstico de Audio (conflicto.callao.bunkering.ogg):
+   - Transcripción completa con transcribe_whisper.py.
+   - Diagnóstico: Rutas con escala técnica de bunkering en Callao (ej. SPCC Tablones/Moquegua) colisionaban en la Matriz Financiera al resumirse genéricamente como [ORIGEN]-[DESTINO].
+
+2. Safe Point y Branching Git:
+   - Tag de seguridad: SAFEPOINT.PRE.CALLAO.BUNKERING.9.9.26
+   - Branch de desarrollo: FEAT.CALLAO.BUNKERING.MATRIZ
+
+3. Backend Engine (forecast_service.py):
+   - Implementación de resolución prioritaria y directa por quote_id para capturar snapshots multicotizador completos.
+   - Detección automática de parada de bunkering en Callao (puertosConfig.action == 'BUNKERING').
+   - Generación de llave segregada discriminada: [ORIGEN]-[DESTINO]-CALLAO(B).
+   - Preservación íntegra de días (+4.06d / +8.30d), gastos portuarios ($72,015.00 / $67,015.00) y consumos de combustible ($75.7k / $79.3k).
+
+4. Frontend (ForecastBuilder_V2.tsx, FinancialMatrixGridTable.tsx, FinancialMatrixNavitransoGridTable.tsx):
+   - Discriminación automática de claves de ruta en ForecastBuilder_V2.
+   - Distintivo visual vertical y badge "⛽ CALLAO(b)" estilizado en oro/ámbar con rotación horizontal adaptativa.
+   - Manejo seguro de cambio de nave para rutas con sufijo CALLAO(B).
+   - Build de producción (npx vite build) ejecutado con éxito en 20.59s (0 errores).
+
+5. Loop QC E2E & Protocolo Benoit Blanc:
+   - Script run_qc_e2e_callao_bunkering_matrix_loop.py ejecutado con éxito.
+   - Coexistencia simultánea y consistente de rutas regulares ('ILO-MARCONA') y rutas con bunkering ('ILO-MARCONA-CALLAO(B)') en la matriz financiera con convergencia matemática al 100%.
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-09-07 (Cierre de Sesión)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
@@ -521,3 +550,5 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-08 09:35:00] Integración de módulos 🏢 Organigrama de la Empresa y 📋 Manual de Organización y Funciones (MOF) en la sección DOCUMENTACIÓN. Compilación con npx vite build exitosa y despliegue automatizado al VPS https://forecast.geeksoft.tech.
 [2026-09-08 09:51:00] Refactorización de Organigrama como Org Chart gráfico (react-organizational-chart) y MOF sincronizado con los 5 integrantes reales de Naviera Petral: Fernando (GG), Iosef (G Comercial), Maria Elena (Op. Moquegua), Jorge (Op. Tablones) y Sandra (Liquidaciones). Desplegado exitosamente a https://forecast.geeksoft.tech.
 [2026-09-08 10:00:00] Rediseño a tema luminoso blanco/slate corporativo para Organigrama y MOF. Integración estética 100% armonizada con el resto del PETRAL ERP desplegada en vivo al VPS https://forecast.geeksoft.tech.
+[2026-09-09 14:25:00] Safe point creado: Tag 'SAFEPOINT.PRE.CALLAO.BUNKERING.9.9.26' y branch 'FEAT.CALLAO.BUNKERING.MATRIZ'.
+[2026-09-09 14:27:00] Caso Pericial Rutas Bunkering Callao: Transcripción con Whisper y plan LEG / CLON / DIFF / QC en marcha.

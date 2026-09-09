@@ -228,23 +228,29 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
             const tramos = s.legs_data?.tramos || [];
             const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
+            const puertosCfg = s.legs_data?.puertosConfig || [];
+            const hasCallaoBunkering = puertosCfg.some((p: any) => p.action === 'BUNKERING' || p.operation === 'BUNKERING') || 
+                                      (s.name || '').toUpperCase().includes('BUNKER') || 
+                                      tramos.some((t: any) => t.destination_action === 'BUNKERING' || (t.type || '').toUpperCase().includes('BUNKER'));
+
+            const bunkSuffix = hasCallaoBunkering ? '-CALLAO(B)' : '';
             let key = '';
             const sId = s.name || s.spot_id || s.route_id || s.contract_id || s.id;
             if (laden.length > 0) {
                 const orig = laden[0].origin_port_id;
                 const dest = laden[laden.length - 1].destination_port_id;
-                key = `QUOTE:${sId}:${orig}-${dest}`;
+                key = `QUOTE:${sId}:${orig}-${dest}${bunkSuffix}`;
             } else if (s.origin_port_id && s.destination_port_id) {
-                key = `QUOTE:${sId}:${s.origin_port_id}-${s.destination_port_id}`;
+                key = `QUOTE:${sId}:${s.origin_port_id}-${s.destination_port_id}${bunkSuffix}`;
             } else {
-                key = `QUOTE:${sId}:UNK-UNK`;
+                key = `QUOTE:${sId}:UNK-UNK${bunkSuffix}`;
             }
 
             if (!addedKeys.has(key)) {
                 addedKeys.add(key);
                 routesList.push({
                     key,
-                    label: s.name,
+                    label: hasCallaoBunkering ? `${s.name} ⛽ (b)` : s.name,
                     isQuote: true,
                     category: routeSource
                 });

@@ -33,6 +33,21 @@ const getCellColor = (type: 'client' | 'route' | 'vessel' | undefined, name: str
     return getVesselColor(name);
 };
 
+const renderCellContent = (name: string, isSubtotal?: boolean) => {
+    if (isSubtotal || !name) return name;
+    if (name.includes('CALLAO(B)')) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-1 py-1">
+                <span className="font-extrabold">{name.replace('-CALLAO(B)', '')}</span>
+                <span className="text-[8px] bg-amber-400 text-amber-950 px-1.5 py-0.5 rounded font-black tracking-tight shadow-sm whitespace-nowrap" style={{ writingMode: 'horizontal-tb', transform: 'none' }}>
+                    ⛽ CALLAO(b)
+                </span>
+            </div>
+        );
+    }
+    return name;
+};
+
 const getColumnHeaderLabel = (type: 'client' | 'route' | 'vessel') => {
     if (type === 'client') return 'Cliente';
     if (type === 'route') return 'Ruta';
@@ -82,12 +97,18 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
         if (ports.length < 2) return;
         const origin_port_id = ports[0];
         const destination_port_id = ports[1];
+        const isTargetBunk = routeName.includes('CALLAO(B)');
 
         setProjectionLines(prev => {
             return prev.map(p => {
+                const isLineBunk = p.puertosConfig?.some?.((pc: any) => pc.action === 'BUNKERING') || 
+                                   p.quote_id?.includes?.('BUNKER') || 
+                                   p.destination_port_id === 'CALLAO' ||
+                                   p.origin_port_id === 'CALLAO';
                 if (p.client_id === clientName && 
                     p.origin_port_id === origin_port_id && 
                     p.destination_port_id === destination_port_id && 
+                    (isTargetBunk ? isLineBunk : !isLineBunk) &&
                     p.vessel_id === oldVesselName) {
                     return { ...p, vessel_id: newVesselId };
                 }
@@ -918,7 +939,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                                     </select>
                                                 </div>
                                             ) : (
-                                                <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-sm tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full font-bold' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
+                                                <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-sm tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full font-bold' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{renderCellContent(row.col1.name, row.isGlobalTotal)}</div>
                                             )}
                                         </td>
                                     )}
@@ -948,14 +969,14 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                                     >
                                                         {vesselsList.map(v => (
-                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
+                                                             <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                                 {v.vessel_id}
                                                             </option>
                                                         ))}
                                                     </select>
                                                 </div>
                                             ) : (
-                                                <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
+                                                <div className="vertical-text mx-auto px-2">{renderCellContent(row.col2.name, row.col2.isSubtotal)}</div>
                                             )}
                                         </td>
                                     )}
@@ -992,7 +1013,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                                     </select>
                                                 </div>
                                             ) : (
-                                                <div className="vertical-text mx-auto px-2">{row.col3.name}</div>
+                                                <div className="vertical-text mx-auto px-2">{renderCellContent(row.col3.name, row.col3.isSubtotal)}</div>
                                             )}
                                         </td>
                                     )}

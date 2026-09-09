@@ -181,7 +181,16 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                                         {clientId}
                                     </td>
                                     <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getRouteColor(routeKey)}`}>
-                                        {routeKey}
+                                        {routeKey.includes('CALLAO(B)') ? (
+                                            <div className="flex flex-col items-center justify-center gap-0.5">
+                                                <span>{routeKey.replace('-CALLAO(B)', '')}</span>
+                                                <span className="text-[9px] bg-amber-400 text-amber-950 px-1 py-0.5 rounded font-black tracking-tight shadow-2xs">
+                                                    ⛽ CALLAO(b)
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            routeKey
+                                        )}
                                     </td>
                                     <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getVesselColor(vesselId)}`}>
                                         {vesselId}

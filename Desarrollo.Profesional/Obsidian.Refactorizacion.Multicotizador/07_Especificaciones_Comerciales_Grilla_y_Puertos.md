@@ -816,56 +816,52 @@ A partir de la auditoría pericial de Benoit Blanc (18.08.2026), se resolvieron 
 A partir de la auditoría pericial de Benoit Blanc (19.08.2026), se detectó que al pulsar **"Ver en Multicotizador"** desde el Maestro de Cierres (`ContractsMaster_V2`) o Maestro de Cotizaciones (`RouteMaster_V2`), la fecha de validez aparecía vacía (`dd/mm/aaaa`) en la tarjeta superior del **Paso 4: VALIDEZ**, a pesar de estar correctamente grabada en la base de datos y visible en la tarjeta inferior de BAF.
 
 | # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
-| :-: | :--- | :--- | :--- | :--- | :--- |
+| :-: | :--- | :--- | :--- | :--- | :-: |
 | **27.1** | **`MultiCotizadorExcel.tsx` (`handleLoadRoute`)** | Intentaba leer `vFrom` y `vTo` antes de desempaquetar `legs_data`, obteniendo `undefined` al venir `legs_data` serializado o anidado en `contract_metadata.valid_from`. | Se desempaqueta primero con `MulticotizadorRetrieverService.unpackQuoteData` y se formatean las fechas a formato HTML5 (`YYYY-MM-DD`) con `formatToDateInput`. | **RESUELTO:** El Paso 4 ("VALIDEZ") en la cabecera carga de inmediato las fechas de inicio y fin de la cotización. | ✅ SOLUCIONADO |
 | **27.2** | **`MulticotizadorRetrieverService.ts` (`unpackQuoteData`)** | Omitía la extracción unificada de `valid_from` y `valid_to` revisando todas las jerarquías posibles de almacenamiento. | Se extraen y devuelven `valid_from` y `valid_to` consolidando `legs_data.valid_from`, `contract_metadata.valid_from`, `baf_valid_from` y `quote.valid_from`. | **RESUELTO:** Recuperación 100% garantizada de las fechas de vigencia en cualquier estructura de JSON. | ✅ SOLUCIONADO |
 | **27.3** | **`multicotizadorStorageService.ts` (`saveQuote`)** | No persistía `valid_from` y `valid_to` en el nivel raíz del payload ni en `legs_data` de forma homogénea para cotizaciones no contractuales. | Se graban `valid_from` y `valid_to` tanto en el objeto raíz como en `legs_data` y en `contract_metadata` (para contratos COA). | **RESUELTO:** Persistencia íntegra y simétrica de la vigencia comercial en todas las tablas de Supabase. | ✅ SOLUCIONADO |
 | **27.4** | **`QuoteExecutiveCardSummary.tsx`** | Leía `route.valid_from` directamente mostrando en ocasiones `'Sin Fecha'`. | Conectado a `unpacked.valid_from` y `unpacked.valid_to` para reflejar la validez exacta en los resúmenes de los maestros. | **RESUELTO:** Trazabilidad y visibilidad de vigencia perfecta en todos los visores. | ✅ SOLUCIONADO |
-
-### 🕵️‍♂️ 5.33. Trigésima Tercera Vuelta (Serie 33: Comportamiento Determinístico y Resaltado de Modos de Demurrage O-P-C)
-
-A partir del peritaje pericial de Benoit Blanc (29.08.2026) bajo el método **BEN / LEG / DIFF / NOTA**, se auditó el comportamiento del selector tripartito `[ O | P | C ]` en la cabecera de la columna `DEMURRAGE (D)` de la grilla live:
-
-| # | Objeto / Escenario Auditado | Estado Legacy (Escena del Crimen) | Solución / Regla Determinística Pericial | Dictamen Pericial & Causa Raíz | Estado |
-| :-: | :--- | :--- | :--- | :--- | :--- |
-| **33.1** | **`Carga de Ruta Grabada (Cierre, Cotización, Presupuesto)`** | Se mostraba `P` o `C` resaltado o ambigüedad en el selector | **Resaltar Determinísticamente `[ O ]` (Original):** Al cargar cualquier ruta existente, el modo activo se fija en **`O`**, inyectando y mostrando las estadías guardadas en Supabase (`legs_data`). | **El Crimen del Reset Ambiguo:** Al deserializar la ruta, no se forzaba de forma unívoca el modo `O`, permitiendo que la UI mantuviera modos residuales. | ✅ SOLUCIONADO |
-| **33.2** | **`Nueva Ruta / Cotización / Presupuesto / Cierre Nuevo`** | `handleResetToNewQuote` seteaba `demurrageMode = 'C'` (Cero) | **Resaltar Determinísticamente `[ P ]` (Promedio Histórico):** Al crear una ruta desde cero, el modo por defecto se inicializa en **`P`**, consultando y sugiriendo la media estadística de 24 meses del puerto. | **El Crimen del Cero por Defecto:** Se inicializaba la cotización limpia en modo `C` en lugar de ofrecer inmediatamente la inteligencia histórica (`P`). | ✅ SOLUCIONADO |
-| **33.3** | **`Modo C (Cero Demoras)`** | Se activaba de forma automática e inadvertida en el reset | **Activación Exclusiva a Pedido Expreso del Usuario:** El botón **`[ C ]`** solo se activa y resalta cuando el usuario hace clic manual y explícito sobre él para fijar las estadías en `0.00 d`. | **Preservación del Control Comercial:** Evita imponer 0 días sin que el analista lo haya decidido expresamente. | ✅ SOLUCIONADO |
-
----
 
 ### 🕵️‍♂️ 5.28. Vigésima Octava Vuelta (Serie 52: Caso de Demurrage Dual, Maestro de Gastos Portuarios Mensual y Búnker Idle Tripartito)
 
 A partir de la auditoría pericial de Benoit Blanc (22.08.2026), se diseñó e implementó la arquitectura integral de Demurrage (Estadías en Días) con consumo dual (Promedio Anual para el Multicotizador vs. Mes Calendario Específico para la Matriz Financiera), búnker idle tripartito y desglose financiero en el Card Verde:
 
 | # | Objeto / Componente Auditado | Estado Inicial (Requerimiento Identificado) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Estado | Estado |
-| :-: | :--- | :--- | :--- | :--- | :--- |
+| :-: | :--- | :--- | :--- | :--- | :-: |
 | **28.1** | **`PortCostsMaster_V2.tsx` (Maestro de Gastos Portuarios)** | No existía configuración de tiempos de estadías/demoras por mes para cada par `(Puerto, Buque)`. | Se implementó el 4to bloque debajo de `⛽ Bunkering` con cuadrícula de **3 filas × 4 meses** (ENE a DIC), promedio anual en tiempo real y persistencia en `port_cost_static`. | **RESUELTO:** El maestro registra y calcula la media anual de demoras con exactitud de centésima de día. | ✅ SOLUCIONADO |
 | **28.2** | **`SpreadsheetTramosGrid.tsx` & `MultiCotizadorExcel.tsx` (Columna Demurrage)** | La grilla no contemplaba días de demurrage por tramo a la izquierda de `TIME TO COUNT (H)`. | Se insertó la columna `DEMURRAGE (DÍAS)` habilitada exclusivamente en operaciones `CARGAR` / `DESCARGAR`, con sugerido en gris (promedio del maestro) y sobreescritura libre por el usuario. | **RESUELTO:** Ergonomía 100% intuitiva con sugerencia inteligente y control comercial absoluto. | ✅ SOLUCIONADO |
 | **28.3** | **`multicotizadorCalculationEngine.ts` (Búnker Idle en Demurrage)** | No computaba el consumo de combustible derivado de los días de demora en fondeo. | Se integró el régimen **100% IDLE**: `Tons IFO = Días Dem × Ratio Idle IFO` y `Tons MDO = Días Dem × Ratio Idle MDO`, valorizados con los precios del búnker. | **RESUELTO:** El combustible en estadías concilia al centavo con la Fila TOTAL Azul y las Cards Financieras. | ✅ SOLUCIONADO |
-| **28.4** | **`FinancialResultCards.tsx` (Búnker Tripartito & Casilla Verde P&L)** | El Card 1 mostraba solo IFO/MDO globales y la Casilla Verde no desglosaba el ingreso ni el costo de hire por demurrage. | Card 1 reorganizado en matriz 3 columnas (`1. Mar`, `2. Pto`, `3. Demurrage`, `TOTAL`). Casilla Verde enriquecida con `(+) Ingreso por Demurrage` (Línea 2) y `(-) Costo Hire Demurrage` (Línea 5). | **RESUELTO:** Transparencia analítica total en la rentabilidad y TCE del viaje. | ✅ SOLUCIONADO |
+| **28.4** | **`FinancialResultCards.tsx` (Búnker Tripartito & Casilla Verde P/L)** | El Card 1 mostraba solo IFO/MDO globales y la Casilla Verde no desglosaba el ingreso ni el costo de hire por demurrage. | Card 1 reorganizado en matriz 3 columnas (`1. Mar`, `2. Pto`, `3. Demurrage`, `TOTAL`). Casilla Verde enriquecida con `(+) Ingreso por Demurrage` (Línea 2) y `(-) Costo Hire Demurrage` (Línea 5). | **RESUELTO:** Transparencia analítica total en la rentabilidad y TCE del viaje. | ✅ SOLUCIONADO |
 
 ---
 
-### 🕵️‍♂️ 5.31. Trigésima Primera Vuelta (Serie 31: El Misterio Pericial de las 118 vs 119 Recaladas en Demurrage ILO)
-
-A partir de la inspección pericial reportada en pantalla donde para el mismo **Puerto ILO** dos cotizaciones/rutas visualizaban estadísticas ligeramente distintas (**118 recaladas / 1.85 d** vs **119 recaladas / 1.86 d**):
-
-| # | Componente Auditado | Escenario A (118 Recaladas) | Escenario B (119 Recaladas) | Dictamen Pericial / Causa del Crimen | Estado |
-| :-: | :--- | :--- | :--- | :--- | :-: |
-| **31.1** | **`Total Recaladas 24M`** | **118 recaladas** | **119 recaladas** (+1 recalada) | **El Crimen del Viaje Limítrofe en la Ventana Móvil de 24 Meses:** `PortDemurrageRatesService.getDemurrageProfile` calcula el corte como `minYearMonthCutoff = maxYearMonth - 24 + 1`. Al cambiar la fecha base de cálculo entre Julio 2026 y Junio 2026 (o registros limítrofes en `localStorage`), la ventana captura 25 vs 26 viajes del año 2024. | 🔍 DETECTADO |
-| **31.2** | **`Promedio 24M (Días / Horas)`** | **1.85 d** (44.4 h) | **1.86 d** (44.6 h) | **Sensibilidad Estadística:** La inclusión del viaje adicional de 2024 altera la media ponderada en apenas $+0.01\text{ d}$ (+0.2 horas) sobre el universo total de recaladas. | 🔍 DETECTADO |
-| **31.3** | **`Mediana 24M`** | **0.58 d** (13.9 h) | **0.63 d** (15.1 h) | **Desplazamiento del Percentil 50:** El viaje número 119 desplaza el elemento central en el ordenamiento `calcMedian()`. | 🔍 DETECTADO |
 ### 🕵️‍♂️ 5.32. Trigésima Segunda Vuelta (Serie 32: El Caso del Costo de Arriendo de Naves Omitido en el PDF del Multicotizador)
 
 A partir de la auditoría pericial de Benoit Blanc (27.08.2026), se identificó y resolvió por qué la tarjeta de **Costo de Arriendo de Naves** no se imprimía en el PDF del Multicotizador:
 
 | # | Objeto / Componente Auditado | Estado Inicial (Causa del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Estado | Estado |
-| :-: | :--- | :--- | :--- | :--- | :---: |
+| :-: | :--- | :--- | :--- | :--- | :-: |
 | **32.1** | **`multicotizadorPdfPrintService.ts` (Condición Restrictiva `> 0` en Card 1A)** | Tenía una condición `${(Number(calc.charterHireCost \|\| charterHireCost \|\| 0) > 0) ? ... : ''}` que ocultaba la tarjeta completa si el valor era `$0` o no estaba instanciado en el snapshot. | Se removió la condición restrictiva para que la tarjeta **Costo Arriendo Naves** sea **100% visible de forma permanente** en la Columna 1 (ubicada encima de *Comments*), mostrando `$0` o el monto exacto asignado. | **RESUELTO:** La tarjeta se imprime siempre en el PDF en estricto espejo con la pantalla del Multicotizador. | ✅ SOLUCIONADO |
 | **32.2** | **`multicotizadorPdfPrintService.ts` (Sintaxis de Cierre de Bloque Búnker)** | Faltaba el cierre de etiquetas `</div></div>` en la tarjeta superior de Gastos de Búnker, colapsando el DOM del PDF. | Se cerró de forma prístina la estructura de etiquetas previa a la inyección de la tarjeta de Arriendo de Naves. | **RESUELTO:** Árbol DOM balanceado y grilla de tramos 100% visible. | ✅ SOLUCIONADO |
 | **32.3** | **`multicotizadorPdfPrintService.ts` (Desglose en Casilla Verde P/L)** | La fila `(-) Arriendo Nave (Charter)` en la Casilla Verde Financial Voyage Result se renderiza dinámicamente si existe valor mayor a 0, deduciendo el costo del P/L final. | Integrada la deducción de Arriendo de Naves dentro del desglose financiero de la Columna 4. | **RESUELTO:** Conciliación contable exacta entre ingresos, costos de viaje y resultado neto. | ✅ SOLUCIONADO |
 
+---
+
+### 🕵️‍♂️ 5.34. Trigésima Cuarta Vuelta (Serie 53: El Caso del Menú Lateral Monolítico y la Refactorización de Acordeones Inteligentes Estilo APEFAC)
+
+A partir de la auditoría pericial de Benoit Blanc (07.09.2026) bajo el método estricto **BEN / LEG / CLON / DIFF / NOTA**, se reestructuró la arquitectura del sidebar lateral de navegación (`MasterTemplate_V2.tsx`) inspirada en el patrón modular probado de APEFAC (`AppSidebar.jsx`):
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **53.1** | **`MasterTemplate_V2.tsx` (Estructura de Menú Lateral)** | Un único botón monolítico `isMaestrosOpen` que desplegaba 22 módulos simultáneos en una lista plana interminable, forzando scroll vertical continuo. | Reemplazado por **6 Acor| **54.4** | **`FinancialMatrixGridTable.tsx` (Renderizado Grilla Matriz)** | La celda de ruta no permitía distinguir de un vistazo si la fila correspondía al viaje regular o al viaje con parada en Callao. | Implementado **Badge Ámbar `⛽ CALLAO(b)`** integrado verticalmente bajo el par de puertos. | **Claridad Operativa Inmediata:** Visibilidad directa en grilla para buques activos (`TABLONES`, `MOQUEGUA`, etc.). | ✅ SOLUCIONADO |
+| **54.5** | **`run_qc_e2e_callao_bunkering_matrix_loop.py` (QC Automatizado)** | No existía suite de pruebas que evaluara la coexistencia dual de 12 meses de operación combinando viajes regulares y viajes de bunkering. | Creado **Script Pericial Automatizado** que extrae las rutas reales grabadas por el usuario (`SPCC Tablones Bunkering` y `SPCC Moquegua Bunkering`) y valida la convergencia matemática. | **Blindaje 100%:** Días totales (+4.06 d Tablones, +8.30 d Moquegua), Costos de Búnker ($75.7k / $79.3k) y Gastos de Puerto calculados al centavo. | ✅ SOLUCIONADO |
+
+---
+
+## 📄 Archivos Relacionadosjo discriminador, el diccionario agregador no podía coexistir con ambos perfiles operativos. Ahora coexisten limpiamente. | ✅ SOLUCIONADO |
+| **54.2** | **`forecast_service.py` (Búsqueda Directa por `quote_id`)** | Si la línea enviaba un `quote_id` correspondiente a una cotización de Bunkering Callao, el motor no priorizaba la búsqueda exacta en `routes_quotes`, perdiendo los cálculos del snapshot multicotizador. | Sincronizado en `run_forecast_simulation` y `run_forecast_simulation_universal` la **búsqueda directa y prioritaria por `quote_id`**. | **Fidelidad al Snapshot:** Respeta con $0.00 de error los consumos de IFO/MDO, gastos portuarios de Callao y días de posicionamiento (24h). | ✅ SOLUCIONADO |
+| **54.3** | **`ForecastBuilder_V2.tsx` (Selector y Ribbon de Rutas)** | Las rutas de cotización multicotizador con parada de bunkering se listaban sin distintivo visual y con clave colisionante `QUOTE:<id>:ORIG-DEST`. | Agregado sufijo `-CALLAO(B)` en las keys de `clientRoutes` y etiqueta con badge distintivo `⛽ (b)`. | **Ergonomía de Planificación:** Permite al analista programar alternadamente meses regulares (ej. Ene-May) y meses de repostaje búnker (ej. Jun y Dic) para cada nave. | ✅ SOLUCIONADO |
+| **54.4** | **`FinancialMatrixGridTable.tsx` (Renderizado Grilla Matriz)** | La celda de ruta no permitía distinguir de un vistazo si la fila correspondía al viaje regular o al viaje con parada en Callao. | Implementado **Badge Ámbar `⛽ CALLAO(b)`** integrado verticalmente bajo el par de puertos. | **Claridad Operativa Inmediata:** Visibilidad directa en grilla para buques activos (`TABLONES`, `MOQUEGUA`, etc.). | ✅ SOLUCIONADO |
 ### 🕵️‍♂️ 5.34. Trigésima Cuarta Vuelta (Serie 53: El Caso del Menú Lateral Monolítico y la Refactorización de Acordeones Inteligentes Estilo APEFAC)
 
 A partir de la auditoría pericial de Benoit Blanc (07.09.2026) bajo el método estricto **BEN / LEG / CLON / DIFF / NOTA**, se reestructuró la arquitectura del sidebar lateral de navegación (`MasterTemplate_V2.tsx`) inspirada en el patrón modular probado de APEFAC (`AppSidebar.jsx`):
