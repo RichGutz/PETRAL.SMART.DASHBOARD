@@ -42,6 +42,14 @@ TAREAS Y MODIFICACIONES REALIZADAS:
    - Build Vite: npx vite build exitoso en 13.61s (0 errores).
    - Loop QC: Script run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py ejecutado con éxito (Delta P&L = $0.00 USD frente a $166,101.84 del Multicotizador).
 
+8. Documentación Ampliada del Super Loop QC y Directorio de Scripts:
+   - Actualizado el expediente canónico '41_Mejoras_USER_3.9.26.BEST.QC.EVER.md' en Obsidian con el detalle forense de los casos R7.1 (Bunkering CALLAO (B)) y R7.2 (Multi-Drop POL-POD-POD).
+   - Registrado el inventario de scripts headless en Geeksoft_Engine/:
+     • run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py
+     • run_qc_e2e_callao_bunkering_matrix_loop.py
+     • run_qc_e2e_mec_consolidado_loop.py
+     • test_convergence_all_routes.py
+
 ================================================================================
 REGISTRO DE SESIÓN: 2026-09-07 (Cierre de Sesión)
 ================================================================================

@@ -24,6 +24,8 @@
 | **R3** | QC Universal: Convergencia Bidireccional Matriz ↔ Multicotizador (48/48 rutas) | `forecast_service.py` & `test_convergence_all_routes.py` | `PRE.R3.QC_CONVERGENCIA_BIDIRECCIONAL`<br>`59b0a5e` | ✅ **RESUELTO** |
 | **R4.1** | Matriz Navitranso: Número de Viajes en solo lectura puro (sin inputs) | `FinancialMatrixNavitransoGridTable.tsx` | `PRE.R4.NAVITRANSO_READONLY_PETRAL_DECIMALES`<br>`160b033` | ✅ **RESUELTO** |
 | **R4.2** | Matriz Petral: Flete base en caliente por defecto a 2 decimales (`toFixed(2)`) | `ForecastGrid.tsx` | `PRE.R4.NAVITRANSO_READONLY_PETRAL_DECIMALES`<br>`160b033` | ✅ **RESUELTO** |
+| **R7.1** | Super Loop QC Bunkering: Rutas de Suministro `CALLAO (B)` sin colisión de fletes ni tarifas | Engine (`forecast_service.py`), Frontend & Script | `RUTAS.BUNKERING.SIN.COLISION.EN.MATRIZ`<br>`a878bd6` | ✅ **RESUELTO & CERTIFICADO** |
+| **R7.2** | Super Loop QC Multi-Drop: Rutas Complejas $\text{POL} \rightarrow \text{POD 1} \rightarrow \text{POD 2}$ (Rotulación Canónica y P&L Fiel $0.00 Delta) | Engine (`forecast_service.py`), Frontend & Script | `FEAT.MULTIDROP.POL.POD.POD.MATRIZ`<br>`38ee821` | ✅ **RESUELTO & CERTIFICADO** |
 | **VPS** | Despliegue Automatizado a Producción en Vivo (`forecast.geeksoft.tech`) | VPS Producción (`91.108.125.253`) | `deploy_forecast_kickoff.py` | 🚀 **PUBLICADO EN VIVO** |
 
 ---
@@ -1084,5 +1086,116 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 - **Estado:** ✅ **SOLUCIONADO, VALIDADO Y DESPLEGADO EN PRODUCCIÓN**.
 
 ---
-*Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
+
+### 🔹 Caso R7.1: Super Loop QC Bunkering — Rutas de Suministro `CALLAO (B)` sin Colisión de Fletes ni Tarifas
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 09 de Septiembre, 2026
+- **Safepoint Git:** `RUTAS.BUNKERING.SIN.COLISION.EN.MATRIZ` (Commit `a878bd6`)
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - Audio pericial transcrito con Whisper: `audio_transcrip\conflicto.callao.bunkering.ogg`.
+  - Capturas de matriz con rutas de suministro `CALLAO (B)` conviviendo con rutas de carga de contrato comercial.
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Al ingresar cotizaciones de aprovisionamiento de combustible (ej. `CALLAO (B)`) que no transportan carga comercial (0 MT / Cargo = Búnker):
+    1. La Matriz Financiera las colisionaba con la ruta de contrato comercial `CALLAO-CALLAO` o `CALLAO-ILO`, sobreescribiendo tarifas con fletes comerciales o forzando 13,500/16,500 MT de mineral.
+    2. En el cálculo de P&L, se generaban ingresos ficticios o se distorsionaba el Voyage Result neto de la nave por sobrefacturación inexistente.
+  - **Causa Raíz Identificada:**
+    - Ausencia de discriminación canónica entre tramos de carga comercial (`is_cargo: true`) y paradas técnicas exclusivas de abastecimiento (`is_bunkering: true` / `CALLAO (B)`).
+    - El matching de cotizaciones agrupaba por puertos extremos sin evaluar la naturaleza operativa del voyage ni el sufijo técnico `(B)`.
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Aislamiento en Backend (`forecast_service.py`):**
+     - Detección explícita de rutas `ISOLATED_BUNKERING` y `CALLAO (B)`.
+     - Preservación íntegra de la carga en `0 MT` y flete en `$0.00/MT`, imputando exclusivamente los costos de navegación, estadía por suministro y consumo de búnker sin contaminar las rutas comerciales estándar.
+  2. **Tratamiento Frontend (`ForecastBuilder_V2.tsx` & Tablas Grid):**
+     - Llave unívoca diferenciada: `QUOTE:<id>:CALLAO(B)` no colisiona con `QUOTE:<id>:CALLAO`.
+     - Renderizado de badges y etiquetas descriptivas con indicador de suministro técnico.
+
+- **Script Automatizado del Super Loop QC:**
+  - **Script:** [run_qc_e2e_callao_bunkering_matrix_loop.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_callao_bunkering_matrix_loop.py)
+  - **Resultado:** 100% PASS (Cuadratura al centavo, $0.00 delta entre cotizador y matriz).
+
+- **Estado:** ✅ **CERTIFICADO Y MERGEADO**.
+
+---
+
+### 🔹 Caso R7.2: Super Loop QC Multi-Drop — Rutas Complejas $\text{POL} \rightarrow \text{POD 1} \rightarrow \text{POD 2}$ (Rotulación Canónica y P&L Fiel)
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 09 de Septiembre, 2026
+- **Safepoint Git:** `SAFEPOINT.PRE.MULTIDROP.9.9.26` ➔ Branch `FEAT.MULTIDROP.POL.POD.POD.MATRIZ` (Commit `38ee821`)
+- **Evidencias Gráficas Respaldadas ([RULE[png_local_storage]]):**
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\media_1788984391023.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\media_1788984391023.png` (Cotización Multicotizador con carga Callao 13,500 MT, descarga Marcona 10,500 MT y descarga Matarani 3,000 MT, Voyage Result = **$166,102 USD**).
+  - `Obsidian.Maestro.Costos.Portuarios\PNGs\media_1788984400267.png` & `Exceles.Petral\PORT.COSTS.PATRICIA\media_1788984400267.png` (Matriz previa con colisión de ruta binaria `CALLAO-MATARANI`, 16,500 MT infladas y P&L distorsionado en **$247,072 USD**).
+
+- **El Misterio (La Escena del Crimen / LEG):**
+  - Para cotizaciones con un puerto de carga y múltiples puertos de descarga sucesivos (ej. `NEXA.ILO.CALLAO.MARCONA.MATARANI.ILO.2026 MARCOBRE Y QUILLA` con buque `TABLONES`):
+    1. **Resumen Binario Erróneo:** La matriz resumía la ruta como un par simple `CALLAO-MATARANI` omitiendo `MARCONA`.
+    2. **Colisión de Fletes y Tonelajes:** Al llamarse `CALLAO-MATARANI`, el motor aplicaba la lógica de contrato estándar sobreescribiendo las 13,500 MT reales con 16,500 MT y aplicando tarifa plana, generando un ingreso ficticio de $526,470 en vez de los $445,500 reales ($433,500 flete + $12,000 muellaje).
+    3. **P&L Distorsionado:** Mostraba **$247,072 USD** (discrepancia de **+$80,970 USD** respecto a los **$166,102 USD** certificados por el Multicotizador).
+
+- **Cirugía Quirúrgica Implacable (DIFF):**
+  1. **Detección Multi-Drop en Backend (`forecast_service.py`):**
+     ```python
+     # Extracción de secuencia de puertos en tramos LADEN ordenados
+     laden_ports = []
+     for leg in sorted(itinerary, key=lambda x: x.get("sequence_order", 0)):
+         if leg.get("leg_type") == "LADEN":
+             p_from = (leg.get("origin_port_id") or "").strip().upper()
+             p_to = (leg.get("destination_port_id") or "").strip().upper()
+             if p_from and (not laden_ports or laden_ports[-1] != p_from):
+                 laden_ports.append(p_from)
+             if p_to and (not laden_ports or laden_ports[-1] != p_to):
+                 laden_ports.append(p_to)
+     if len(laden_ports) >= 3:
+         # Llave canónica multi-drop de 3 o más puertos: POL-POD1-POD2
+         multi_drop_canonical_key = "-".join(laden_ports)  # ej. "CALLAO-MARCONA-MATARANI"
+     ```
+  2. **Blindaje de Aislamiento en Matching de Rutas:**
+     - Las rutas de contrato estándar sin `quote_id` no hacen fallback con cotizaciones multi-drop o de nombres cruzados.
+  3. **Frontend Multi-Drop (`ForecastBuilder_V2.tsx`, `FinancialMatrixGridTable.tsx`, `FinancialMatrixNavitransoGridTable.tsx`):**
+     - Llave selectora de escenario: `QUOTE:<quote_id>:CALLAO-MARCONA-MATARANI`.
+     - Autocompletado de Tonelaje Real Cotizado: `13,500 MT` (en vez de capacidad genérica).
+     - Yield Flete Ponderado: `$32.11/MT` ($433,500 / 13,500 MT).
+     - Renderizado visual con conectores direccionales: `CALLAO ↓ MARCONA ↓ MATARANI`.
+
+- **Script Automatizado del Super Loop QC:**
+  - **Script:** [run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py)
+  - **Resultado Pericial:**
+    ```text
+    ====================================================================================================
+    🕵️  QC AUDIT MULTI-DROP E2E: NEXA MARCOBRE Y QUILLA (CALLAO -> MARCONA -> MATARANI)
+    ====================================================================================================
+    ▶ Nombre Cotización: NEXA.ILO.CALLAO.MARCONA.MATARANI.ILO.2026 MARCOBRE Y QUILLA
+    ▶ Buque Evaluado: TABLONES | Toneladas Carga: 13,500 MT
+    ▶ Duración Total: 7.69 días | Hire TCE Cost ($15,000/d): $115,295.03 USD
+    ▶ Total Port Expenses: $91,000.00 USD (Callao $25k + Marcona $44k + Matarani $22k)
+    ▶ Total Bunker Costs: $73,103.12 USD
+    ▶ Gross Revenue: $445,500.00 USD ($433,500 flete + $12,000 muellaje)
+    ────────────────────────────────────────────────────────────────────────────────────────────────────
+    🎯 P&L Multicotizador (Voyage Result): $166,101.84 USD (~$166,102.00 USD)
+    🎯 P&L Matriz Financiera Petral:       $166,101.84 USD (~$166,102.00 USD)
+    🎯 Discrepancia / Delta P&L:           $0.00 USD  -->  ✅ 100% CUADRATURA PERFECTA
+    ====================================================================================================
+    ```
+
+- **Estado:** ✅ **CERTIFICADO 1:1 AL CENTAVO (Delta = $0.00 USD)**.
+
+---
+
+## 📍 2. Directorio Canónico de Scripts del Super Loop QC
+
+Todos los scripts periciales de control de calidad E2E forman una suite headless integral y están ubicados en la carpeta del motor backend:
+
+📁 **Ruta Base del Engine:**  
+`C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\`
+
+| Script | Finalidad y Alcance del QC | Comando de Ejecución (PowerShell) |
+|---|---|---|
+| 📜 [run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py) | **QC Multi-Drop ($\text{POL} \rightarrow \text{POD 1} \rightarrow \text{POD 2}$):** Valida la rotulación canónica completa, toneladas ponderadas y cuadratura al centavo de P&L ($166,102 USD, Delta $0.00) evitando colisiones con contratos binarios. | `python run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py` |
+| 📜 [run_qc_e2e_callao_bunkering_matrix_loop.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_callao_bunkering_matrix_loop.py) | **QC Bunkering Aislado (`CALLAO (B)`):** Valida que las rutas de reaprovisionamiento de combustible (0 MT comercial) no sobreescriban tarifas ni colisionen con las rutas regulares de mineral. | `python run_qc_e2e_callao_bunkering_matrix_loop.py` |
+| 📜 [run_qc_e2e_mec_consolidado_loop.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_mec_consolidado_loop.py) | **QC Triangular E2E (4/4 Escenarios):** Cuadratura estricta entre Multicotizador, Matriz Petral, Persistencia de Escenarios e Informe Consolidado (MEC). | `python run_qc_e2e_mec_consolidado_loop.py` |
+| 📜 [test_convergence_all_routes.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/test_convergence_all_routes.py) | **QC Universal 48/48 Rutas:** Prueba de convergencia bidireccional exhaustiva sobre la totalidad de rutas registradas en la base de datos de PETRAL. | `python test_convergence_all_routes.py` |
+
+---
+*Documento canónico actualizado por Detective Benoit Blanc - 09/09/2026.*
 
