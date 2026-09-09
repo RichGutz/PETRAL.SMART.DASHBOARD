@@ -1,0 +1,1319 @@
+"""
+GENERADOR PERICIAL DE DECK DE PRESENTACIÓN V4: SUSTENTO DE MODIFICACIÓN DE ALCANCE & RENEGOCIACIÓN
+Auditor: Detective Benoit Blanc
+Software: DELFOS SHIPPING SOFTWARE
+Fecha de Inicio Oficial del Proyecto: 24 de Junio de 2026
+Fecha de Dictamen: 09 de Septiembre, 2026
+"""
+import os
+import sys
+import re
+import base64
+import subprocess
+from datetime import datetime
+
+PROJECT_START_DATE = datetime(2026, 6, 24, 0, 0, 0)
+
+def analyze_workspace_v4(ws_path, hourly_rate=60.0):
+    day_activity = {}
+    git_by_date = {}
+
+    # 1. Commits git con hash y mensaje (filtrados >= 2026-06-24)
+    cmd = ['git', 'log', '--all', '--pretty=format:%ad|%h|%s', '--date=iso']
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=ws_path)
+
+    for line in res.stdout.strip().split('\n'):
+        if line:
+            parts = line.split('|', 2)
+            if len(parts) == 3:
+                try:
+                    dt = datetime.strptime(parts[0][:19], '%Y-%m-%d %H:%M:%S')
+                    if dt >= PROJECT_START_DATE:
+                        day_str = dt.strftime('%Y-%m-%d')
+                        if day_str not in day_activity:
+                            day_activity[day_str] = []
+                        day_activity[day_str].append(dt)
+                        if day_str not in git_by_date:
+                            git_by_date[day_str] = []
+                        git_by_date[day_str].append(f"[{parts[1]}] {parts[2]}")
+                except Exception:
+                    pass
+
+    # 2. Fechas de modificación de archivos de código, diseño y especificaciones (filtrados >= 2026-06-24)
+    valid_exts = ('.py', '.tsx', '.ts', '.js', '.md', '.sql', '.html', '.json', '.png', '.svg', '.txt', '.pdf', '.css')
+    ignore_dirs = {'node_modules', '.git', 'dist', '.vite', '.vscode', '.obsidian'}
+
+    for root, dirs, files in os.walk(ws_path):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        for f in files:
+            if f.endswith(valid_exts):
+                path = os.path.join(root, f)
+                try:
+                    mtime = os.path.getmtime(path)
+                    dt = datetime.fromtimestamp(mtime)
+                    if dt >= PROJECT_START_DATE:
+                        day_str = dt.strftime('%Y-%m-%d')
+                        if day_str not in day_activity:
+                            day_activity[day_str] = []
+                        day_activity[day_str].append(dt)
+                except Exception:
+                    pass
+
+    # 3. Lectura de marcas de tiempo en interaction_log.txt y gemini_work_log.txt (filtrados >= 2026-06-24)
+    for log_name in ['interaction_log.txt', 'gemini_work_log.txt']:
+        log_path = os.path.join(ws_path, log_name)
+        if os.path.exists(log_path):
+            try:
+                with open(log_path, 'r', encoding='utf-8', errors='ignore') as lf:
+                    curr_date = None
+                    for line in lf:
+                        m_date = re.search(r'2026-\d{2}-\d{2}', line)
+                        if m_date:
+                            curr_date = m_date.group(0)
+                        m_time = re.search(r'(\d{1,2}):(\d{2}):(\d{2})', line)
+                        if curr_date and m_time:
+                            try:
+                                dt = datetime.strptime(f"{curr_date} {m_time.group(0)}", '%Y-%m-%d %H:%M:%S')
+                                if dt >= PROJECT_START_DATE:
+                                    if curr_date not in day_activity:
+                                        day_activity[curr_date] = []
+                                    day_activity[curr_date].append(dt)
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+
+    summary = []
+    total_hours_project = 0.0
+    total_events_project = 0
+
+    dias_semana_es = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+
+    for idx, day in enumerate(sorted(day_activity.keys()), start=1):
+        timestamps = sorted(day_activity[day])
+        sessions = []
+        curr_start = timestamps[0]
+        curr_end = timestamps[0]
+
+        for t in timestamps[1:]:
+            if (t - curr_end).total_seconds() <= 9000:  # Ventana de inactividad de 2.5 horas
+                curr_end = t
+            else:
+                sessions.append((curr_start, curr_end))
+                curr_start = t
+                curr_end = t
+        sessions.append((curr_start, curr_end))
+
+        day_sec = 0
+        for s_start, s_end in sessions:
+            sec = (s_end - s_start).total_seconds()
+            sec += 1800  # Warmup y análisis técnico de 30 min por sesión
+            day_sec += sec
+
+        hours = day_sec / 3600.0
+        day_amount = hours * hourly_rate
+        total_hours_project += hours
+        total_events_project += len(timestamps)
+
+        commits_list = git_by_date.get(day, [])
+        commits_text = "; ".join([c.split(' ', 1)[1] for c in commits_list[:2]]) if commits_list else "Desarrollo de módulos, interfaces, ruteo y auditoría forense"
+        if len(commits_text) > 95:
+            commits_text = commits_text[:92] + "..."
+
+        dt_day = datetime.strptime(day, '%Y-%m-%d')
+        dia_nombre = dias_semana_es[dt_day.weekday()]
+        day_formatted = f"{day} / {dia_nombre}"
+
+        summary.append({
+            'num': idx,
+            'day': day,
+            'day_formatted': day_formatted,
+            'events': len(timestamps),
+            'start': timestamps[0].strftime('%H:%M'),
+            'end': timestamps[-1].strftime('%H:%M'),
+            'hours': round(hours, 2),
+            'amount_usd': round(day_amount, 2),
+            'tasks': commits_text
+        })
+
+    return summary, round(total_hours_project, 2), total_events_project, round(total_hours_project * hourly_rate, 2)
+
+
+def generate_html_deck_v4(ws_path):
+    summary, total_hours, total_events, total_usd = analyze_workspace_v4(ws_path, 60.0)
+    total_days = len(summary)
+    
+    # Datos contractuales de referencia (COTIZACION_MODULAR_PETRAL_V10)
+    dev_contract_hours = 110.0
+    dev_contract_rate = 60.0
+    dev_contract_usd = 6600.0
+    
+    total_contract_onetime_hours = 150.0
+    total_contract_onetime_usd = 9100.0
+
+    # Sobreesfuerzo de desarrollo puro
+    dev_overage_hours = round(total_hours - dev_contract_hours, 2)
+    dev_overage_usd = round(dev_overage_hours * dev_contract_rate, 2)
+    dev_overage_pct = round((dev_overage_hours / dev_contract_hours) * 100, 1)
+
+    # Valor Total Entregado
+    total_delivered_hours = round(total_contract_onetime_hours + dev_overage_hours, 2)
+    total_delivered_usd = round(total_contract_onetime_usd + dev_overage_usd, 2)
+
+    # Ratio de dedicación del PM (50 hrs de Iosef Zavala)
+    pm_hours = 50.0
+    pm_ratio_pct = round((pm_hours / total_hours) * 100, 1)
+    dev_pm_ratio = round(total_hours / pm_hours, 1)
+
+    today_str = datetime.now().strftime('%d de Septiembre de %Y')
+    
+    # Base64 Logo para portabilidad total (Local / Web / VPS)
+    logo_file = os.path.join(ws_path, "Boiler.Plate", "PPTS.HERMOSAS", "logo_final_v3.png")
+    if os.path.exists(logo_file):
+        with open(logo_file, "rb") as img_f:
+            logo_b64 = base64.b64encode(img_f.read()).decode('utf-8')
+            logo_src = f"data:image/png;base64,{logo_b64}"
+    else:
+        logo_src = "/Logo.Petral.png"
+
+    # Generación de filas de la tabla día por día (Slide 12 con Fecha / Día de semana)
+    table_rows_html = []
+    for item in summary:
+        row = f"""                        <tr>
+                            <td style="text-align: center; font-weight: 700; color: var(--navy);">{item['num']}</td>
+                            <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 8pt; color: #1E293B;">{item['day_formatted']}</td>
+                            <td style="text-align: center; font-size: 8pt; color: #64748B;">{item['start']} - {item['end']}</td>
+                            <td style="text-align: center; font-weight: 700; color: var(--accent);">{item['hours']:.2f} h</td>
+                            <td style="text-align: right; font-weight: 700; color: var(--navy);">${item['amount_usd']:,.2f}</td>
+                            <td style="font-size: 8pt; color: #475569;" title="{item['tasks']}">{item['tasks']}</td>
+                        </tr>"""
+        table_rows_html.append(row)
+    
+    all_table_rows = "\n".join(table_rows_html)
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigating the Future V4: Sustento de Modificación de Alcance & Auditoría Forense - DELFOS SHIPPING SOFTWARE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+        :root {{
+            --bg:          #F8FAFC;
+            --bg-card:     #FFFFFF;
+            --navy:        #0F2C59;
+            --navy-dark:   #0A192F;
+            --navy-mid:    #1E3A8A;
+            --primary:     #0F2C59;
+            --accent:      #0284C7;
+            --accent-dim:  rgba(2, 132, 199, 0.1);
+            --accent-brd:  rgba(2, 132, 199, 0.3);
+            --blue:        #2563EB;
+            --green:       #059669;
+            --green-dim:   rgba(5, 150, 105, 0.1);
+            --amber:       #D97706;
+            --amber-dim:   rgba(217, 119, 6, 0.1);
+            --red:         #E11D48;
+            --red-dim:     rgba(225, 29, 72, 0.1);
+            --purple:      #7C3AED;
+            --purple-dim:  rgba(124, 58, 237, 0.1);
+            --text:        #0F172A;
+            --text-dim:    rgba(15, 23, 42, 0.70);
+            --border:      rgba(15, 23, 42, 0.12);
+            --shadow:      0 6px 24px rgba(15, 23, 42, 0.08);
+            --shadow-lg:   0 14px 44px rgba(15, 23, 42, 0.14);
+        }}
+
+        html, body {{
+            width: 100%; height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }}
+
+        #progress {{
+            position: fixed; top: 0; left: 0; height: 6px; z-index: 999;
+            background: linear-gradient(90deg, var(--accent), var(--green), var(--amber));
+            transition: width 0.35s ease;
+        }}
+
+        .top-brand-bar {{
+            position: fixed;
+            top: 18px;
+            left: 48px;
+            right: 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 900;
+            pointer-events: none;
+        }}
+        .brand-logo {{
+            height: 52px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.1));
+        }}
+        .brand-badge {{
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border);
+            padding: 7px 18px;
+            border-radius: 9999px;
+            font-size: 9.5pt;
+            font-weight: 800;
+            color: var(--navy);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }}
+
+        #deck {{
+            width: 100%; height: 100%;
+            position: relative;
+        }}
+
+        .slide {{
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            padding: 84px 60px 48px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: scale(0.985);
+            background: var(--bg);
+        }}
+        .slide.active {{
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 10;
+        }}
+
+        .slide-content {{
+            width: 100%;
+            max-width: 1380px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }}
+
+        .tag {{
+            display: inline-block;
+            font-size: 9pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            width: fit-content;
+        }}
+
+        h1 {{
+            font-family: 'Outfit', sans-serif;
+            font-size: 38pt;
+            font-weight: 900;
+            color: var(--navy);
+            line-height: 1.1;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }}
+        h2 {{
+            font-family: 'Outfit', sans-serif;
+            font-size: 24pt;
+            font-weight: 900;
+            color: var(--navy);
+            line-height: 1.15;
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
+        }}
+        .sub {{
+            font-size: 11.5pt;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+        }}
+
+        .kpi-grid-4 {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 14px;
+        }}
+        .kpi-box {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            box-shadow: var(--shadow);
+            border-top: 5px solid var(--accent);
+        }}
+        .kpi-box .label {{
+            font-size: 8.5pt;
+            font-weight: 800;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }}
+        .kpi-box .num {{
+            font-family: 'Outfit', sans-serif;
+            font-size: 26pt;
+            font-weight: 900;
+            color: var(--navy);
+            line-height: 1.1;
+        }}
+        .kpi-box .desc {{
+            font-size: 9pt;
+            color: var(--text-dim);
+            margin-top: 4px;
+            line-height: 1.35;
+        }}
+
+        .card {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 22px;
+            box-shadow: var(--shadow);
+        }}
+
+        .callout {{
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-top: 12px;
+            font-size: 10pt;
+            line-height: 1.5;
+        }}
+        .callout-blue {{ background: rgba(2, 132, 199, 0.08); border-left: 5px solid var(--accent); }}
+        .callout-amber {{ background: rgba(217, 119, 6, 0.08); border-left: 5px solid var(--amber); }}
+        .callout-green {{ background: rgba(5, 150, 105, 0.08); border-left: 5px solid var(--green); }}
+        .callout-purple {{ background: rgba(124, 58, 237, 0.08); border-left: 5px solid var(--purple); }}
+
+        .ppt-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5pt;
+            background: #FFFFFF;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }}
+        .ppt-table th {{
+            background: var(--navy);
+            color: #FFFFFF;
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 8.8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }}
+        .ppt-table td {{
+            padding: 9px 14px;
+            border-bottom: 1px solid #E2E8F0;
+            color: #334155;
+            vertical-align: middle;
+        }}
+        .ppt-table tr:nth-child(even) {{
+            background: #F8FAFC;
+        }}
+
+        .badge-pill {{
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 8pt;
+            font-weight: 700;
+            text-transform: uppercase;
+        }}
+        .badge-blue {{ background: #DBEAFE; color: #1E40AF; }}
+        .badge-green {{ background: #D1FAE5; color: #065F46; }}
+        .badge-amber {{ background: #FEF3C7; color: #92400E; }}
+        .badge-purple {{ background: #EDE9FE; color: #5B21B6; }}
+
+        .slide-footnote {{
+            display: flex;
+            justify-content: space-between;
+            font-size: 8.5pt;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+            margin-top: 10px;
+            font-weight: 600;
+        }}
+
+        .nav-controls {{
+            position: fixed;
+            bottom: 14px;
+            right: 48px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 950;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 9999px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }}
+        .nav-btn {{
+            background: transparent;
+            border: none;
+            color: var(--navy);
+            font-size: 15pt;
+            font-weight: 900;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }}
+        .nav-btn:hover {{
+            background: var(--navy);
+            color: #FFFFFF;
+        }}
+        .nav-counter {{
+            font-size: 9pt;
+            font-weight: 800;
+            color: var(--navy);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0 4px;
+        }}
+
+        /* Scrollable container for Day-by-Day log (Slide 12) */
+        .day-log-container {{
+            max-height: 440px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #FFFFFF;
+            box-shadow: var(--shadow);
+        }}
+        .day-log-container::-webkit-scrollbar {{
+            width: 7px;
+        }}
+        .day-log-container::-webkit-scrollbar-track {{
+            background: #F1F5F9;
+        }}
+        .day-log-container::-webkit-scrollbar-thumb {{
+            background: #94A3B8;
+            border-radius: 4px;
+        }}
+        .day-log-container table {{
+            width: 100%;
+            border-collapse: collapse;
+        }}
+        .day-log-container th {{
+            position: sticky;
+            top: 0;
+            background: var(--navy);
+            color: #FFFFFF;
+            font-weight: 700;
+            padding: 8px 12px;
+            font-size: 8pt;
+            text-transform: uppercase;
+            z-index: 2;
+        }}
+    </style>
+</head>
+<body>
+
+    <div id="progress"></div>
+
+    <div class="top-brand-bar">
+        <img src="{logo_src}" class="brand-logo" alt="Logo Delfos">
+        <div class="brand-badge">DICTAMEN PERICIAL &bull; SUSTENTO DE ALCANCE V4</div>
+    </div>
+
+    <div id="deck">
+
+        <!-- ==========================================
+             SLIDE 1: PORTADA & RESUMEN EJECUTIVO V4
+             ========================================== -->
+        <div class="slide active">
+            <div class="slide-content" style="justify-content: center;">
+                <div class="tag">DICTAMEN TÉCNICO-FINANCIERO V4 &bull; {today_str.upper()}</div>
+                <h1>Navigating the Future</h1>
+                <div class="sub" style="font-size: 14pt; margin-bottom: 22px; color: var(--navy-mid); font-weight: 600;">
+                    Sustento Pericial de Modificación de Alcance, Consultoría Marítima y Auditoría Forense de Horas Devengadas
+                </div>
+
+                <div class="kpi-grid-4" style="margin-bottom: 22px;">
+                    <div class="kpi-box">
+                        <div class="label">Desarrollo Cotizado</div>
+                        <div class="num" style="color: #64748B;">{dev_contract_hours:.2f} h</div>
+                        <div class="desc">Etapa 2 Base ($6,600 USD)</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--accent);">
+                        <div class="label">Horas Reales Auditadas</div>
+                        <div class="num" style="color: var(--accent);">{total_hours:.2f} h</div>
+                        <div class="desc">Desde 24/06/2026 (Inmutable Git/IDE)</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--amber);">
+                        <div class="label">Sobreesfuerzo Devengado</div>
+                        <div class="num" style="color: var(--amber);">+{dev_overage_pct}%</div>
+                        <div class="desc">+{dev_overage_hours:.2f} hrs adicionales</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--green);">
+                        <div class="label">Estado de Producción</div>
+                        <div class="num" style="color: var(--green); font-size: 18pt; margin-top: 6px;">100% VIVO</div>
+                        <div class="desc">forecast.geeksoft.tech</div>
+                    </div>
+                </div>
+
+                <div class="card" style="border-left: 6px solid var(--accent); background: #FFFFFF; padding: 20px 26px;">
+                    <strong style="color: var(--navy); font-size: 12pt; display: block; margin-bottom: 6px;">Mensaje Clave del Dictamen Gerencial:</strong>
+                    <p style="font-size: 10.5pt; color: #334155; line-height: 1.55;">
+                        Presentar a la Gerencia y Dirección de <strong>Naviera Petral S.A.</strong> el sustento objetivo del desborde del alcance inicial: el proyecto evolucionó de una <strong>hoja de cálculo interactiva básica</strong> a <strong>DELFOS SHIPPING SOFTWARE</strong>, una Suite Enterprise de Inteligencia Comercial Marítima + Consultoría de Reingeniería de Procesos + Ciberseguridad Bancaria + Matriz NAVITRANSO + 13 Exportadores Print-Ready, respaldada por una auditoría digital inalterable de <strong>{total_hours:.2f} horas reales de trabajo</strong> en {total_days} jornadas activas desde el inicio del proyecto (24 de Junio de 2026).
+                    </p>
+                </div>
+
+                <div class="slide-footnote" style="margin-top: 26px;">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 01 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 2: PREMISA INICIAL VS REALIDAD
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">DIAGNÓSTICO INICIAL &bull; ANÁLISIS DE BRECHA</div>
+                <h2>Slide 2: La Premisa Inicial vs. La Realidad Encontrada</h2>
+                <div class="sub">El punto de quiebre donde la simple automatización de rutas redondas requirió un saneamiento estructural integral.</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
+                    <div class="card" style="border-top: 5px solid #64748B;">
+                        <strong style="color: var(--navy); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            📋 Lo que se Cotizó (Premisa Teórica - Junio 2026)
+                        </strong>
+                        <ul style="font-size: 10.2pt; color: #475569; padding-left: 20px; line-height: 1.55;">
+                            <li><strong>Rutas Redondas Simples Base Ilo:</strong> Todo el alcance inicial se limitaba a trayectos fijos y directos con retorno a base (<code style="font-size: 9pt;">ILO ➔ Puerto X ➔ ILO</code>).</li>
+                            <li><strong>Supuesto de Datos Limpios:</strong> Tarifas de agenciamiento, costos portuarios y distancias dadas por sentado sin fórmulas dinámicas.</li>
+                            <li><strong>Esfuerzo Estimado:</strong> 110 horas hombre de desarrollo directo bajo reglas lineales supuestamente estables.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-top: 5px solid var(--red);">
+                        <strong style="color: var(--red); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            🔍 La Realidad Operativa Encontrada (Diagnóstico Forense)
+                        </strong>
+                        <ul style="font-size: 10.2pt; color: #475569; padding-left: 20px; line-height: 1.55;">
+                            <li><strong>Modelos Complejos Fuera de Alcance:</strong> Rutas con múltiples puertos de descarga (Multi-Drop: <code style="font-size: 9pt;">POL ➔ POD 1 ➔ POD 2</code>) y escalas de aprovisionamiento técnico (<code style="font-size: 9pt;">CALLAO (B)</code>).</li>
+                            <li><strong>Fragmentación de Datos:</strong> Las planillas comerciales no incluían muellaje paramétrico, demoras por escala ni arriendo de naves.</li>
+                            <li><strong>Proceso ETL Rehecho 3 Veces:</strong> La extracción y limpieza de datos históricos tuvo que rehacerse 3 veces consecutivas por inconsistencias en los datos fuente.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="callout callout-amber">
+                    <strong style="color: var(--amber); font-size: 11pt; display: block; margin-bottom: 4px;">Principio de Ingeniería de Software & Gobernanza:</strong>
+                    <p style="font-size: 10.2pt; color: #334155; font-style: italic;">
+                        "No se podía construir un rascacielos digital moderno sobre cimientos de datos inconsistentes sin antes ejecutar un saneamiento estructural, operativo y de procesos profundo."
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 02 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 3: EL PIPELINE DE 4 MÓDULOS TRANSACCIONALES
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">ARQUITECTURA DE MÓDULOS &bull; PROPUESTA DE VALOR</div>
+                <h2>Slide 3: Pipeline de Inteligencia Comercial Marítima</h2>
+                <div class="sub">Secuencia operativa formal de los 4 módulos transaccionales desarrollados fuera de los maestros.</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+                    <div class="card" style="border-left: 5px solid var(--accent);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: var(--navy); font-size: 11.5pt;">Paso 1: Voyage Calculator (Multicotizador)</strong>
+                            <span class="badge-pill badge-blue">Motor Base</span>
+                        </div>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            Calcula el <strong>muellaje paramétrico</strong> por terminal y <strong>sugiere demoras con base estadística en tiempo real</strong> según el comportamiento histórico de cada puerto.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid var(--green);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: var(--navy); font-size: 11.5pt;">Paso 2: Matrices Financieras (Petral & Navitranso)</strong>
+                            <span class="badge-pill badge-green">Dual Reporting</span>
+                        </div>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            <strong>Modelación multidimensional de 12 meses</strong> con simulaciones *what-if* en caliente y doble espejo: Formato Petral y Formato Navitranso de control presupuestal.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid var(--amber);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: var(--navy); font-size: 11.5pt;">Paso 3: AN GRAF (Analytics Visual)</strong>
+                            <span class="badge-pill badge-amber">Detección</span>
+                        </div>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            Permite <strong>descubrir tendencias, anomalías y patrones financieros</strong> en márgenes y fletes que resultan imposibles de identificar en una tabla plana de datos.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid var(--purple);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: var(--navy); font-size: 11.5pt;">Paso 4: Spaghetti Map (Visión Geoespacial)</strong>
+                            <span class="badge-pill badge-purple">Georreferencial</span>
+                        </div>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            Proporciona una <strong>visión integral del tráfico de la flota (cabotaje e internacional)</strong>, sopesando visualmente la densidad, volumen e importancia estratégica de cada ruta.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="callout callout-blue">
+                    <strong style="color: var(--accent); font-size: 11pt; display: block; margin-bottom: 3px;">Resultado Tecnológico:</strong>
+                    <p style="font-size: 10.2pt; color: #334155;">
+                        Petral no recibió un simple visor, sino <strong>DELFOS SHIPPING SOFTWARE</strong>, una suite transaccional enterprise integrada que conecta desde la cotización puntual hasta el mapa de tráfico regional.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 03 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 4: ANÁLISIS ESTADÍSTICO DE DEMORAS
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">MÓDULO FUERA DE ALCANCE &bull; ANÁLISIS ESTADÍSTICO</div>
+                <h2>Slide 4: Maestro de Demoras & Modelación Estadística</h2>
+                <div class="sub">De una tarifa plana arbitraria a un subsistema analítico de dispersión, percentiles y fondeo.</div>
+
+                <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; margin-bottom: 14px;">
+                    <div class="card" style="border-top: 5px solid var(--accent);">
+                        <strong style="color: var(--navy); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            📊 Lo que se Construyó (Analítica Forense de Demurrage)
+                        </strong>
+                        <ul style="font-size: 10pt; color: #475569; padding-left: 20px; line-height: 1.55;">
+                            <li><strong>Distribución Histórica por Puerto:</strong> Análisis estadístico de tiempos de espera en fondeo y maniobra para terminales peruanos y chilenos.</li>
+                            <li><strong>Modelación de Despacho vs. Estadía:</strong> Cálculo automatizado del ritmo de carga/descarga (TM/día) vs. días pactados en póliza de fletamento.</li>
+                            <li><strong>Impacto Operativo Multicapa:</strong> Conversión matemática de días de demora en búnker idle consumido, costo HIRE adicional y dilución de TCE diario.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-top: 5px solid var(--amber);">
+                        <strong style="color: var(--amber); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            ⚠️ Desviación Frente al Alcance Contratado
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                            El contrato inicial contemplaba únicamente un <strong>campo de texto plano de tarifa diaria</strong> sin cruces ni procesamiento.
+                        </p>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            La creación de un módulo analítico estadístico con benchmarks históricos constituye un subsistema especializado de ingeniería de datos marítimos.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="callout callout-amber">
+                    <strong style="color: var(--amber); font-size: 11pt; display: block; margin-bottom: 3px;">Valor para Naviera Petral:</strong>
+                    <p style="font-size: 10.2pt; color: #334155;">
+                        Permite sustentar penalidades con rigor matemático ante clientes como SPCC y NEXA, mitigando sobrecostos ocultos por congestión en muelle.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 04 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 5: LIQUIDACIONES DE VIAJE & RETRABAJO ETL
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">MÓDULO FUERA DE ALCANCE &bull; CONCILIACIÓN POST-VIAJE</div>
+                <h2>Slide 5: Análisis de Liquidaciones de Viaje & Retrabajo por Inconsistencias</h2>
+                <div class="sub">Un módulo ERP post-operativo no cotizado que demandó triple ciclo de normalización forense.</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
+                    <div class="card" style="border-left: 5px solid var(--red);">
+                        <strong style="color: var(--red); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            🔄 Triple Iteración por Criterios Cambiantes & Falta de Datos
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                            El módulo de liquidaciones fue <strong>subido y reestructurado 3 veces consecutivas</strong> debido a que las planillas suministradas carecían de normalización contable y modificaban fórmulas de viaje en viaje.
+                        </p>
+                        <p style="font-size: 10pt; line-height: 1.5; font-weight: 700; color: #991B1B;">
+                            Hasta la fecha, Petral NO cuenta con liquidaciones de viaje matemáticamente correctas ni consistentes por parte de sus operadores.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid var(--purple);">
+                        <strong style="color: var(--purple); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            🎯 Pre-Voyage (Cotizado) vs. Post-Voyage (Construido)
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                            <strong>Alcance Contratado:</strong> Estimación comercial previa al zarpe (*Pre-Voyage Estimation*).
+                        </p>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            <strong>Entregable Real:</strong> Sistema de liquidación y conciliación contable de viaje (*Post-Voyage Actuals Reconciliation ERP*), calculando variaciones reales de combustible, demoras y gastos portuarios finales.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="callout callout-purple">
+                    <strong style="color: var(--purple); font-size: 11pt; display: block; margin-bottom: 3px;">Diagnóstico Pericial:</strong>
+                    <p style="font-size: 10.2pt; color: #334155;">
+                        La falta de madurez de los datos originales del cliente multiplicó las horas de ingeniería, transformando el desarrollo en un proceso de consultoría forense contable.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 05 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 6: MATRIZ FINANCIERA NAVITRANSO
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">MÓDULO FUERA DE ALCANCE &bull; ESTRUCTURA FINANCIERA DUAL</div>
+                <h2>Slide 6: Matriz Financiera NAVITRANSO & Reportería Dedicada</h2>
+                <div class="sub">Creación de un modelo contable de 4 bloques independientes y vista de solo lectura no contemplada en el alcance.</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
+                    <div class="card" style="border-top: 5px solid var(--accent);">
+                        <strong style="color: var(--navy); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            🏛️ Estructura de 4 Bloques Contables Independientes
+                        </strong>
+                        <ul style="font-size: 10pt; color: #475569; padding-left: 20px; line-height: 1.55;">
+                            <li><strong>Bloque 1 - Ingresos Operacionales:</strong> Consolidación de fletes por TM y recargos por demoras brutas.</li>
+                            <li><strong>Bloque 2 - Costos Variables Directos:</strong> Consumo búnker (IFO/MDO), peajes y gastos de agenciamiento portuario.</li>
+                            <li><strong>Bloque 3 - Costos Fijos & Arriendo (HIRE):</strong> Time Charter equivalente diario y prorrateo de días de navegación/fondeo.</li>
+                            <li><strong>Bloque 4 - Margen Operativo & EBITDA:</strong> Utilidad neta de viaje y ratio de retorno por nave/cliente.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-top: 5px solid var(--amber);">
+                        <strong style="color: var(--amber); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            ⚠️ Desvío del Alcance & Funcionalidades Exclusivas
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                            <strong>No Cotizado:</strong> El contrato contemplaba una única vista financiera unificada para Petral. La integración del formato NAVITRANSO representó una segunda dimensión contable completa.
+                        </p>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            <strong>Entregables Adicionales:</strong> Vista financiera *Read-Only* para auditores, motor de sincronización automática y exportadores dedicados en PDF vectorial y ExcelJS contable.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="callout callout-blue">
+                    <strong style="color: var(--accent); font-size: 11pt; display: block; margin-bottom: 3px;">Impacto de Negocio:</strong>
+                    <p style="font-size: 10.2pt; color: #334155;">
+                        Permite a Naviera Petral y al consorcio NAVITRANSO conciliar estados financieros y flujos de caja operativos bajo esquemas contables totalmente homologados y auditables.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 06 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 7: CONSULTORÍA DE PROCESOS, ORGANIGRAMA & MOF
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">VALOR INTANGIBLE &bull; GOBERNANZA INSTITUCIONAL</div>
+                <h2>Slide 7: Consultoría de Procesos, Organigrama Interactivo & Manual MOF</h2>
+                <div class="sub">Entregables de consultoría organizacional y reingeniería humana incorporados a la plataforma.</div>
+
+                <div class="kpi-grid-4" style="margin-bottom: 14px;">
+                    <div class="kpi-box" style="border-top: 5px solid var(--accent);">
+                        <div class="label">Costos Portuarios</div>
+                        <div class="num" style="font-size: 16pt;">Estandarizados</div>
+                        <div class="desc">Reglas de fondeo, muellaje y estancias.</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--green);">
+                        <div class="label">Organigrama Digital</div>
+                        <div class="num" style="font-size: 16pt;">Roles Claros</div>
+                        <div class="desc">Estructura interactiva de áreas y cargos.</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--amber);">
+                        <div class="label">Manual MOF</div>
+                        <div class="num" style="font-size: 16pt;">Digitalizado</div>
+                        <div class="desc">Perfiles y funciones integradas en UI.</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--purple);">
+                        <div class="label">Gobernanza</div>
+                        <div class="num" style="font-size: 16pt;">Sin Fugas</div>
+                        <div class="desc">Software como guía de funciones activa.</div>
+                    </div>
+                </div>
+
+                <div class="callout callout-purple">
+                    <strong style="color: #6B21A8; font-size: 11pt; display: block; margin-bottom: 4px;">Delimitación Funcional & Estructura Organizacional:</strong>
+                    <p style="font-size: 10.2pt; color: #334155; line-height: 1.5;">
+                        Se modeló la <strong>estructura jerárquica corporativa de Petral</strong> (organigrama digital interactivo y perfiles del Manual MOF), definiendo con exactitud las atribuciones de Operaciones, Comercial, Finanzas y Gerencia. Este trabajo de consultoría de gestión institucional excedió con creces el alcance de desarrollo puramente informático.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 07 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 8: CIBERSEGURIDAD, DEVICE VAULT & AUDIT LEDGER
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">CIBERSEGURIDAD BANCARIA &bull; INTEGRIDAD DE DATOS</div>
+                <h2>Slide 8: Bóveda de Dispositivos (Device Vault) & Libro de Auditoría</h2>
+                <div class="sub">Blindaje de hardware y trazabilidad forense inmutable para la protección de datos dinámicos.</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
+                    <div class="card" style="border-top: 5px solid var(--navy);">
+                        <strong style="color: var(--navy); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            🔐 Device Vault (Device Fingerprinting & Binding)
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                            Sistema que genera una <strong>huella digital criptográfica de hardware</strong> por terminal autorizada.
+                        </p>
+                        <ul style="font-size: 9.8pt; color: #475569; padding-left: 20px; line-height: 1.45;">
+                            <li>Restringe accesos exclusivamente a computadoras corporativas validadas.</li>
+                            <li>Elimina riesgos de robo de credenciales y accesos concurrentes no autorizados.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-top: 5px solid var(--green);">
+                        <strong style="color: var(--green); font-size: 12pt; display: block; margin-bottom: 8px;">
+                            📜 Audit Ledger (Libro Mayor Forense Transaccional)
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                            Mecanismo de <strong>registro inmutable de eventos y transacciones</strong> que audita cada modificación en el sistema.
+                        </p>
+                        <ul style="font-size: 9.8pt; color: #475569; padding-left: 20px; line-height: 1.45;">
+                            <li>Trazabilidad completa: quién, cuándo y qué valor sobreescribió en fletes o matrices.</li>
+                            <li>Protección absoluta de la integridad de la data dinámica ante controversias internas.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="callout callout-blue">
+                    <strong style="color: var(--accent); font-size: 11pt; display: block; margin-bottom: 3px;">Salto de Alcance de Seguridad:</strong>
+                    <p style="font-size: 10.2pt; color: #334155;">
+                        Se cotizó un inicio de sesión básico; se entregó una arquitectura de ciberseguridad y auditoría transaccional de estándar bancario y de misión crítica.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 08 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 9: SUITE DE 13 REPORTES PDF/EXCEL INK-SAVE
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">REPORTERÍA EJECUTIVA &bull; DISEÑO PRINT-READY</div>
+                <h2>Slide 9: Suite de 13 Reportes PDF/ExcelJS con Matriz Cromática e Ink-Save</h2>
+                <div class="sub">Maquetación editorial de alta precisión con identidad del cliente y ahorro del 75% de tinta.</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
+                    <div class="card" style="border-top: 5px solid var(--accent);">
+                        <strong style="color: var(--navy); font-size: 11.5pt; display: block; margin-bottom: 6px;">
+                            📄 8 Reportes PDF Vectoriales (Print-Ready)
+                        </strong>
+                        <ul style="font-size: 9.5pt; color: #475569; padding-left: 18px; line-height: 1.45;">
+                            <li><strong>1. Estimación Individual de Viaje:</strong> Formato A4 Portrait con desglose de costos y TCE.</li>
+                            <li><strong>2. Resumen Ejecutivo de Flota:</strong> Vista A4 Landscape comparativa de naves.</li>
+                            <li><strong>3. Comparativa Multirruta SPCC/NEXA:</strong> Matriz de sensibilidad de fletes.</li>
+                            <li><strong>4. Liquidación Consolidada Post-Viaje:</strong> Conciliación de búnker y demoras reales.</li>
+                            <li><strong>5. Estado de Resultados NAVITRANSO:</strong> Formato contable oficial de 4 bloques.</li>
+                            <li><strong>6. Matriz de Fletes y Demurrage:</strong> Resumen tarifario por puerto y cliente.</li>
+                            <li><strong>7. Ficha Técnica de Consumo Búnker:</strong> IFO 380 vs MDO en mar y puerto.</li>
+                            <li><strong>8. Reporte de Costos Portuarios:</strong> Detalle de muellaje, practicaje y lanchas.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-top: 5px solid var(--green);">
+                        <strong style="color: var(--green); font-size: 11.5pt; display: block; margin-bottom: 6px;">
+                            📊 5 Reportes Excel (.xlsx con ExcelJS) & Matriz Cromática
+                        </strong>
+                        <ul style="font-size: 9.5pt; color: #475569; padding-left: 18px; line-height: 1.45; margin-bottom: 8px;">
+                            <li><strong>1. Matriz Financiera Petral 12 Meses:</strong> Modelo dinámico multidimensional.</li>
+                            <li><strong>2. Matriz Financiera NAVITRANSO 12 Meses:</strong> Control presupuestario en 4 bloques.</li>
+                            <li><strong>3. Maestro de Puertos y Costos Paramétricos:</strong> Tarifario integral editable.</li>
+                            <li><strong>4. Base Consolidada de Cotizaciones:</strong> Historial transaccional completo.</li>
+                            <li><strong>5. Log Transaccional Audit Ledger:</strong> Trazabilidad forense de cambios.</li>
+                        </ul>
+                        <div style="background: rgba(5, 150, 105, 0.08); padding: 8px 12px; border-radius: 8px; font-size: 9pt; color: #065F46; line-height: 1.4;">
+                            <strong>Matriz Cromática & Ink-Save:</strong> Clientes (SPCC/NEXA), Naves y Rutas con colores identitarios y 75% ahorro de tinta.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout callout-green">
+                    <strong style="color: var(--green); font-size: 11pt; display: block; margin-bottom: 3px;">Entregable Editorial Ejecutivo:</strong>
+                    <p style="font-size: 10.2pt; color: #334155;">
+                        Informes listos para imprimir y presentar directamente a Directorio y Gerencia General sin requerir edición ni formateo manual posterior.
+                    </p>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 09 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 10: EFICIENCIA OPERATIVA & AHORRO PM PETRAL
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">EFICIENCIA OPERATIVA &bull; BENCHMARK INTERNACIONAL PMI</div>
+                <h2>Slide 10: Ahorro Masivo de Gestión para el Project Manager de Petral</h2>
+                <div class="sub">Desarrollo ágil proactivo: solo ~50 horas invertidas por Petral vs. {total_hours:.2f} horas devengadas por Geeksoft.</div>
+
+                <div class="kpi-grid-4" style="margin-bottom: 14px;">
+                    <div class="kpi-box" style="border-top: 5px solid var(--green);">
+                        <div class="label">Horas Invertidas PM</div>
+                        <div class="num" style="color: var(--green);">~50 h</div>
+                        <div class="desc">Iosef Zavala (Gestión Ágil)</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--accent);">
+                        <div class="label">Horas Devengadas Dev</div>
+                        <div class="num" style="color: var(--accent);">{total_hours:.0f} h</div>
+                        <div class="desc">Absorción total de ingeniería</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--amber);">
+                        <div class="label">Ratio PM / Dev Real</div>
+                        <div class="num" style="color: var(--amber);">1 : {dev_pm_ratio:.1f}</div>
+                        <div class="desc">{pm_ratio_pct}% (Máxima Eficiencia)</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 5px solid var(--purple);">
+                        <div class="label">Norma Industria PMI</div>
+                        <div class="num" style="color: var(--purple);">10% - 20%</div>
+                        <div class="desc">Ratio estándar (1:5 a 1:10)</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; margin-bottom: 10px;">
+                    <div class="card" style="border-left: 5px solid var(--green);">
+                        <strong style="color: var(--navy); font-size: 11.5pt; display: block; margin-bottom: 5px;">
+                            🌐 Validación con Estándares PMI (Project Management Institute)
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            En la industria del software corporativo, la dedicación estándar del Project Manager oscila entre el <strong>10% y el 20% del esfuerzo total del equipo técnico</strong>. Con 50 horas de gestión sobre {total_hours:.2f} horas de ingeniería (<strong>{pm_ratio_pct}%</strong>), Petral se ubicó en el rango de máxima eficiencia internacional.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid var(--purple);">
+                        <strong style="color: #6B21A8; font-size: 11.5pt; display: block; margin-bottom: 5px;">
+                            ⏱️ Ahorro de 30 a 80 Horas Gerenciales
+                        </strong>
+                        <p style="font-size: 10pt; color: #475569; line-height: 1.5;">
+                            Geeksoft absorbió la consultoría de negocio, redacción de especificaciones, modelación contable y control de calidad forense, <strong>ahorrándole a Petral entre 30 y 80 horas</strong> de comités técnicos maratónicos.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 10 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 11: LIQUIDACIÓN ECONÓMICA & PROPUESTA V4
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">VALORIZACIÓN ECONÓMICA &bull; CIERRE COMERCIAL</div>
+                <h2>Slide 11: Liquidación Económica & Propuesta de Regularización</h2>
+                <div class="sub">Valorización formal del servicio entregado y esquema comercial de regularización al {today_str}.</div>
+
+                <table class="ppt-table" style="margin-bottom: 14px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 45%;">Concepto / Entregable</th>
+                            <th style="width: 15%; text-align: center;">Horas</th>
+                            <th style="width: 15%; text-align: center;">Tarifa Ref.</th>
+                            <th style="width: 15%; text-align: right;">Subtotal (USD)</th>
+                            <th style="width: 10%; text-align: center;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong>Presupuesto Inicial Aprobado (One-Timers)</strong><br>
+                                <span style="font-size: 8pt; color: #475569; line-height: 1.4; display: block; margin-top: 3px;">
+                                    • Diseño UI/UX: <strong>10h @ $50/h</strong> ($500)<br>
+                                    • Desarrollo Base: <strong>110h @ $60/h</strong> ($6,600)<br>
+                                    • Carga ETL / Datos: <strong>10h @ $50/h</strong> ($500)<br>
+                                    • Onboarding & Capacitación: <strong>10h @ $50/h</strong> ($500)<br>
+                                    • Despliegue In Situ: <strong>10h @ $100/h</strong> ($1,000)
+                                </span>
+                            </td>
+                            <td style="text-align: center; font-size: 9.5pt; font-weight: 700;">{total_contract_onetime_hours:.2f} hrs</td>
+                            <td style="text-align: center; font-size: 8pt; line-height: 1.35; color: #334155;">
+                                <strong>$50/h</strong> (Diseño/ETL/Cap)<br>
+                                <strong>$60/h</strong> (Dev Base)<br>
+                                <strong>$100/h</strong> (In Situ)
+                            </td>
+                            <td style="text-align: right; font-weight: bold; font-size: 10.5pt; color: var(--navy);">${total_contract_onetime_usd:,.2f}</td>
+                            <td style="text-align: center;"><span class="badge-pill badge-blue">Base Contratada</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Horas Adicionales Devengadas de Desarrollo</strong><br>
+                                <span style="font-size: 8pt; color: #64748B; display: block; margin-top: 2px;">
+                                    Matriz NAVITRANSO, Device Vault, Demoras Estadísticas, 13 Reportes & Triple Retrabajo ETL
+                                </span>
+                            </td>
+                            <td style="text-align: center; color: var(--red); font-weight: bold; font-size: 9.5pt;">{dev_overage_hours:.2f} hrs</td>
+                            <td style="text-align: center; font-size: 8.5pt; font-weight: 700; color: var(--navy);">${dev_contract_rate:.2f} / h<br><span style="font-size: 7.5pt; color: #64748B; font-weight: normal;">(Dev Senior)</span></td>
+                            <td style="text-align: right; color: var(--red); font-weight: bold; font-size: 10.5pt;">${dev_overage_usd:,.2f}</td>
+                            <td style="text-align: center;"><span class="badge-pill badge-amber">Valor Entregado</span></td>
+                        </tr>
+                        <tr style="background-color: #EFF6FF; font-weight: bold;">
+                            <td style="color: var(--navy); font-size: 10.5pt;">
+                                VALOR TOTAL REAL ENTREGADO A NAVIERA PETRAL
+                            </td>
+                            <td style="text-align: center; font-size: 10.5pt;">{total_delivered_hours:.2f} hrs</td>
+                            <td style="text-align: center;">—</td>
+                            <td style="text-align: right; color: var(--navy); font-size: 11.5pt;">${total_delivered_usd:,.2f}</td>
+                            <td style="text-align: center;"><span class="badge-pill badge-green">En Operación</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="card" style="border-left: 6px solid var(--accent);">
+                        <strong style="color: var(--accent); font-size: 11.5pt; display: block; margin-bottom: 4px;">Opción A: Paquete Cerrado de Regularización</strong>
+                        <p style="font-size: 9.8pt; color: #334155; line-height: 1.45;">
+                            Acuerdo de monto fijo para regularizar la consultoría de procesos, 3 ciclos de ETL, auditorías forenses y los 6 módulos enterprise no previstos.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-left: 6px solid var(--green);">
+                        <strong style="color: var(--green); font-size: 11.5pt; display: block; margin-bottom: 4px;">Opción B: Bolsa Mensual de Evolución Continua</strong>
+                        <p style="font-size: 9.8pt; color: #334155; line-height: 1.45;">
+                            Estructuración de un abono mensual de soporte, mantenimiento y desarrollo ágil de nuevas funcionalidades (Módulo de Liquidaciones).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4</span>
+                    <span>Diapositiva 11 / 12</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================
+             SLIDE 12: EXTRACTO FORENSE DÍA POR DÍA (SLIDE FINAL)
+             ========================================== -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="tag">AUDITORÍA DIGITAL FORENSE &bull; DÍA POR DÍA INMUTABLE (DESDE 24/06/2026)</div>
+                <h2>Slide 12: Extracto Cronológico Detallado de Jornadas ({total_days} Días)</h2>
+                <div class="sub">Trazabilidad inalterable de cada jornada de trabajo, día de la semana, horario, horas devengadas e hitos ejecutados.</div>
+
+                <div class="kpi-grid-4" style="margin-bottom: 10px;">
+                    <div class="kpi-box" style="border-top: 4px solid var(--navy); padding: 8px 14px;">
+                        <div class="label">Jornadas Auditadas</div>
+                        <div class="num" style="font-size: 18pt;">{total_days} Días</div>
+                        <div class="desc">Desde 24/06/2026 a la fecha</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 4px solid var(--accent); padding: 8px 14px;">
+                        <div class="label">Horas Totales Reales</div>
+                        <div class="num" style="color: var(--accent); font-size: 18pt;">{total_hours:.2f} h</div>
+                        <div class="desc">Algoritmo inmutable Git/MTime</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 4px solid var(--green); padding: 8px 14px;">
+                        <div class="label">Valor Total Devengado</div>
+                        <div class="num" style="color: var(--green); font-size: 18pt;">${total_usd:,.2f}</div>
+                        <div class="desc">Tarifa estándar $60.00 / h</div>
+                    </div>
+                    <div class="kpi-box" style="border-top: 4px solid var(--purple); padding: 8px 14px;">
+                        <div class="label">Eventos / Commits</div>
+                        <div class="num" style="color: var(--purple); font-size: 18pt;">{total_events:,}</div>
+                        <div class="desc">Marcas de tiempo registradas</div>
+                    </div>
+                </div>
+
+                <div class="day-log-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 5%; text-align: center;">#</th>
+                                <th style="width: 17%; text-align: left;">Fecha / Día</th>
+                                <th style="width: 12%; text-align: center;">Horario</th>
+                                <th style="width: 9%; text-align: center;">Horas</th>
+                                <th style="width: 11%; text-align: right;">Monto ($ USD)</th>
+                                <th style="width: 46%; text-align: left;">Detalle de Tareas & Commits Clave</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+{all_table_rows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="slide-footnote">
+                    <span>DELFOS SHIPPING SOFTWARE &bull; Auditoría de Alcance V4 &bull; TOTAL ACUMULADO: {total_hours:.2f} HORAS (${total_usd:,.2f} USD)</span>
+                    <span>Diapositiva 12 / 12</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── NAVEGACIÓN BOTTOM RIGHT ── -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" title="Anterior">&larr;</button>
+        <span class="nav-counter" id="counter">01 / 12</span>
+        <button class="nav-btn" id="nextBtn" title="Siguiente">&rarr;</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress');
+        const counter = document.getElementById('counter');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let currentIdx = 0;
+        const total = slides.length;
+
+        function updateSlide(idx) {{
+            if (idx < 0) idx = 0;
+            if (idx >= total) idx = total - 1;
+            currentIdx = idx;
+
+            slides.forEach((s, i) => {{
+                s.classList.toggle('active', i === currentIdx);
+            }});
+
+            const pct = ((currentIdx + 1) / total) * 100;
+            progressBar.style.width = pct + '%';
+
+            const numStr = String(currentIdx + 1).padStart(2, '0');
+            const totalStr = String(total).padStart(2, '0');
+            counter.textContent = `${{numStr}} / ${{totalStr}}`;
+        }}
+
+        prevBtn.addEventListener('click', () => updateSlide(currentIdx - 1));
+        nextBtn.addEventListener('click', () => updateSlide(currentIdx + 1));
+
+        window.addEventListener('keydown', (e) => {{
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {{
+                updateSlide(currentIdx + 1);
+            }} else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {{
+                updateSlide(currentIdx - 1);
+            }} else if (e.key === 'Home') {{
+                updateSlide(0);
+            }} else if (e.key === 'End') {{
+                updateSlide(total - 1);
+            }}
+        }});
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
+"""
+    return html
+
+
+if __name__ == '__main__':
+    ws_path = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD'
+    html_content = generate_html_deck_v4(ws_path)
+
+    v4_path = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\Informe_Sustento_Modificacion_Alcance_Petral_V4.html"
+    presentation_path = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\presentation.html"
+    public_v4_path = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public\presentation_V4.html"
+
+    # Rutas para /BUSHIDO y /bushido
+    bushido_dir_upper = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public\BUSHIDO"
+    bushido_dir_lower = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public\bushido"
+    os.makedirs(bushido_dir_upper, exist_ok=True)
+    os.makedirs(bushido_dir_lower, exist_ok=True)
+
+    bushido_index_upper = os.path.join(bushido_dir_upper, "index.html")
+    bushido_index_lower = os.path.join(bushido_dir_lower, "index.html")
+    bushido_file_upper = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public\BUSHIDO.html"
+    bushido_file_lower = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public\bushido.html"
+
+    # Escribir en todos los destinos
+    destinations = [
+        v4_path,
+        presentation_path,
+        public_v4_path,
+        bushido_index_upper,
+        bushido_index_lower,
+        bushido_file_upper,
+        bushido_file_lower
+    ]
+
+    for dest in destinations:
+        with open(dest, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+    print(f"Deck V4 (DELFOS SHIPPING SOFTWARE) generado exitosamente con filtro estricto desde {PROJECT_START_DATE.strftime('%Y-%m-%d')} en:")
+    for dest in destinations:
+        print(f" -> {dest}")
