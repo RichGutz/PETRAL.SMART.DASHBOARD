@@ -166,6 +166,10 @@ export const ForecastService = {
         const response = await api.post('/forecast/vessels', payload);
         return response.data;
     },
+    deleteVessel: async (vessel_id: string) => {
+        const response = await api.delete('/forecast/vessels', { params: { vessel_id } });
+        return response.data;
+    },
     reorderVessels: async (payload: any) => {
         const response = await api.post('/forecast/vessels/reorder', payload);
         return response.data;

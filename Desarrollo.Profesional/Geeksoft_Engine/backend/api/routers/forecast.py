@@ -1011,14 +1011,13 @@ def save_vessel(request: dict):
                          "draft_m"]
         
         for field in numeric_fields:
-            if field in request:
-                if request[field] is None or request[field] == "":
+            if field not in request or request[field] is None or request[field] == "":
+                request[field] = 0.0
+            else:
+                try:
+                    request[field] = float(request[field])
+                except (ValueError, TypeError):
                     request[field] = 0.0
-                else:
-                    try:
-                        request[field] = float(request[field])
-                    except (ValueError, TypeError):
-                        request[field] = 0.0
 
         # Integer fields in Postgres (int4)
         int_fields = ["built", "display_order"]
@@ -1055,6 +1054,21 @@ def save_vessel(request: dict):
         return {"status": "success", "vessel_id": request["vessel_id"]}
     except Exception as e:
         print(f"Error in save_vessel: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/vessels")
+def delete_vessel(vessel_id: str):
+    try:
+        from backend.database import get_supabase
+        from backend.services.forecast_service import clear_forecast_cache
+        sb = get_supabase()
+        if not vessel_id:
+            raise HTTPException(status_code=400, detail="vessel_id is required")
+        sb.table("vessels").delete().eq("vessel_id", vessel_id).execute()
+        clear_forecast_cache()
+        return {"status": "success", "vessel_id": vessel_id}
+    except Exception as e:
+        print(f"Error in delete_vessel: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 from pydantic import BaseModel

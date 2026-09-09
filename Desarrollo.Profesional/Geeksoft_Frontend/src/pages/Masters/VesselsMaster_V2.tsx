@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity } from 'lucide-react';
+import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 
 export const VesselsMaster: React.FC = () => {
     const navigate = navigateHook();
-    const { hasPermission } = useAuth();
+    const { user, hasPermission } = useAuth();
     const isReadOnly = !hasPermission('maestro_buques', 'Editor');
     const [vessels, setVessels] = useState<any[]>([]);
 
@@ -46,6 +46,30 @@ export const VesselsMaster: React.FC = () => {
         };
         fetchVessels();
     }, []);
+
+    const handleDeleteVessel = async (vessel_id: string, vessel_name: string) => {
+        if (!confirm(`¿Está seguro de que desea eliminar el buque "${vessel_name || vessel_id}" de la flota?\n\nEsta acción eliminará el registro naval definitivamente.`)) {
+            return;
+        }
+        try {
+            setIsSaving(true);
+            await ForecastService.deleteVessel(vessel_id);
+            alert(`Buque "${vessel_name || vessel_id}" eliminado correctamente.`);
+            const data = await ForecastService.getVessels();
+            setVessels(data);
+            if (data.length > 0) {
+                setActiveVesselId(data[0].vessel_id);
+            } else {
+                setActiveVesselId('');
+            }
+        } catch (error: any) {
+            console.error("Error al eliminar barco:", error);
+            const errMsg = error?.response?.data?.detail || error?.message || "Error al eliminar barco";
+            alert(`Error al eliminar barco: ${errMsg}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const exportColumns: ExportColumn[] = [
         { header: 'ID Buque', key: 'vessel_id', type: 'string' },
@@ -371,17 +395,29 @@ export const VesselsMaster: React.FC = () => {
                                     </div>
 
                                     {/* BOTONES DE EDICIÓN - Alineados al fondo */}
-                                    <div className="mt-auto pt-4 border-t border-slate-100 flex gap-2 justify-end">
+                                    <div className="mt-auto pt-4 border-t border-slate-100 flex gap-2 justify-end items-center">
                                         {!isReadOnly && !isEditing && (
-                                            <button 
-                                                onClick={() => {
-                                                    setEditFormData(selectedVessel);
-                                                    setIsEditing(true);
-                                                }}
-                                                className="flex items-center gap-1 text-xs bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-6 py-2 rounded-lg font-bold transition-colors shadow-sm justify-center"
-                                            >
-                                                <Edit3 size={14} /> Editar Registro Naval
-                                            </button>
+                                            <>
+                                                <button 
+                                                    onClick={() => {
+                                                        setEditFormData(selectedVessel);
+                                                        setIsEditing(true);
+                                                    }}
+                                                    className="flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 px-5 py-2 rounded-lg font-bold transition-colors shadow-sm justify-center"
+                                                >
+                                                    <Edit3 size={14} /> Editar Registro Naval
+                                                </button>
+                                                {user?.role === 'ADMIN' && (
+                                                    <button 
+                                                        onClick={() => handleDeleteVessel(selectedVessel.vessel_id, selectedVessel.vessel_name)}
+                                                        disabled={isSaving}
+                                                        className="flex items-center gap-1.5 text-xs bg-rose-50 border border-rose-200 hover:bg-rose-600 hover:border-rose-600 hover:text-white text-rose-700 px-5 py-2 rounded-lg font-bold transition-all shadow-sm justify-center disabled:opacity-50"
+                                                        title="Eliminar buque del maestro de flota (Solo Administradores)"
+                                                    >
+                                                        <Trash2 size={14} /> Borrar Registro Naval
+                                                    </button>
+                                                )}
+                                            </>
                                         )}
                                         {isReadOnly && (
                                             <div className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
