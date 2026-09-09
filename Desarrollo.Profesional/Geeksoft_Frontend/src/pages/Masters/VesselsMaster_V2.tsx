@@ -2,10 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity, Trash2 } from 'lucide-react';
+import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity, Trash2, Camera, Upload } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
+
+const compressImage = (file: File, maxWidth = 1200, maxHeight = 900, quality = 0.82): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxWidth || height > maxHeight) {
+                    if (width / height > maxWidth / maxHeight) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    resolve(event.target?.result as string);
+                    return;
+                }
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(dataUrl);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
 
 export const VesselsMaster: React.FC = () => {
     const navigate = navigateHook();
@@ -46,6 +82,69 @@ export const VesselsMaster: React.FC = () => {
         };
         fetchVessels();
     }, []);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 8 * 1024 * 1024) {
+            alert("La imagen excede el límite máximo de 8MB.");
+            return;
+        }
+        try {
+            setIsSaving(true);
+            const compressedDataUrl = await compressImage(file, 1200, 900, 0.82);
+            
+            if (isEditing) {
+                setEditFormData({
+                    ...editFormData,
+                    image_url: compressedDataUrl
+                });
+            } else if (selectedVessel) {
+                const payload = {
+                    ...selectedVessel,
+                    image_url: compressedDataUrl
+                };
+                await ForecastService.saveVessel(payload);
+                alert(`Fotografía de "${selectedVessel.vessel_name || selectedVessel.vessel_id}" actualizada exitosamente.`);
+                const data = await ForecastService.getVessels();
+                setVessels(data);
+            }
+        } catch (error: any) {
+            console.error("Error al procesar la imagen:", error);
+            const errMsg = error?.response?.data?.detail || error?.message || "Error al subir foto";
+            alert(`Error al subir foto: ${errMsg}`);
+        } finally {
+            setIsSaving(false);
+            e.target.value = '';
+        }
+    };
+
+    const handleRemovePhoto = async () => {
+        if (!confirm("¿Desea remover la fotografía personalizada de este buque?")) return;
+        try {
+            setIsSaving(true);
+            if (isEditing) {
+                setEditFormData({
+                    ...editFormData,
+                    image_url: null
+                });
+            } else if (selectedVessel) {
+                const payload = {
+                    ...selectedVessel,
+                    image_url: null
+                };
+                await ForecastService.saveVessel(payload);
+                alert("Fotografía removida.");
+                const data = await ForecastService.getVessels();
+                setVessels(data);
+            }
+        } catch (error: any) {
+            console.error("Error al remover foto:", error);
+            alert("Error al remover la fotografía.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const handleDeleteVessel = async (vessel_id: string, vessel_name: string) => {
         if (!confirm(`¿Está seguro de que desea eliminar el buque "${vessel_name || vessel_id}" de la flota?\n\nEsta acción eliminará el registro naval definitivamente.`)) {
@@ -250,35 +349,33 @@ export const VesselsMaster: React.FC = () => {
                                         </div>
                                     ))}
 
-                                    {/* Interfaz de carga de imagen si se está editando */}
-                                    {isEditing && (
-                                        <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer gap-2 select-none z-20">
-                                            <Activity size={24} className="animate-bounce text-blue-400" />
-                                            <span className="text-xs font-bold uppercase tracking-wider">Subir Nueva Foto</span>
-                                            <span className="text-[9px] text-slate-300">Formatos: JPG, PNG, WEBP</span>
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                className="hidden" 
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        if (file.size > 2 * 1024 * 1024) {
-                                                            alert("La imagen excede el límite de 2MB recomendado para optimización.");
-                                                            return;
-                                                        }
-                                                        const reader = new FileReader();
-                                                        reader.onloadend = () => {
-                                                            setEditFormData({
-                                                                ...editFormData,
-                                                                image_url: reader.result as string
-                                                            });
-                                                        };
-                                                        reader.readAsDataURL(file);
-                                                    }
-                                                }}
-                                            />
-                                        </label>
+                                    {/* Botón flotante siempre visible para subir/cambiar foto */}
+                                    {!isReadOnly && (
+                                        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-20">
+                                            <label 
+                                                className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-blue-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-md backdrop-blur-sm cursor-pointer transition-all border border-white/20 hover:scale-105 active:scale-95 select-none"
+                                                title="Subir o actualizar fotografía del buque"
+                                            >
+                                                <Camera size={14} className="text-blue-300" />
+                                                <span>{(isEditing ? editFormData?.image_url : selectedVessel.image_url) ? 'Cambiar Foto' : 'Subir Foto'}</span>
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/png, image/jpeg, image/webp" 
+                                                    className="hidden" 
+                                                    onChange={handlePhotoUpload}
+                                                />
+                                            </label>
+                                            {((isEditing ? editFormData?.image_url : selectedVessel.image_url)) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemovePhoto}
+                                                    className="p-1.5 bg-rose-950/80 hover:bg-rose-600 text-rose-200 hover:text-white rounded-lg shadow-md backdrop-blur-sm transition-all border border-white/20 hover:scale-105"
+                                                    title="Remover fotografía personalizada"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
 
                                     <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10 z-10">
