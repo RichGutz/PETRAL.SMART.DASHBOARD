@@ -1585,6 +1585,28 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 ))}
                                             </select>
                                         </div>
+                                    ) : row.col1.type === 'route' && !row.isGlobalTotal ? (
+                                        <div className="vertical-text mx-auto px-1 flex flex-col items-center justify-center gap-1">
+                                            {row.col1.name.replace('-CALLAO(B)', '').split('-').length >= 3 ? (
+                                                <div className="flex flex-col items-center leading-tight">
+                                                    {row.col1.name.replace('-CALLAO(B)', '').split('-').map((p: string, pIdx: number, arr: string[]) => (
+                                                        <React.Fragment key={pIdx}>
+                                                            <span className="font-extrabold text-[11px] tracking-tight">{p}</span>
+                                                            {pIdx < arr.length - 1 && (
+                                                                <span className="text-[9px] text-sky-200 font-bold my-[-2px]">↓</span>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span>{row.col1.name.replace('-CALLAO(B)', '')}</span>
+                                            )}
+                                            {row.col1.name.includes('-CALLAO(B)') && (
+                                                <span className="inline-block px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] tracking-tight mt-1 shadow-2xs transform rotate-0" style={{ writingMode: 'horizontal-tb' }}>
+                                                    ⛽ CALLAO(b)
+                                                </span>
+                                            )}
+                                        </div>
                                     ) : (
                                         <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
                                     )}
@@ -1605,7 +1627,31 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
-                                    <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
+                                    {row.col2.type === 'route' && !row.col2.isSubtotal ? (
+                                        <div className="vertical-text mx-auto px-1 flex flex-col items-center justify-center gap-1">
+                                            {row.col2.name.replace('-CALLAO(B)', '').split('-').length >= 3 ? (
+                                                <div className="flex flex-col items-center leading-tight">
+                                                    {row.col2.name.replace('-CALLAO(B)', '').split('-').map((p: string, pIdx: number, arr: string[]) => (
+                                                        <React.Fragment key={pIdx}>
+                                                            <span className="font-extrabold text-[11px] tracking-tight">{p}</span>
+                                                            {pIdx < arr.length - 1 && (
+                                                                <span className="text-[9px] text-sky-200 font-bold my-[-2px]">↓</span>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span>{row.col2.name.replace('-CALLAO(B)', '')}</span>
+                                            )}
+                                            {row.col2.name.includes('-CALLAO(B)') && (
+                                                <span className="inline-block px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] tracking-tight mt-1 shadow-2xs transform rotate-0" style={{ writingMode: 'horizontal-tb' }}>
+                                                    ⛽ CALLAO(b)
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
+                                    )}
                                 </td>
                             )}
                             {row.col3 && activeDimensions[2] && (
@@ -1641,6 +1687,28 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                     </option>
                                                 ))}
                                             </select>
+                                        </div>
+                                    ) : row.col3.type === 'route' && !row.col3.isSubtotal ? (
+                                        <div className="vertical-text mx-auto px-1 flex flex-col items-center justify-center gap-1">
+                                            {row.col3.name.replace('-CALLAO(B)', '').split('-').length >= 3 ? (
+                                                <div className="flex flex-col items-center leading-tight">
+                                                    {row.col3.name.replace('-CALLAO(B)', '').split('-').map((p: string, pIdx: number, arr: string[]) => (
+                                                        <React.Fragment key={pIdx}>
+                                                            <span className="font-extrabold text-[11px] tracking-tight">{p}</span>
+                                                            {pIdx < arr.length - 1 && (
+                                                                <span className="text-[9px] text-sky-200 font-bold my-[-2px]">↓</span>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span>{row.col3.name.replace('-CALLAO(B)', '')}</span>
+                                            )}
+                                            {row.col3.name.includes('-CALLAO(B)') && (
+                                                <span className="inline-block px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] tracking-tight mt-1 shadow-2xs transform rotate-0" style={{ writingMode: 'horizontal-tb' }}>
+                                                    ⛽ CALLAO(b)
+                                                </span>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="vertical-text mx-auto px-2">{row.col3.name}</div>

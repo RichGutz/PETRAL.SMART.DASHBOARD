@@ -25,6 +25,19 @@ def get_demurrage_from_dict(d, vessel_name):
             except Exception: pass
     return 0.0
 
+def safe_fetch(supabase, table_name, retries=3):
+    for attempt in range(retries):
+        try:
+            res = supabase.table(table_name).select("*").execute()
+            if res.data is not None:
+                return res.data
+        except Exception as e:
+            if attempt == retries - 1:
+                print(f"Warning: Could not fetch table {table_name} after {retries} attempts: {e}")
+                return []
+            time.sleep(0.3 * (attempt + 1))
+    return []
+
 def get_cached_masters(supabase) -> Dict[str, Any]:
     global _masters_cache, _cache_time
     now = time.time()
@@ -34,7 +47,8 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
             "bunker_prices", "ports", "contracts", "contract_tariffs",
             "port_costs_matrix", "port_cost_static", "vessel_terminal_operations"
         ]
-        with ThreadPoolExecutor(max_workers=11) as executor:
+        # Usar concurrencia moderada (max_workers=3) para no saturar PostgREST y evitar 504 Gateway Timeouts
+        with ThreadPoolExecutor(max_workers=3) as executor:
             future_to_table = {executor.submit(safe_fetch, supabase, t): t for t in tables}
             new_cache = {}
             for future in future_to_table:
@@ -47,14 +61,6 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
         _masters_cache = new_cache
         _cache_time = now
     return _masters_cache
-
-
-def safe_fetch(supabase, table_name):
-    try:
-        return supabase.table(table_name).select("*").execute().data
-    except Exception as e:
-        print(f"Warning: Could not fetch table {table_name}: {e}")
-        return []
 
 def get_latest_bunker_prices() -> Dict[str, Any]:
     try:
@@ -648,6 +654,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     str(s.get("route_id", "")).strip() == clean_q_id or 
                     str(s.get("contract_id", "")).strip() == clean_q_id
                 )), None)
+
+            # 3. Rescate Resiliente Directo a Supabase (Fallback ante micro-desconexión de caché)
+            if not spot_route and clean_q_id:
+                try:
+                    direct_res = supabase.table("routes_quotes").select("*").ilike("name", f"%{clean_q_id}%").execute()
+                    if direct_res.data:
+                        spot_route = direct_res.data[0]
+                except Exception as ex_direct:
+                    print(f"Warning: Direct Supabase fetch fallback error for quote '{clean_q_id}': {ex_direct}")
                 
             if spot_route:
                 is_spot_route = True
@@ -847,14 +862,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 has_valid_snapshot = bool(fin_summary and (float(fin_summary.get("grandBunkerTotal", 0)) > 0 or float(fin_summary.get("totalDays", 0)) > 0))
                 is_same_vessel = bool(vessel and original_vessel_id and vessel.strip().upper() == str(original_vessel_id).strip().upper())
                 
-                orig_freight_rate = (float(fin_summary.get("totalFreight", 0)) / (total_laden_qty if total_laden_qty > 0 else line.quantity)) if (fin_summary and float(fin_summary.get("totalFreight", 0)) > 0) else yield_flete
+                snapshot_qty = float(fin_summary.get("totalQuantity") or (total_laden_qty if total_laden_qty > 0 else line.quantity) or 13500.0)
+                orig_freight_rate = (float(fin_summary.get("totalFreight", 0)) / snapshot_qty) if (fin_summary and float(fin_summary.get("totalFreight", 0)) > 0) else yield_flete
                 has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0 and abs(float(line.custom_tariff) - orig_freight_rate) > 0.01)
                 has_bunker_override = bool((line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) or (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0))
 
                 if is_same_vessel and has_valid_snapshot:
                     # Consumo directo o escalado analítico de la Foto del Multicotizador
                     if has_tariff_override:
-                        tot_freight_rev = float((total_laden_qty if total_laden_qty > 0 else line.quantity) * float(line.custom_tariff))
+                        tot_freight_rev = float(snapshot_qty * float(line.custom_tariff))
                     else:
                         tot_freight_rev = float(fin_summary.get("totalFreight", consolidated.get("total_freight_revenue", 0)))
 
@@ -928,7 +944,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "tce_real": round(tce_real, 2),
                     "tce_required_unit": tce_req,
                     "flete_unit": yield_flete if yield_flete > 0 else freight_rate,
-                    "carga_unit": total_laden_qty if total_laden_qty > 0 else line.quantity,
+                    "carga_unit": snapshot_qty if (snapshot_qty > 0) else (total_laden_qty if total_laden_qty > 0 else line.quantity),
                     "total_duration": total_days,
                     "total_distance": consolidated.get("total_distance", 0),
                     "sea_days": sea_days_val,
@@ -1010,9 +1026,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             
             inputs = {
                 "route_distance": consolidated.get("total_distance", 0),
-                # Para rutas multicotizador: cantidad total cargada y yield ponderado
-                # Para SpotRouter tradicional: quantity y freight_rate de la línea del forecast
-                "quantity": total_laden_qty if ("tramos" in legs_data and total_laden_qty > 0) else line.quantity,
+                "quantity": (snapshot_qty if 'snapshot_qty' in locals() and snapshot_qty > 0 else (total_laden_qty if ("tramos" in legs_data and total_laden_qty > 0) else line.quantity)),
                 "freight_rate": freight_rate  # yield ponderado (multi) o custom_tariff (tradicional)
             }
             
@@ -1472,13 +1486,14 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 has_valid_snapshot = bool(fin_summary and (float(fin_summary.get("grandBunkerTotal", 0)) > 0 or float(fin_summary.get("totalDays", 0)) > 0))
                 is_same_vessel = bool(vessel and original_vessel_id and vessel.strip().upper() == str(original_vessel_id).strip().upper())
                 
-                orig_freight_rate = (float(fin_summary.get("totalFreight", 0)) / (total_laden_qty if total_laden_qty > 0 else line.quantity)) if (fin_summary and float(fin_summary.get("totalFreight", 0)) > 0) else yield_flete
+                snapshot_qty = float(fin_summary.get("totalQuantity") or (total_laden_qty if total_laden_qty > 0 else line.quantity) or 13500.0)
+                orig_freight_rate = (float(fin_summary.get("totalFreight", 0)) / snapshot_qty) if (fin_summary and float(fin_summary.get("totalFreight", 0)) > 0) else yield_flete
                 has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0 and abs(float(line.custom_tariff) - orig_freight_rate) > 0.01)
                 has_bunker_override = bool((line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) or (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0))
 
                 if is_same_vessel and has_valid_snapshot:
                     if has_tariff_override:
-                        tot_freight_rev = float((total_laden_qty if total_laden_qty > 0 else line.quantity) * float(line.custom_tariff))
+                        tot_freight_rev = float(snapshot_qty * float(line.custom_tariff))
                     else:
                         tot_freight_rev = float(fin_summary.get("totalFreight", consolidated.get("total_freight_revenue", 0)))
 
