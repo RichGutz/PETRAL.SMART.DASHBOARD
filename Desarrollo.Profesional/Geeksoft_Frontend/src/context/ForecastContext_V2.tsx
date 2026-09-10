@@ -407,24 +407,32 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const handleFrequencyChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => {
         setIsDirty(true);
         setProjectionLines(prev => {
-            const destination_port_id = route_key.split('-')[1];
-            const existingIndex = prev.findIndex(p => 
-                p.month_index === month_index && 
-                p.vessel_id === vessel_id &&
-                p.destination_port_id === destination_port_id &&
-                p.client_id === client_id
-            );
+            const cleanRoute = (route_key || '').replace('-CALLAO(B)', '').trim();
+            const routeParts = cleanRoute.split('-');
+            const origPort = routeParts[0];
+            const destPort = routeParts.length > 2 ? routeParts.slice(1).join('-') : (routeParts[1] || routeParts[0]);
+
+            const matchesRoute = (p: any) => {
+                const pRoute = `${p.origin_port_id}-${p.destination_port_id}`;
+                return p.client_id === client_id &&
+                    p.vessel_id === vessel_id &&
+                    (
+                        pRoute === route_key ||
+                        pRoute === cleanRoute ||
+                        p.destination_port_id === destPort ||
+                        p.destination_port_id === routeParts[1] ||
+                        (p.origin_port_id === origPort && p.destination_port_id === destPort)
+                    );
+            };
+
+            const existingIndex = prev.findIndex(p => p.month_index === month_index && matchesRoute(p));
 
             if (existingIndex >= 0) {
                 const clone = [...prev];
                 clone[existingIndex] = { ...clone[existingIndex], monthly_frequency: newFrequency };
                 return clone;
             } else if (newFrequency > 0) {
-                const templateLine = prev.find(p => 
-                    p.vessel_id === vessel_id &&
-                    p.destination_port_id === destination_port_id &&
-                    p.client_id === client_id
-                );
+                const templateLine = prev.find(p => matchesRoute(p));
                 
                 if (templateLine) {
                     const newLine = {
@@ -442,15 +450,24 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => {
         setIsDirty(true);
         setProjectionLines(prev => {
-            const destination_port_id = route_key?.includes('-') ? route_key.split('-')[1] : route_key;
+            const cleanRoute = (route_key || '').replace('-CALLAO(B)', '').trim();
+            const routeParts = cleanRoute.split('-');
+            const destPort = routeParts.length > 2 ? routeParts.slice(1).join('-') : (routeParts[1] || routeParts[0]);
+
+            const matchesRoute = (p: any) => {
+                const pRoute = `${p.origin_port_id}-${p.destination_port_id}`;
+                return p.client_id === client_id &&
+                    p.vessel_id === vessel_id &&
+                    (
+                        pRoute === route_key ||
+                        pRoute === cleanRoute ||
+                        p.destination_port_id === destPort ||
+                        p.destination_port_id === routeParts[1]
+                    );
+            };
             
             // 1. Verificar si ya existe una línea para este mes específico
-            const existingIndex = prev.findIndex(p => 
-                p.client_id === client_id && 
-                p.vessel_id === vessel_id && 
-                (p.destination_port_id === destination_port_id || `${p.origin_port_id}-${p.destination_port_id}` === route_key) &&
-                (!month_index || p.month_index === month_index)
-            );
+            const existingIndex = prev.findIndex(p => matchesRoute(p) && (!month_index || p.month_index === month_index));
 
             if (existingIndex >= 0) {
                 const clone = [...prev];
@@ -459,11 +476,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             }
 
             // 2. Si no existe para este mes pero existe una plantilla en otro mes de este cliente/ruta/buque
-            const templateLine = prev.find(p => 
-                p.client_id === client_id && 
-                p.vessel_id === vessel_id &&
-                (p.destination_port_id === destination_port_id || `${p.origin_port_id}-${p.destination_port_id}` === route_key)
-            );
+            const templateLine = prev.find(p => matchesRoute(p));
 
             if (templateLine) {
                 const newLine = {
@@ -490,10 +503,21 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
 
     const handleDeleteNode = (type: 'client' | 'route' | 'vessel', client_id: string, route_key?: string, vessel_id?: string) => {
         setIsDirty(true);
+        const cleanRoute = (route_key || '').replace('-CALLAO(B)', '').trim();
+        const routeParts = cleanRoute.split('-');
+        const destPort = routeParts.length > 2 ? routeParts.slice(1).join('-') : (routeParts[1] || routeParts[0]);
+
         setProjectionLines(prev => prev.filter(p => {
             if (type === 'client') return p.client_id !== client_id;
-            if (type === 'route') return !(p.client_id === client_id && `${p.origin_port_id}-${p.destination_port_id}` === route_key);
-            if (type === 'vessel') return !(p.client_id === client_id && `${p.origin_port_id}-${p.destination_port_id}` === route_key && p.vessel_id === vessel_id);
+            const pRoute = `${p.origin_port_id}-${p.destination_port_id}`;
+            const matchesRoute = p.client_id === client_id && (
+                pRoute === route_key ||
+                pRoute === cleanRoute ||
+                p.destination_port_id === destPort ||
+                p.destination_port_id === routeParts[1]
+            );
+            if (type === 'route') return !matchesRoute;
+            if (type === 'vessel') return !(matchesRoute && p.vessel_id === vessel_id);
             return true;
         }));
     };

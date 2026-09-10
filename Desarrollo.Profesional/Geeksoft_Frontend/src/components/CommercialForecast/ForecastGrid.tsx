@@ -475,15 +475,22 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const trips = months.map(m => {
                         let totalFreq = 0;
                         leaves.forEach((lf: any) => {
-                            const line = projectionLines.find(p => 
-                                p.client_id === lf.client && 
-                                `${p.origin_port_id}-${p.destination_port_id}` === lf.route && 
-                                p.vessel_id === lf.vessel && 
-                                p.month_index === m
-                            );
+                            const cleanLfRoute = (lf.route || '').replace('-CALLAO(B)', '').trim();
+                            const line = projectionLines.find(p => {
+                                const pRoute = `${p.origin_port_id}-${p.destination_port_id}`;
+                                return p.client_id === lf.client && 
+                                    p.vessel_id === lf.vessel && 
+                                    p.month_index === m &&
+                                    (
+                                        pRoute === lf.route || 
+                                        pRoute === cleanLfRoute ||
+                                        (cleanLfRoute.includes('-') && p.destination_port_id === cleanLfRoute.split('-')[1]) ||
+                                        p.destination_port_id === cleanLfRoute
+                                    );
+                            });
                             if (line) totalFreq += (line.monthly_frequency || 0);
                         });
-                        return totalFreq > 0 ? totalFreq : (monthData[m]?.trips || monthData[m]?.monthly_frequency || 0);
+                        return totalFreq > 0 ? totalFreq : (Number(monthData[m]?.freq) || Number(monthData[m]?.trips) || Number(monthData[m]?.monthly_frequency) || 0);
                     });
 
                     const vesselDemurrageRate = months.map(m => monthData[m]?.["vessel_demurrage_rate"] ?? monthData[m]?.["demurrage_rate"] ?? monthData[m]?.["demurrageRate"] ?? 20000);
@@ -1586,27 +1593,37 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             </select>
                                         </div>
                                     ) : row.col1.type === 'route' && !row.isGlobalTotal ? (
-                                        <div className="vertical-text mx-auto px-1 flex flex-col items-center justify-center gap-1">
-                                            {row.col1.name.replace('-CALLAO(B)', '').split('-').length >= 3 ? (
-                                                <div className="flex flex-col items-center leading-tight">
-                                                    {row.col1.name.replace('-CALLAO(B)', '').split('-').map((p: string, pIdx: number, arr: string[]) => (
-                                                        <React.Fragment key={pIdx}>
-                                                            <span className="font-extrabold text-[11px] tracking-tight">{p}</span>
-                                                            {pIdx < arr.length - 1 && (
-                                                                <span className="text-[9px] text-sky-200 font-bold my-[-2px]">↓</span>
+                                        (() => {
+                                            const isBunk = row.col1.name.includes('-CALLAO(B)') || row.col1.name.includes('CALLAO(B)');
+                                            const cleanKey = row.col1.name.replace('-CALLAO(B)', '').replace('CALLAO(B)', '').trim();
+                                            const ports = cleanKey.split('-').filter(Boolean);
+
+                                            if (isBunk || ports.length >= 3) {
+                                                return (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center p-1 leading-tight select-none">
+                                                        <div className="flex flex-col items-center leading-tight font-extrabold text-[11px] tracking-tight">
+                                                            {ports.map((p: string, pIdx: number) => (
+                                                                <React.Fragment key={pIdx}>
+                                                                    <span>{p}</span>
+                                                                    {pIdx < ports.length - 1 && (
+                                                                        <span className="text-[9px] text-sky-200 font-bold my-[-1px]">↓</span>
+                                                                    )}
+                                                                </React.Fragment>
+                                                            ))}
+                                                            {isBunk && (
+                                                                <>
+                                                                    <span className="text-[9px] text-amber-200 font-bold my-[-1px]">↓</span>
+                                                                    <span className="inline-flex items-center gap-0.5 px-1 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[8.5px] tracking-tight shadow-2xs mt-0.5 whitespace-nowrap">
+                                                                        ⛽ CALLAO(b)
+                                                                    </span>
+                                                                </>
                                                             )}
-                                                        </React.Fragment>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <span>{row.col1.name.replace('-CALLAO(B)', '')}</span>
-                                            )}
-                                            {row.col1.name.includes('-CALLAO(B)') && (
-                                                <span className="inline-block px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] tracking-tight mt-1 shadow-2xs transform rotate-0" style={{ writingMode: 'horizontal-tb' }}>
-                                                    ⛽ CALLAO(b)
-                                                </span>
-                                            )}
-                                        </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return <div className="vertical-text mx-auto px-2">{row.col1.name}</div>;
+                                        })()
                                     ) : (
                                         <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
                                     )}
@@ -1628,27 +1645,37 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         </div>
                                     )}
                                     {row.col2.type === 'route' && !row.col2.isSubtotal ? (
-                                        <div className="vertical-text mx-auto px-1 flex flex-col items-center justify-center gap-1">
-                                            {row.col2.name.replace('-CALLAO(B)', '').split('-').length >= 3 ? (
-                                                <div className="flex flex-col items-center leading-tight">
-                                                    {row.col2.name.replace('-CALLAO(B)', '').split('-').map((p: string, pIdx: number, arr: string[]) => (
-                                                        <React.Fragment key={pIdx}>
-                                                            <span className="font-extrabold text-[11px] tracking-tight">{p}</span>
-                                                            {pIdx < arr.length - 1 && (
-                                                                <span className="text-[9px] text-sky-200 font-bold my-[-2px]">↓</span>
+                                        (() => {
+                                            const isBunk = row.col2.name.includes('-CALLAO(B)') || row.col2.name.includes('CALLAO(B)');
+                                            const cleanKey = row.col2.name.replace('-CALLAO(B)', '').replace('CALLAO(B)', '').trim();
+                                            const ports = cleanKey.split('-').filter(Boolean);
+
+                                            if (isBunk || ports.length >= 3) {
+                                                return (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center p-1 leading-tight select-none">
+                                                        <div className="flex flex-col items-center leading-tight font-extrabold text-[11px] tracking-tight">
+                                                            {ports.map((p: string, pIdx: number) => (
+                                                                <React.Fragment key={pIdx}>
+                                                                    <span>{p}</span>
+                                                                    {pIdx < ports.length - 1 && (
+                                                                        <span className="text-[9px] text-sky-200 font-bold my-[-1px]">↓</span>
+                                                                    )}
+                                                                </React.Fragment>
+                                                            ))}
+                                                            {isBunk && (
+                                                                <>
+                                                                    <span className="text-[9px] text-amber-200 font-bold my-[-1px]">↓</span>
+                                                                    <span className="inline-flex items-center gap-0.5 px-1 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[8.5px] tracking-tight shadow-2xs mt-0.5 whitespace-nowrap">
+                                                                        ⛽ CALLAO(b)
+                                                                    </span>
+                                                                </>
                                                             )}
-                                                        </React.Fragment>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <span>{row.col2.name.replace('-CALLAO(B)', '')}</span>
-                                            )}
-                                            {row.col2.name.includes('-CALLAO(B)') && (
-                                                <span className="inline-block px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] tracking-tight mt-1 shadow-2xs transform rotate-0" style={{ writingMode: 'horizontal-tb' }}>
-                                                    ⛽ CALLAO(b)
-                                                </span>
-                                            )}
-                                        </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return <div className="vertical-text mx-auto px-2">{row.col2.name}</div>;
+                                        })()
                                     ) : (
                                         <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
                                     )}
@@ -1689,27 +1716,37 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             </select>
                                         </div>
                                     ) : row.col3.type === 'route' && !row.col3.isSubtotal ? (
-                                        <div className="vertical-text mx-auto px-1 flex flex-col items-center justify-center gap-1">
-                                            {row.col3.name.replace('-CALLAO(B)', '').split('-').length >= 3 ? (
-                                                <div className="flex flex-col items-center leading-tight">
-                                                    {row.col3.name.replace('-CALLAO(B)', '').split('-').map((p: string, pIdx: number, arr: string[]) => (
-                                                        <React.Fragment key={pIdx}>
-                                                            <span className="font-extrabold text-[11px] tracking-tight">{p}</span>
-                                                            {pIdx < arr.length - 1 && (
-                                                                <span className="text-[9px] text-sky-200 font-bold my-[-2px]">↓</span>
+                                        (() => {
+                                            const isBunk = row.col3.name.includes('-CALLAO(B)') || row.col3.name.includes('CALLAO(B)');
+                                            const cleanKey = row.col3.name.replace('-CALLAO(B)', '').replace('CALLAO(B)', '').trim();
+                                            const ports = cleanKey.split('-').filter(Boolean);
+
+                                            if (isBunk || ports.length >= 3) {
+                                                return (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center p-1 leading-tight select-none">
+                                                        <div className="flex flex-col items-center leading-tight font-extrabold text-[11px] tracking-tight">
+                                                            {ports.map((p: string, pIdx: number) => (
+                                                                <React.Fragment key={pIdx}>
+                                                                    <span>{p}</span>
+                                                                    {pIdx < ports.length - 1 && (
+                                                                        <span className="text-[9px] text-sky-200 font-bold my-[-1px]">↓</span>
+                                                                    )}
+                                                                </React.Fragment>
+                                                            ))}
+                                                            {isBunk && (
+                                                                <>
+                                                                    <span className="text-[9px] text-amber-200 font-bold my-[-1px]">↓</span>
+                                                                    <span className="inline-flex items-center gap-0.5 px-1 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[8.5px] tracking-tight shadow-2xs mt-0.5 whitespace-nowrap">
+                                                                        ⛽ CALLAO(b)
+                                                                    </span>
+                                                                </>
                                                             )}
-                                                        </React.Fragment>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <span>{row.col3.name.replace('-CALLAO(B)', '')}</span>
-                                            )}
-                                            {row.col3.name.includes('-CALLAO(B)') && (
-                                                <span className="inline-block px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] tracking-tight mt-1 shadow-2xs transform rotate-0" style={{ writingMode: 'horizontal-tb' }}>
-                                                    ⛽ CALLAO(b)
-                                                </span>
-                                            )}
-                                        </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return <div className="vertical-text mx-auto px-2">{row.col3.name}</div>;
+                                        })()
                                     ) : (
                                         <div className="vertical-text mx-auto px-2">{row.col3.name}</div>
                                     )}

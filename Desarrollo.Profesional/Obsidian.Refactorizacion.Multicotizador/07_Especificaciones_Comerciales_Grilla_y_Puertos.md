@@ -873,6 +873,16 @@ A partir de la auditoría pericial de Benoit Blanc (09.09.2026), se resolvió el
 | **55.4** | **`FinancialMatrixGridTable.tsx` & `FinancialMatrixNavitransoGridTable.tsx`** | No formateaban verticalmente secuencias de 3 o más puertos, causando desalineación en la columna Ruta. | Implementado **Renderizado Secuencial Vertical con Conectores (`CALLAO ↓ MARCONA ↓ MATARANI`)** de alta legibilidad. | **Ergonomía Visual Impecable:** Claridad inmediata para los analistas al visualizar rutas multi-drop complejas en la matriz. | ✅ SOLUCIONADO |
 | **55.5** | **`run_qc_e2e_multidrop_pol_pod_pod_matrix_loop.py` (QC Automatizado)** | No existía suite de validación pericial de convergencia para operaciones multi-drop. | Creado **Script Pericial Automatizado** que valida Flete ($433,500), Muellaje ($12,000), Hire ($115,295), Gastos de Puerto ($91,000), Búnker ($73,103) y P&L ($166,102). | **Convergencia Matemática al 100%:** Delta = $0.00 USD frente al snapshot del Multicotizador. | ✅ SOLUCIONADO |
 
+### 🕵️‍♂️ 5.37. Trigésima Séptima Vuelta (Serie 56: El Caso del Cero Fantasma y el Badge Girado en Rutas Bunkering en la Matriz React)
+
+A partir de la auditoría pericial de Benoit Blanc (10.09.2026), se diagnosticó la desconexión entre el cálculo exitoso del Backend Engine Python y el renderizado visual del componente `ForecastGrid.tsx` en React al cargar presupuestos de SPCC con escala técnica de Bunkering Callao (`SPCC.ILO.MARCONA.CALLAO.ILO.2026 DM MOQUEGUA`):
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **56.1** | **`ForecastGrid.tsx` (Emparejamiento `projectionLines` vs `lf.route`)** | Buscaba `p.origin-p.destination === lf.route` (`"ILO-MARCONA"` vs `"ILO-MARCONA-CALLAO(B)"`), evaluando `trips = 0` y forzando todas las métricas financieras a guiones (`—`). Fallback buscaba `trips` en lugar de `freq`. | Tolerancia simétrica: normalización de claves sin sufijo `-CALLAO(B)`, búsqueda por `quote_id` y lectura directa del campo canónico `monthData[m]?.freq`. | **Descalce de Llave en Frontend:** El backend calculó el P&L al 100% pero React no pudo cruzar la fila con las líneas de proyección. | 🔍 **DIAGNOSTICADO** |
+| **56.2** | **`ForecastContext_V2.tsx` (`handleFrequencyChange`)** | `route_key.split('-')[1]` extraía erróneamente `"MARCONA"` sin limpiar el sufijo `-CALLAO(B)` ni validar `quote_id`, bloqueando la sobreescritura de viajes en caliente. | Limpieza estricta de sufijo (`route_key.replace('-CALLAO(B)', '')`) antes de extraer puertos y reconciliación resiliente por `quote_id`. | **Bloqueo de Celda:** Imposibilidad de actualizar la frecuencia por desajuste de firma en el hook de mutación. | 🔍 **DIAGNOSTICADO** |
+| **56.3** | **`ForecastGrid.tsx` & `ForecastGrid.css` (Rotación Invertida 180°)** | El contenedor TD usaba `.vertical-text` (`transform: rotate(180deg)`), provocando que los elementos hijos (`flex-col` con badges y flechas) se mostraran invertidos de cabeza. | Segregación de estilos: los layouts estructurados de múltiples piernas usan orientación natural descendente sin heredar la rotación global de 180°. | **Herencia CSS Invertida:** `rotate(180deg)` del padre volteaba el badge `⛽ CALLAO(b)`. Ahora se muestra derecho como 3ra pierna (`ILO ↓ MARCONA ↓ ⛽ CALLAO`). | 🔍 **DIAGNOSTICADO** |
+
 ---
 
 ## 📄 Archivos Relacionados
@@ -880,6 +890,7 @@ A partir de la auditoría pericial de Benoit Blanc (09.09.2026), se resolvió el
 * **Documento Autopsia Pericial Benoit Blanc:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
 * **Protocolo de Control de Calidad Triangular:** [`03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
 

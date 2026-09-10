@@ -27,6 +27,7 @@
 | **R7.1** | Super Loop QC Bunkering: Rutas de Suministro `CALLAO (B)` sin colisión de fletes ni tarifas | Engine (`forecast_service.py`), Frontend & Script | `RUTAS.BUNKERING.SIN.COLISION.EN.MATRIZ`<br>`a878bd6` | ✅ **RESUELTO & CERTIFICADO** |
 | **R7.2** | Super Loop QC Multi-Drop: Rutas Complejas $\text{POL} \rightarrow \text{POD 1} \rightarrow \text{POD 2}$ (Rotulación Canónica y P&L Fiel $0.00 Delta) | Engine (`forecast_service.py`), Frontend & Script | `FEAT.MULTIDROP.POL.POD.POD.MATRIZ`<br>`38ee821` | ✅ **RESUELTO & CERTIFICADO** |
 | **R8** | Super Loop QC Máximo: 60/60 Rutas en BD vs JSON Matriz de Escenarios Sintéticos | Engine (`forecast_service.py`) & Scripts QC | `SUPER.LOOP.QC.SINTETICO.60.RUTAS` | ✅ **RESUELTO & 100% CERTIFICADO** |
+| **R9** | Caso Forense: Rutas SPCC Bunkering en Grilla React (Cero Fantasma, Edición de Viajes & Orientación Badge Callao 3ra Pierna) | Frontend (`ForecastGrid.tsx`, `ForecastContext_V2.tsx`) | `FIX.REACT.GRID.BUNKERING.SPCC` | 🔍 **DIAGNOSTICADO & EN CURSO** |
 | **VPS** | Despliegue Automatizado a Producción en Vivo (`forecast.geeksoft.tech`) | VPS Producción (`91.108.125.253`) | `deploy_forecast_kickoff.py` | 🚀 **PUBLICADO EN VIVO** |
 
 ---
@@ -1438,7 +1439,31 @@ def audit_saved_forecast_scenarios():
         print(f"📦 [{idx:02d}/{len(forecasts):02d}] Escenario: '{fc_name}' │ Margen (P&L): ${mat_pnl:,.2f} -> 🟢 OK")
 ```
 
-- **Estado:** ✅ **100% CERTIFICADO (60/60 RUTAS EXACTAS CON $0.00 DISCREPANCIA)**.
+- **Estado:** ✅ **100% CERTIFICADO (60/60 RUTAS EXACTAS CON $0.00 DISCREPANCIA EN BACKEND)**.
+
+---
+
+### 🔹 Caso R9: Cero Fantasma en Grilla React, Bloqueo de Sobreescritura de Viajes y Rotación 180° de Bunkering Callao
+
+#### 🔍 Autopsia Forense de la Brecha (¿Por qué el Super Loop QC 60/60 no lo detectó?):
+1. **Éxito Absoluto en Backend Engine (`FastAPI / Python`)**:
+   - En el Super Loop QC masivo (`run_qc_super_loop_synthetic_scenarios.py`), el script evaluó la respuesta JSON pura (`response.json()["aggregated_data"]`).
+   - El motor calculó la ruta de Bunkering SPCC con $0.00 de error ($324,850 Revenue, $72,463.53 Bunker, $67,015 Port Costs, $185,371.47 P&L) bajo la llave `ILO-MARCONA-CALLAO(B)`.
+2. **La Falla Estuvo en el Hook de Renderizado de React DOM (`ForecastGrid.tsx`)**:
+   - En el navegador, `ForecastGrid.tsx` cruza las líneas en memoria (`projectionLines`) con los nodos devueltos por el backend:
+     `p.origin_port_id + '-' + p.destination_port_id === lf.route`
+   - `projectionLines` guardaba `ILO-MARCONA` (con `quote_id`), mientras que `lf.route` era `ILO-MARCONA-CALLAO(B)`.
+   - Al no calzar la cadena exacta, React evaluó `trips = 0` y ocultó todas las métricas financieras bajo guiones (`—`).
+   - Además, el fallback leía `monthData[m]?.trips` en lugar de `monthData[m]?.freq`.
+3. **El Bloqueo de Mutación en Caliente (`handleFrequencyChange`)**:
+   - `route_key.split('-')[1]` extraía `"MARCONA"` sin considerar el sufijo `-CALLAO(B)` ni validar `quote_id`, bloqueando la sobreescritura de viajes.
+4. **La Rotación Invertida de CSS (`.vertical-text`)**:
+   - La celda TD usaba `.vertical-text` (`transform: rotate(180deg)`), haciendo que los badges hijos con `rotate-0` heredaran la inversión y aparecieran de cabeza en lugar de ordenarse limpiamente como 3ra pierna vertical (`ILO ↓ MARCONA ↓ ⛽ CALLAO`).
+
+- **Archivos Intervenidos:**
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGrid.tsx` (L478-486, L1588-1651, L1851-1861).
+  - `Desarrollo.Profesional/Geeksoft_Frontend/src/context/ForecastContext_V2.tsx` (L410-438).
+  - `Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/07_Especificaciones_Comerciales_Grilla_y_Puertos.md` (Sección 5.37).
 
 ---
 
@@ -1459,5 +1484,6 @@ Todos los scripts periciales de control de calidad E2E forman una suite headless
 | 📜 [test_convergence_all_routes.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/test_convergence_all_routes.py) | **QC Universal 48/48 Rutas:** Prueba de convergencia bidireccional exhaustiva sobre la totalidad de rutas registradas en la base de datos de PETRAL. | `python test_convergence_all_routes.py` |
 
 ---
-*Documento canónico actualizado por Detective Benoit Blanc - 09/09/2026.*
+*Documento canónico actualizado por Detective Benoit Blanc - 10/09/2026.*
+
 

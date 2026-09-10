@@ -1,7 +1,33 @@
 ================================================================================
-REGISTRO DE SESIÓN: 2026-09-09 (Cierre de Sesión)
+REGISTRO DE SESIÓN: 2026-09-09 (Cierre de Sesión V4 - Deck DELFOS & Despliegue BUSHIDO)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Generación de Deck Pericial V4 (DELFOS SHIPPING SOFTWARE):
+   - Creación de 12 diapositivas ejecutivas con maquetación editorial de alto impacto visual.
+   - Slide 2: Especificación de rutas redondas simples base Ilo (ILO -> Puerto X -> ILO) vs rutas complejas fuera de alcance (Multi-Drop y Bunkering CALLAO (B)).
+   - Slide 5: Constancia de ausencia de liquidaciones de viaje correctas/consistentes provistas por el cliente.
+   - Slide 6: Módulo exclusivo de Matriz Financiera NAVITRANSO (4 bloques contables, vista read-only y exportadores).
+   - Slide 9: Desglose nominal exhaustivo de la Suite de 13 Reportes Print-Ready (8 PDF vectoriales y 5 libros ExcelJS con matriz cromática e Ink-Save al 75%).
+   - Slide 10: Benchmark internacional PMI de ratio PM vs Dev (11.9% / 1:8.4 vs estándar de 10%-20%), demostrando el ahorro de 30-80 horas de gestión gerencial para Petral.
+   - Slide 11: Liquidación económica con desglose de horas y tarifas unitarias por ítem del Presupuesto Inicial ($9,100) y tarifas por etapa en la columna Tarifa Ref.
+   - Slide 12: Extracto cronológico detallado de las 63 jornadas auditadas (desde el 24/06/2026), con fecha + día de la semana en español, rango horario, horas devengadas, monto en USD y tareas mínimas/commits, con totalizador destacado (420.02 Horas Totales / $25,201.20 USD).
+
+2. Filtro Forense Estricto:
+   - Saneamiento del motor de cálculo de horas para tomar únicamente eventos a partir del inicio oficial del repositorio (24 de Junio de 2026).
+   - Horas devengadas totales: 420.02 hrs (vs 110 hrs cotizadas, +310.02 hrs adicionales / +281.8%).
+   - Total valor entregado: $33,221.80 USD.
+
+3. Despliegue en Producción VPS (91.108.125.253):
+   - Compilación exitosa del frontend con Vite (npx vite build).
+   - Sincronización SFTP y despliegue en /opt/forecast_petral y Nginx.
+   - Certificado SSL y publicación oficial en:
+     • https://forecast.geeksoft.tech/BUSHIDO
+     • https://forecast.geeksoft.tech/BUSHIDO/index.html
+
+================================================================================
+REGISTRO DE SESIÓN: 2026-09-09 (Cierre de Sesión Previo)
+================================================================================
 
 1. Transcripción y Diagnóstico de Audio (conflicto.callao.bunkering.ogg):
    - Transcripción completa con transcribe_whisper.py.
