@@ -607,3 +607,5 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-08 10:00:00] Rediseño a tema luminoso blanco/slate corporativo para Organigrama y MOF. Integración estética 100% armonizada con el resto del PETRAL ERP desplegada en vivo al VPS https://forecast.geeksoft.tech.
 [2026-09-09 14:25:00] Safe point creado: Tag 'SAFEPOINT.PRE.CALLAO.BUNKERING.9.9.26' y branch 'FEAT.CALLAO.BUNKERING.MATRIZ'.
 [2026-09-09 14:27:00] Caso Pericial Rutas Bunkering Callao: Transcripción con Whisper y plan LEG / CLON / DIFF / QC en marcha.
+[2026-09-10 10:12:00] Despliegue exitoso al VPS de Producción https://forecast.geeksoft.tech con corrección de layout bunkering y reconciliación React en grilla.
+[2026-09-10 11:55:00] Transcripción Whisper, Nota 46 Obsidian, Plantilla Excel Clon UI, Propuesta PDF y Presentación HTML fondo claro desplegada en vivo a https://forecast.geeksoft.tech/presentacion_voyage_liquidator.html.
