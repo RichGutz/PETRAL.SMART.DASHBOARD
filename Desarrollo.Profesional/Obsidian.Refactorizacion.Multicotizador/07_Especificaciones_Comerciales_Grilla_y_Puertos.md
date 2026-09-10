@@ -895,6 +895,18 @@ A partir de la auditoría pericial de Benoit Blanc (10.09.2026), se investigó l
 | **57.2** | **`MultiCotizadorExcel.tsx` (`handleLoadRoute`)** | Forzaba `setDemurrageMode('O')` y evaluaba `origDays` con fallback a `'0.00'`, bloqueando el promedio dinámico `P`. | **Recuperación Fiel 1:1:** Abre en **`[ O ]` (Original)** con los días legítimos cotizados (ej. `1.65 d`, `2.10 d`). Si no hubo demoras previas, resuelve el promedio real del puerto/buque. | **Inyección de Cero Fantasma:** Fallback erróneo estampaba `'0.00'` en texto negro. | ✅ RESUELTO |
 | **57.3** | **`MultiCotizadorExcel.tsx` (`handleDemurrageModeChange`)** | Conmutación no permitía refrescar en caliente los promedios de 24 meses antes de sobrescribir. | **Conmutación Reactiva:** Al pulsar `[ P ]`, limpia los inputs a `''` y recalcula en vivo el promedio móvil de los últimos 24 meses. Al guardar, sobreescribe la nueva foto. | **Flexibilidad Comercial:** Permite al usuario conmutar a `P`, actualizar al día de hoy y volver a grabar. | ✅ RESUELTO |
 | **57.4** | **`MulticotizadorStorageService.ts` & `MulticotizadorRetrieverService.ts`** | No empaquetaban ni desempaquetaban `demurrage_mode`. | **Persistencia Canónica en `legs_data.demurrage_mode`:** Almacena y desempaqueta el modo original de la cotización. | **Trazabilidad Completa:** Preservación íntegra del estado en Supabase `routes_quotes`. | ✅ RESUELTO |
+| **57.5** | **`Seeding Masivo Supabase routes_quotes`** | 36 rutas comerciales con demoras tenían valores vacíos `""` o números residuales no homologados. | **Seeding Automatizado de 36 Rutas:** Saneamiento masivo en PostgreSQL Supabase asignando a cada puerto operativo su valor oficial `P`: **ILO 1.86d**, **CALLAO 0.67d**, **MARCONA 2.38d**, **MATARANI 1.67d**, **MEJILLONES 2.04d**. | **Homologación de Datos:** 100% de las rutas comerciales ahora abren en `[ O ]` con los promedios legítimos de 24 meses. | ✅ RESUELTO |
+
+#### 📊 Detalle de las 36 Rutas Saneadas y Homologadas (Opción A):
+* **Informe Completo en PDF:** [`Reporte_Auditoria_Seeding_Demurrage_P.pdf`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Reporte_Auditoria_Seeding_Demurrage_P.pdf)
+* **Script de Ejecución Automatizado:** [`scratch/execute_seeding_and_pdf.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/execute_seeding_and_pdf.py)
+* **Resumen de Puertos Homologados:**
+  * `ILO` (Carga): **`1.86 d`** (44.6 h) sobre 119 recaladas.
+  * `CALLAO` (Carga): **`0.67 d`** (16.1 h) sobre 17 recaladas.
+  * `MARCONA` (Descarga): **`2.38 d`** (57.1 h) sobre 38 recaladas.
+  * `MATARANI` (Descarga): **`1.67 d`** (40.1 h) sobre 25 recaladas.
+  * `MEJILLONES` (Descarga): **`2.04 d`** (49.0 h) sobre 60 recaladas.
+  * `BARQUITO` / `OTROS`: **`0.00 d`** (Sin historial de demoras contractuales).
 
 ---
 

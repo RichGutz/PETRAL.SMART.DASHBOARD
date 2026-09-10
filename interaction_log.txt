@@ -609,3 +609,5 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-09 14:27:00] Caso Pericial Rutas Bunkering Callao: Transcripción con Whisper y plan LEG / CLON / DIFF / QC en marcha.
 [2026-09-10 10:12:00] Despliegue exitoso al VPS de Producción https://forecast.geeksoft.tech con corrección de layout bunkering y reconciliación React en grilla.
 [2026-09-10 11:55:00] Transcripción Whisper, Nota 46 Obsidian, Plantilla Excel Clon UI, Propuesta PDF y Presentación HTML fondo claro desplegada en vivo a https://forecast.geeksoft.tech/presentacion_voyage_liquidator.html.
+[2026-09-10 13:21:00] Reconciliación Pericial del Modo O / P / C en Demurrage (Multicotizador): Congelamiento de snapshot al guardar, apertura fiel en [ O ] y conmutación reactiva a [ P ]. Desplegado exitosamente a https://forecast.geeksoft.tech.
+[2026-09-10 13:30:00] Seeding Masivo de Demoras P en Supabase (routes_quotes): 36 rutas comerciales actualizadas con promedios matemáticos oficiales (ILO 1.86d, CALLAO 0.67d, MARCONA 2.38d, MATARANI 1.67d, MEJILLONES 2.04d). Generado Reporte_Auditoria_Seeding_Demurrage_P.pdf y desplegado al VPS.
