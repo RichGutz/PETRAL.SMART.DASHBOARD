@@ -489,6 +489,13 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Agregada la fila principal `Días-Buque` inmediatamente debajo de `Viajes (freq)` en cada nodo de proyección.
 - Integrada la acumulación de `Días-Buque` en el Subtotal de cada Cliente (`subMetrics`), en el Total de Flota (`globalMetrics`) y en el Total Acumulado Anual (`accumMetrics`).
 
+[2026-09-10 15:58:00] [INTERACCIÓN - PROTOCOLO LEG / CLONE / DIFF / QC NAVITRANSO]:
+- Usuario solicitó:
+  1. Retirar '(P&L)' en totales y subtotales de Margen Bruto.
+  2. Formato 'Ene-27' para columnas mes-año en PDF y Excel.
+  3. Resaltado en amarillo pastel y negrita para 'VENTAS', 'COSTOS DIRECTOS' y 'TIME CHARTER EQUIVALENT' (en buque, subtotales de cliente y totales).
+- Ejecución completada y validada con 'npx vite build' (cero errores, bundle listo).
+
 [2026-08-26 21:21:00] [GARANTIA DE ARRANQUE EN BLANCO / PANTALLA LIMPIA EN DASHBOARD]
 - Condicionado el renderizado de la tabla (`ForecastGrid` y `NavitransoGrid`) para verificar estrictamente `projectionLines.length === 0 || rows.length === 0`.
 - Eliminada la auto-restauracion residual de `sessionStorage` que cargaba el esqueleto de `2027 Base MEC`.

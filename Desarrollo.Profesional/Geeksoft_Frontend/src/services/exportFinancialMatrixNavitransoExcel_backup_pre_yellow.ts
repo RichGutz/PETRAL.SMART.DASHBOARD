@@ -15,40 +15,6 @@
 
 import ExcelJS from 'exceljs';
 
-export function formatMonthNavitranso(rawMonth: string): string {
-    if (!rawMonth) return '';
-    const raw = rawMonth.trim();
-    if (raw.toUpperCase().includes('TOTAL')) return raw;
-    
-    // Si viene formato ISO "YYYY-MM" (ej. "2027-01", "2027-12")
-    const matchIso = raw.match(/^(\d{4})-(\d{2})$/);
-    const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-    if (matchIso) {
-        const yearShort = matchIso[1].slice(-2);
-        const monthNum = parseInt(matchIso[2], 10);
-        if (monthNum >= 1 && monthNum <= 12) {
-            return `${MESES[monthNum - 1]}-${yearShort}`;
-        }
-    }
-
-    // Si viene formato texto tipo "ENE 2027", "ENE-2027", "ENE-27", "JAN 2027"
-    const monthNamesMap: Record<string, string> = {
-        'ENE': 'Ene', 'FEB': 'Feb', 'MAR': 'Mar', 'ABR': 'Abr', 'MAY': 'May', 'JUN': 'Jun',
-        'JUL': 'Jul', 'AGO': 'Ago', 'SET': 'Set', 'SEP': 'Set', 'OCT': 'Oct', 'NOV': 'Nov', 'DIC': 'Dic',
-        'JAN': 'Ene', 'APR': 'Abr', 'AUG': 'Ago', 'DEC': 'Dic'
-    };
-    const upper = raw.toUpperCase();
-    for (const [key, val] of Object.entries(monthNamesMap)) {
-        if (upper.includes(key)) {
-            const yMatch = upper.match(/(\d{4}|\d{2})$/);
-            const yy = yMatch ? yMatch[1].slice(-2) : '27';
-            return `${val}-${yy}`;
-        }
-    }
-
-    return raw;
-}
-
 // Colores ARGB con 75% de transparencia (25% tint pastel) para ahorro de tinta
 function getNavitransoCellArgb(className: string, text: string, isHeader = false, isTotalAcum = false) {
     if (isHeader) {
@@ -144,11 +110,6 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                 if (currentCol === 1) cleanText = 'C';
                 else if (currentCol === 2) cleanText = 'R';
                 else if (currentCol === 3) cleanText = 'B';
-                else if (currentCol >= 5) {
-                    if (!cleanText.toUpperCase().includes('TOTAL')) {
-                        cleanText = formatMonthNavitranso(cleanText);
-                    }
-                }
 
                 const cell = ws.getCell(currentRow, currentCol);
                 cell.value = cleanText.toUpperCase();
@@ -261,16 +222,6 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                     cell.value = textValue;
                 }
 
-                const isYellowRow = currentMetricName === 'VENTAS' ||
-                                    currentMetricName === 'VENTAS CONSOLIDADAS' ||
-                                    currentMetricName === 'COSTOS DIRECTOS' ||
-                                    currentMetricName === 'TIME CHARTER EQUIVALENT' ||
-                                    currentMetricName === 'INGRESOS DE OPERACIÓN' ||
-                                    currentMetricName === 'INGRESOS DE OPERACION' ||
-                                    currentMetricName.startsWith('VENTAS') ||
-                                    currentMetricName.startsWith('COSTOS DIRECTOS') ||
-                                    currentMetricName.startsWith('TIME CHARTER EQUIVALENT');
-
                 // Estilos por tipo de celda
                 if (isDimensionCol) {
                     const colors = getNavitransoCellArgb(tdClass, textValue, false, false);
@@ -278,14 +229,14 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors?.bg || 'FFC0DAE8' } };
                     cell.alignment = { vertical: 'middle', horizontal: 'center', textRotation: 90, wrapText: true };
                 } else if (currentMetricName.includes('MARGEN BRUTO')) {
-                    // Fila de Margen Bruto (Destacada en Lavanda / Azul Marino)
+                    // Fila de Margen Bruto (Destacada)
                     cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF312E81' } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
-                } else if (isYellowRow) {
-                    // Resaltado Amarillo Pastel (#FEF3C7) y Negrita para VENTAS, COSTOS DIRECTOS y TIME CHARTER EQUIVALENT
-                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+                } else if (currentMetricName.includes('INGRESOS DE OPERACIÓN') || currentMetricName.includes('COSTOS DIRECTOS') || currentMetricName.includes('TIME CHARTER EQUIVALENT')) {
+                    // Cabeceras de Bloques Contables
+                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E293B' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 } else if (isSubtotalRow) {
                     cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E293B' } };

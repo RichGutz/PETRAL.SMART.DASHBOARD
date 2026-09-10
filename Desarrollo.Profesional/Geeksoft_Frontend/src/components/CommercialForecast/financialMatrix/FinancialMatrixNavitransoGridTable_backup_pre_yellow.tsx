@@ -4,40 +4,6 @@ import { useForecastContext_V2 } from '../../../context/ForecastContext_V2';
 import { ForecastService } from '../../../services/api';
 import '../ForecastGrid.css';
 
-export function formatMonthNavitranso(rawMonth: string): string {
-    if (!rawMonth) return '';
-    const raw = rawMonth.trim();
-    if (raw.toUpperCase().includes('TOTAL')) return raw;
-    
-    // Si viene formato ISO "YYYY-MM" (ej. "2027-01", "2027-12")
-    const matchIso = raw.match(/^(\d{4})-(\d{2})$/);
-    const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-    if (matchIso) {
-        const yearShort = matchIso[1].slice(-2);
-        const monthNum = parseInt(matchIso[2], 10);
-        if (monthNum >= 1 && monthNum <= 12) {
-            return `${MESES[monthNum - 1]}-${yearShort}`;
-        }
-    }
-
-    // Si viene formato texto tipo "ENE 2027", "ENE-2027", "ENE-27", "JAN 2027"
-    const monthNamesMap: Record<string, string> = {
-        'ENE': 'Ene', 'FEB': 'Feb', 'MAR': 'Mar', 'ABR': 'Abr', 'MAY': 'May', 'JUN': 'Jun',
-        'JUL': 'Jul', 'AGO': 'Ago', 'SET': 'Set', 'SEP': 'Set', 'OCT': 'Oct', 'NOV': 'Nov', 'DIC': 'Dic',
-        'JAN': 'Ene', 'APR': 'Abr', 'AUG': 'Ago', 'DEC': 'Dic'
-    };
-    const upper = raw.toUpperCase();
-    for (const [key, val] of Object.entries(monthNamesMap)) {
-        if (upper.includes(key)) {
-            const yMatch = upper.match(/(\d{4}|\d{2})$/);
-            const yy = yMatch ? yMatch[1].slice(-2) : '27';
-            return `${val}-${yy}`;
-        }
-    }
-
-    return raw;
-}
-
 const getClientColor = (name: string) => {
     if (name.includes('SPCC')) return 'bg-sky-700 text-white';
     if (name.includes('SPOT')) return 'bg-orange-500 text-white';
@@ -940,28 +906,30 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                 Métrica
                             </th>
                             {months.filter(m => !hiddenMonths.includes(m)).map((m, idx) => (
-                                <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-extrabold text-xs tracking-wider min-w-[60px] w-16">{formatMonthNavitranso(m)}</th>
+                                <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-extrabold text-xs tracking-wider min-w-[60px] w-16">{m}</th>
                             ))}
                             <th className="py-1 px-2 border border-sky-800 bg-sky-900 text-sky-100 text-center font-black text-[11px] tracking-wider min-w-[70px] w-20 shadow-2xs">TOTAL ACUM</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rows.map((row, i) => {
-                            const isVentas = row.metric.isNavSubtotal === 'ventas' || row.metric.name === 'VENTAS' || row.metric.name === 'VENTAS CONSOLIDADAS';
-                            const isCostos = row.metric.isNavSubtotal === 'costos' || row.metric.name === 'COSTOS DIRECTOS';
-                            const isTce = row.metric.isNavSubtotal === 'tce' || row.metric.name === 'TIME CHARTER EQUIVALENT';
-                            const isMb = row.metric.isNavSubtotal === 'margenBruto' || row.metric.name === 'MARGEN BRUTO';
+                            const isVentasSub = row.metric.isNavSubtotal === 'ventas';
+                            const isCostosSub = row.metric.isNavSubtotal === 'costos';
+                            const isTceSub = row.metric.isNavSubtotal === 'tce';
+                            const isMbSub = row.metric.isNavSubtotal === 'margenBruto';
 
                             let rowStyleClass = 'hover:bg-slate-50';
                             if (row.isSubRow) rowStyleClass = 'bg-slate-50/60 text-xs text-slate-500';
                             if (row.metric.isNaRow) rowStyleClass = 'bg-slate-50/40 text-slate-400 text-xs';
-                            if (isVentas || isCostos || isTce) rowStyleClass = 'bg-amber-100/90 font-bold text-slate-900 border-t border-amber-300';
-                            if (isMb) rowStyleClass = 'bg-indigo-50/90 font-bold text-indigo-950 border-y border-indigo-200';
-                            if (row.isClientSubtotal && !isVentas && !isCostos && !isTce && !isMb) rowStyleClass = 'bg-slate-100 font-bold text-slate-800';
-                            if (row.isGlobalTotal && !isVentas && !isCostos && !isTce && !isMb) rowStyleClass = 'bg-slate-200 font-black text-slate-900';
+                            if (isVentasSub) rowStyleClass = 'bg-slate-100/90 font-bold text-slate-800 border-t border-slate-300';
+                            if (isCostosSub) rowStyleClass = 'bg-slate-100/90 font-bold text-slate-800 border-t border-slate-300';
+                            if (isTceSub) rowStyleClass = 'bg-slate-100/90 font-bold text-slate-800 border-t border-slate-300';
+                            if (isMbSub) rowStyleClass = 'bg-slate-200/80 font-bold text-slate-900 border-y border-slate-400';
+                            if (row.isClientSubtotal) rowStyleClass = 'bg-slate-100 font-bold text-slate-800';
+                            if (row.isGlobalTotal) rowStyleClass = 'bg-slate-200 font-black text-slate-900';
 
                             return (
-                                <tr key={i} className={`border border-slate-200 transition-colors ${rowStyleClass} ${row.metric.isTotal ? 'font-semibold' : ''}`}>
+                                <tr key={i} className={`border border-slate-200 transition-colors ${rowStyleClass} ${row.metric.isTotal ? 'bg-slate-100 font-semibold' : ''}`}>
                                     {row.col1 && (
                                         <td rowSpan={row.col1.rowSpanRef ? row.col1.rowSpanRef.value : row.col1.rowSpan} colSpan={row.isGlobalTotal ? 3 : 1}
                                             onContextMenu={(e) => { 

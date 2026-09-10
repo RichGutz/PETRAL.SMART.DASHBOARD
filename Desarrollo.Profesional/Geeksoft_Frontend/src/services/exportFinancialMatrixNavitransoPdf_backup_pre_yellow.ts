@@ -89,40 +89,6 @@ interface NavAtomicBlock {
     rows: { metric: string; values: string[] }[];
 }
 
-export function formatMonthNavitranso(rawMonth: string): string {
-    if (!rawMonth) return '';
-    const raw = rawMonth.trim();
-    if (raw.toUpperCase().includes('TOTAL')) return raw;
-    
-    // Si viene formato ISO "YYYY-MM" (ej. "2027-01", "2027-12")
-    const matchIso = raw.match(/^(\d{4})-(\d{2})$/);
-    const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
-    if (matchIso) {
-        const yearShort = matchIso[1].slice(-2);
-        const monthNum = parseInt(matchIso[2], 10);
-        if (monthNum >= 1 && monthNum <= 12) {
-            return `${MESES[monthNum - 1]}-${yearShort}`;
-        }
-    }
-
-    // Si viene formato texto tipo "ENE 2027", "ENE-2027", "ENE-27", "JAN 2027"
-    const monthNamesMap: Record<string, string> = {
-        'ENE': 'Ene', 'FEB': 'Feb', 'MAR': 'Mar', 'ABR': 'Abr', 'MAY': 'May', 'JUN': 'Jun',
-        'JUL': 'Jul', 'AGO': 'Ago', 'SET': 'Set', 'SEP': 'Set', 'OCT': 'Oct', 'NOV': 'Nov', 'DIC': 'Dic',
-        'JAN': 'Ene', 'APR': 'Abr', 'AUG': 'Ago', 'DEC': 'Dic'
-    };
-    const upper = raw.toUpperCase();
-    for (const [key, val] of Object.entries(monthNamesMap)) {
-        if (upper.includes(key)) {
-            const yMatch = upper.match(/(\d{4}|\d{2})$/);
-            const yy = yMatch ? yMatch[1].slice(-2) : '27';
-            return `${val}-${yy}`;
-        }
-    }
-
-    return raw;
-}
-
 export function generateFinancialMatrixNavitransoPdfHtml(
     tableId: string = 'forecast-grid-table',
     _orientation: 'portrait' | 'landscape' = 'landscape',
@@ -146,9 +112,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         });
     }
 
-    const safeMonths = headerCols.slice(4, -1).length > 0 ? headerCols.slice(4, -1).map(m => formatMonthNavitranso(m)) : [
-        'Ene-27', 'Feb-27', 'Mar-27', 'Abr-27', 'May-27', 'Jun-27',
-        'Jul-27', 'Ago-27', 'Set-27', 'Oct-27', 'Nov-27', 'Dic-27'
+    const safeMonths = headerCols.slice(4, -1).length > 0 ? headerCols.slice(4, -1) : [
+        'ENE 2027', 'FEB 2027', 'MAR 2027', 'ABR 2027', 'MAY 2027', 'JUN 2027',
+        'JUL 2027', 'AGO 2027', 'SET 2027', 'OCT 2027', 'NOV 2027', 'DIC 2027'
     ];
     const totalHeader = headerCols[headerCols.length - 1] || 'TOTAL ACUM';
 
@@ -381,8 +347,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 return b.rows.map((row, rIdx) => {
                     const isFirst = rIdx === 0;
                     const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
-                    const isYellow = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT') || row.metric.toUpperCase().includes('INGRESOS DE OPERACIÓN');
-                    const trClass = isMargen ? 'tr-nav-margen' : (isYellow ? 'tr-nav-highlight-yellow' : 'tr-data-row');
+                    const isHeader = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                    const trClass = isMargen ? 'tr-nav-margen' : (isHeader ? 'tr-fleet-total' : 'tr-data-row');
 
                     return `
                     <tr class="${trClass}">
@@ -407,8 +373,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 return b.rows.map((row, rIdx) => {
                     const isFirst = rIdx === 0;
                     const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
-                    const isYellow = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT') || row.metric.toUpperCase().includes('INGRESOS DE OPERACIÓN');
-                    const trClass = isMargen ? 'tr-nav-margen' : (isYellow ? 'tr-nav-highlight-yellow' : 'tr-data-row');
+                    const isHeader = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                    const trClass = isMargen ? 'tr-nav-margen' : (isHeader ? 'tr-global-accum' : 'tr-data-row');
 
                     return `
                     <tr class="${trClass}">
@@ -434,8 +400,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 return b.rows.map((row, rIdx) => {
                     const isFirst = rIdx === 0;
                     const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
-                    const isYellow = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT') || row.metric.toUpperCase().includes('INGRESOS DE OPERACIÓN');
-                    const trClass = isMargen ? 'tr-nav-margen' : (isYellow ? 'tr-nav-highlight-yellow' : 'tr-data-row');
+                    const isHeader = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                    const trClass = isMargen ? 'tr-nav-margen' : (isHeader ? 'tr-subtotal' : 'tr-data-row');
 
                     return `
                     <tr class="${trClass}">
@@ -478,15 +444,15 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             return b.rows.map((row, rIdx) => {
                 const isVesselFirst = rIdx === 0;
                 const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
-                const isYellow = row.metric.toUpperCase().includes('INGRESOS DE OPERACIÓN') || 
-                                 row.metric.toUpperCase().includes('VENTAS') ||
-                                 row.metric.toUpperCase().includes('COSTOS DIRECTOS') || 
-                                 row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                const isHeaderBlock = row.metric.toUpperCase().includes('INGRESOS DE OPERACIÓN') || 
+                                      row.metric.toUpperCase().includes('VENTAS') ||
+                                      row.metric.toUpperCase().includes('COSTOS DIRECTOS') || 
+                                      row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
                 const isSubRow = row.metric.startsWith('↳') || row.metric.startsWith('  ');
 
                 let trClass = 'tr-data-row';
                 if (isMargen) trClass = 'tr-nav-margen';
-                else if (isYellow) trClass = 'tr-nav-highlight-yellow';
+                else if (isHeaderBlock) trClass = 'tr-nav-block-header';
 
                 return `
                 <tr class="${trClass}">
@@ -785,42 +751,11 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             border-bottom: 1.5px solid #0d9488;
             font-weight: 700 !important;
         }
-        /* Filas Resaltadas: VENTAS, COSTOS DIRECTOS y TIME CHARTER EQUIVALENT en Amarillo Pastel */
-        tr.tr-nav-highlight-yellow td {
-            background-color: #fef3c7 !important;
-            color: #0f172a !important;
-            font-weight: 700 !important;
-            border-top: 1px solid #fcd34d !important;
-            border-bottom: 1px solid #fcd34d !important;
-        }
-        tr.tr-nav-highlight-yellow td.td-metric-name {
-            font-weight: 700 !important;
-            color: #0f172a !important;
-        }
-        tr.tr-nav-highlight-yellow td.td-num,
-        tr.tr-nav-highlight-yellow td.td-total-cell {
-            font-weight: 700 !important;
-            color: #0f172a !important;
-        }
-
-        /* Margen Bruto (Destacado en Lavanda / Azul Marino) */
         tr.tr-nav-margen td {
             background-color: #eef2ff !important;
-            color: #312e81 !important;
+            color: #312e81;
             font-weight: 700 !important;
-            border-top: 1px solid #c7d2fe !important;
-            border-bottom: 1.5px solid #a5b4fc !important;
         }
-        tr.tr-nav-margen td.td-metric-name {
-            font-weight: 700 !important;
-            color: #312e81 !important;
-        }
-        tr.tr-nav-margen td.td-num,
-        tr.tr-nav-margen td.td-total-cell {
-            font-weight: 700 !important;
-            color: #312e81 !important;
-        }
-
         tr.tr-nav-block-header td {
             background-color: #f8fafc !important;
             font-weight: 700 !important;

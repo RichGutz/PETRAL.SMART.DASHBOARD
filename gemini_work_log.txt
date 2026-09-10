@@ -375,6 +375,16 @@ CONCURRENCY & QC SUMMARY:
 - Verificado que solo se renderice cuando el costo sea > 0.
 - Compilacion y despliegue exitoso al VPS https://forecast.geeksoft.tech.
 
+[2026-09-10 15:58:00] [FORMATO MATRIZ NAVITRANSO - ENE-27 & RESALTADO AMARILLO/NEGRITA]:
+- LEG / CLONE: Respaldados FinancialMatrixNavitransoGridTable_backup_pre_yellow.tsx, exportFinancialMatrixNavitransoPdf_backup_pre_yellow.ts y exportFinancialMatrixNavitransoExcel_backup_pre_yellow.ts.
+- RESGUARDO PNG: Copiada y resguardada captura enviada por el usuario en Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/PNGs/ y Exceles.Petral/PORT.COSTS.PATRICIA/.
+- RETIRO DE (P&L): Retirado el sufijo '(P&L)' en subtotales de cliente, total flota y acumulado, unificando a 'MARGEN BRUTO'.
+- FORMATO DE MES-AÑO (Ene-27): Implementada función formatMonthNavitranso en GridTable, PDF y Excel para renderizar cabeceras 'Ene-27', 'Feb-27', ..., 'Dic-27'.
+- RESALTADO AMARILLO PASTEL & NEGRITA: Aplicado en 'VENTAS', 'COSTOS DIRECTOS' y 'TIME CHARTER EQUIVALENT' en todas las vistas (Grid UI, PDF A4 Landscape y Excel XLSX con ExcelJS).
+- MARGEN BRUTO: Destacado en fondo lavanda suave (#EEF2FF) con texto azul marino (#312E81) y negrita.
+- QC: 'npx vite build' ejecutado con éxito (cero errores de compilación, bundle generado).
+
+
 [2026-08-27 14:02:00] AGREGADO BOTON 4 RUTA PRESUPUESTO Y ESTANDARIZACION DE PASOS:
 - Barra superior de MultiCotizadorExcel.tsx estructurada en 6 Pasos: 1. CLIENTE, 2. RUTA CIERRE, 3. RUTA COTIZACION, 4. RUTA PRESUPUESTO, 5. VALIDEZ, 6. BUQUE.
 - Filtrado reactivo de presupuestos con filteredBudgets.
