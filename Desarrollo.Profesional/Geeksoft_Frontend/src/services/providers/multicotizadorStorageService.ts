@@ -28,6 +28,7 @@ export interface SaveQuoteParams {
     bafMdoBase?: number;
     tariffTiers?: any[];
     demurrageRatesMap?: Record<string, number>;
+    demurrageMode?: 'O' | 'P' | 'M' | 'C' | string;
     commentsText?: string;
     charterHireCost?: number;
     financialSummary?: any;
@@ -51,6 +52,7 @@ export class MulticotizadorStorageService {
             puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients,
             isContract, category, validFrom, validTo, validityYears, contractStatus,
             bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap,
+            demurrageMode,
             commentsText,
             charterHireCost,
             financialSummary,
@@ -128,6 +130,7 @@ export class MulticotizadorStorageService {
                 baf_mdo_base: bafMdoBase,
                 tariff_tiers: tariffTiers,
                 demurrage_rates: demurrageRatesMap,
+                demurrage_mode: demurrageMode || 'P',
                 comments_text: commentsText,
                 charter_hire_cost: Number(charterHireCost) || 0,
                 charterHireCost: Number(charterHireCost) || 0,

@@ -690,6 +690,26 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
             const financialSummary = liveCalculation;
 
+            // Sincronización pericial de demoras en puertosConfig antes de persistir
+            const synchronizedPuertosConfig = (puertosConfig || []).map((p: any, idx: number) => {
+                let effDem = p.demurrage_days;
+                if (effDem === undefined || effDem === null || effDem === '') {
+                    if (idx === 0 && p.action === 'CARGAR') {
+                        const originPort = calculatedTramos[0]?.origin_port_id || '';
+                        effDem = String(financialSummary?.demurrageDays0 ?? PortDemurrageRatesService.resolveDemurrageDays(originPort, selectedVessel, demurrageMode, validFrom));
+                    } else if (idx > 0 && (p.action === 'CARGAR' || p.action === 'DESCARGAR')) {
+                        const destPort = calculatedTramos[idx - 1]?.destination_port_id || '';
+                        effDem = String(financialSummary?.calculatedTramos?.[idx - 1]?.demurrage_days ?? PortDemurrageRatesService.resolveDemurrageDays(destPort, selectedVessel, demurrageMode, validFrom));
+                    } else {
+                        effDem = '0.00';
+                    }
+                }
+                return {
+                    ...p,
+                    demurrage_days: effDem
+                };
+            });
+
             await MulticotizadorStorageService.saveQuote({
                 routeId: (saveMode === 'OVERWRITE' && effectiveClient === selectedClient) ? loadedRouteId : undefined,
                 routeName: finalName,
@@ -701,7 +721,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 bunkerPriceIfo,
                 bunkerPriceMdo,
                 tramosEnriquecidos: calculatedTramos,
-                puertosConfig,
+                puertosConfig: synchronizedPuertosConfig,
                 vesselParams,
                 addressCommPct,
                 brokerCommPct,
@@ -715,6 +735,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 bafMdoBase,
                 tariffTiers,
                 demurrageRatesMap,
+                demurrageMode,
                 commentsText,
                 charterHireCost,
                 financialSummary,
@@ -966,7 +987,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 : buildPuertosConfigFromTramos(enrichedTramos, extractedClient || selectedClient);
             setPuertosConfig(pConfig);
 
-            // Auto-Detección de Demora Original (Modo 'O' por defecto: respeta lo grabado en puertosConfig o calculatedTramos/financial_summary)
+            // 4. Buque (Paso 4)
+            const targetVessel = unpacked.vessel_id || clonedQuote.vessel_id || clonedQuote.legs_data?.vessel_id || '';
+            if (targetVessel) {
+                handleVesselChange(targetVessel, false);
+            }
+
+            // Auto-Detección Pericial de Demora Original (Modo 'O' por defecto: respeta lo grabado con fidelidad 1:1)
             const calcTramos = unpacked.financial_summary?.calculatedTramos 
                 || clonedQuote.legs_data?.financial_summary?.calculatedTramos 
                 || clonedQuote.legs_data?.calculatedTramos 
@@ -980,10 +1007,18 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         recoveredDays = p.demurrage_days;
                     } else if (idx === 0) {
                         const d0 = unpacked.financial_summary?.demurrageDays0 ?? clonedQuote.legs_data?.financial_summary?.demurrageDays0;
-                        if (d0 !== undefined && d0 !== null && d0 !== '') recoveredDays = d0;
-                    } else if (idx > 0 && calcTramos[idx - 1]) {
-                        const trDem = calcTramos[idx - 1].demurrage_days;
-                        if (trDem !== undefined && trDem !== null && trDem !== '') recoveredDays = trDem;
+                        if (d0 !== undefined && d0 !== null && d0 !== '') {
+                            recoveredDays = d0;
+                        } else if (p.action === 'CARGAR' && enrichedTramos[0]?.origin_port_id) {
+                            recoveredDays = PortDemurrageRatesService.resolveDemurrageDays(enrichedTramos[0].origin_port_id, targetVessel, 'P', resolvedValidFrom);
+                        }
+                    } else if (idx > 0) {
+                        const trDem = calcTramos[idx - 1]?.demurrage_days;
+                        if (trDem !== undefined && trDem !== null && trDem !== '') {
+                            recoveredDays = trDem;
+                        } else if ((p.action === 'CARGAR' || p.action === 'DESCARGAR') && enrichedTramos[idx - 1]?.destination_port_id) {
+                            recoveredDays = PortDemurrageRatesService.resolveDemurrageDays(enrichedTramos[idx - 1].destination_port_id, targetVessel, 'P', resolvedValidFrom);
+                        }
                     }
                     
                     if (recoveredDays !== undefined && recoveredDays !== '' && recoveredDays !== null) {
@@ -999,12 +1034,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 ...p,
                 demurrage_days: (origDays[idx] !== undefined && origDays[idx] !== '') ? String(origDays[idx]) : '0.00'
             })));
-        }
-
-        // 4. Buque (Paso 5)
-        const targetVessel = unpacked.vessel_id || clonedQuote.vessel_id || clonedQuote.legs_data?.vessel_id || '';
-        if (targetVessel) {
-            handleVesselChange(targetVessel, false);
         }
 
         // Precios de búnker y comisiones

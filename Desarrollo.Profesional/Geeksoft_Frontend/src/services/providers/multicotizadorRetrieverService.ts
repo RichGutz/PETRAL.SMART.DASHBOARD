@@ -182,6 +182,7 @@ export class MulticotizadorRetrieverService {
             charter_hire_cost: Number(legsData.charter_hire_cost ?? legsData.charterHireCost ?? quote.charter_hire_cost ?? quote.charterHireCost ?? meta.charter_hire_cost ?? 0),
             charterHireCost: Number(legsData.charter_hire_cost ?? legsData.charterHireCost ?? quote.charter_hire_cost ?? quote.charterHireCost ?? meta.charter_hire_cost ?? 0),
             financial_summary: legsData.financial_summary || meta.financial_summary || null,
+            demurrage_mode: legsData.demurrage_mode || legsData.demurrageMode || meta.demurrage_mode || quote.demurrage_mode || null,
             refacturarMuellajeMap: legsData.refacturarMuellajeMap || null
         };
     }

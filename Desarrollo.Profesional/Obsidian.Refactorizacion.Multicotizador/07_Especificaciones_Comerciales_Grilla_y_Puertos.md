@@ -883,6 +883,19 @@ A partir de la auditoría pericial de Benoit Blanc (10.09.2026), se diagnosticó
 | **56.2** | **`ForecastContext_V2.tsx` (`handleFrequencyChange`)** | `route_key.split('-')[1]` extraía erróneamente `"MARCONA"` sin limpiar el sufijo `-CALLAO(B)` ni validar `quote_id`, bloqueando la sobreescritura de viajes en caliente. | Limpieza estricta de sufijo (`route_key.replace('-CALLAO(B)', '')`) antes de extraer puertos y reconciliación resiliente por `quote_id`. | **Bloqueo de Celda:** Imposibilidad de actualizar la frecuencia por desajuste de firma en el hook de mutación. | 🔍 **DIAGNOSTICADO** |
 | **56.3** | **`ForecastGrid.tsx` & `ForecastGrid.css` (Rotación Invertida 180°)** | El contenedor TD usaba `.vertical-text` (`transform: rotate(180deg)`), provocando que los elementos hijos (`flex-col` con badges y flechas) se mostraran invertidos de cabeza. | Segregación de estilos: los layouts estructurados de múltiples piernas usan orientación natural descendente sin heredar la rotación global de 180°. | **Herencia CSS Invertida:** `rotate(180deg)` del padre volteaba el badge `⛽ CALLAO(b)`. Ahora se muestra derecho como 3ra pierna (`ILO ↓ MARCONA ↓ ⛽ CALLAO`). | 🔍 **DIAGNOSTICADO** |
 
+### ───────────────
+
+### 🕵️‍♂️ 5.38. Trigésima Octava Vuelta (Serie 57: El Caso del Número O Fantasma en Demurrage y Reconciliación O / P / C)
+
+A partir de la auditoría pericial de Benoit Blanc (10.09.2026), se investigó la discrepancia donde al cotizar en modo **`[ P ]` (Promedio Histórico)** y guardar, al recargar la ruta se abría forzadamente en modo **`[ O ]`** con un número estático ('0.00' o residual) que difería del promedio real cotizado:
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **57.1** | **`MultiCotizadorExcel.tsx` (`handleSaveRoute`)** | Al guardar en modo `P`, `puertosConfig.demurrage_days` viajaba vacío `""`. `demurrageMode` no se persistía en BD. | **Sincronización Pericial de Snapshot:** Al guardar, se congelan los días de demora calculados en vivo en `puertosConfig.demurrage_days` y se envía `demurrageMode`. | **Vacío en Payload:** Al viajar vacío, la BD no tenía registro congelado del valor real cotizado. | ✅ RESUELTO |
+| **57.2** | **`MultiCotizadorExcel.tsx` (`handleLoadRoute`)** | Forzaba `setDemurrageMode('O')` y evaluaba `origDays` con fallback a `'0.00'`, bloqueando el promedio dinámico `P`. | **Recuperación Fiel 1:1:** Abre en **`[ O ]` (Original)** con los días legítimos cotizados (ej. `1.65 d`, `2.10 d`). Si no hubo demoras previas, resuelve el promedio real del puerto/buque. | **Inyección de Cero Fantasma:** Fallback erróneo estampaba `'0.00'` en texto negro. | ✅ RESUELTO |
+| **57.3** | **`MultiCotizadorExcel.tsx` (`handleDemurrageModeChange`)** | Conmutación no permitía refrescar en caliente los promedios de 24 meses antes de sobrescribir. | **Conmutación Reactiva:** Al pulsar `[ P ]`, limpia los inputs a `''` y recalcula en vivo el promedio móvil de los últimos 24 meses. Al guardar, sobreescribe la nueva foto. | **Flexibilidad Comercial:** Permite al usuario conmutar a `P`, actualizar al día de hoy y volver a grabar. | ✅ RESUELTO |
+| **57.4** | **`MulticotizadorStorageService.ts` & `MulticotizadorRetrieverService.ts`** | No empaquetaban ni desempaquetaban `demurrage_mode`. | **Persistencia Canónica en `legs_data.demurrage_mode`:** Almacena y desempaqueta el modo original de la cotización. | **Trazabilidad Completa:** Preservación íntegra del estado en Supabase `routes_quotes`. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados
