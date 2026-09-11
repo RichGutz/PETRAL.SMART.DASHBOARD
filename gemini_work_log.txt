@@ -1,6 +1,15 @@
 ================================================================================
-GEMINI WORK LOG: 2026-09-09 (Cierre de Sesión V4 - Deck DELFOS & Despliegue BUSHIDO)
+GEMINI WORK LOG: 2026-09-11 (Homologación Ceros Numéricos en Excel Petral y Navitrans)
 ================================================================================
+CONCURRENCY & QC SUMMARY:
+- Requerimiento: Ceros numéricos reales (0) en exportación Excel para permitir fórmulas diferenciales entre Matriz Petral y Matriz Navitrans.
+- Safe Point Git: Branch 'feature/excel-numeric-zeros', Tag 'SAFEPOINT.PRE.EXCEL.ZEROS.NUMERIC'.
+- Servicios modificados: 'exportFinancialMatrixExcel.ts' y 'exportFinancialMatrixNavitransoExcel.ts'.
+- Aislamiento PDF: 'exportFinancialMatrixPdf.ts' y 'exportFinancialMatrixNavitransoPdf.ts' confirmados como módulos 100% independientes y estéticamente intactos.
+- Frontend Build: npx vite build (SUCCESS, 0 ERRORS, 30.09s, 1110 módulos).
+- Git: Merge a main y push origin main exitoso.
+================================================================================
+
 CONCURRENCY & QC SUMMARY:
 - Deck Pericial V4 DELFOS SHIPPING SOFTWARE generado en 12 diapositivas ejecutivas con maquetación editorial responsiva.
 - Saneamiento del cálculo forense de horas: filtro estricto desde 24 de Junio de 2026 (63 jornadas auditadas, 420.02 horas devengadas, $25,201.20 USD).

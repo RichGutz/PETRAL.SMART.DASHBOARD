@@ -1,6 +1,20 @@
 ================================================================================
-REGISTRO DE SESIÓN: 2026-09-09 (Cierre de Sesión V4 - Deck DELFOS & Despliegue BUSHIDO)
+REGISTRO DE SESIÓN: 2026-09-11 (Homologación Ceros Numéricos en Excel Petral y Navitrans)
 ================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Protocolo Benoit Blanc de Ceros Numéricos en Excel:
+   - Safe Point Git creado: Tag 'SAFEPOINT.PRE.EXCEL.ZEROS.NUMERIC' y rama 'feature/excel-numeric-zeros'.
+   - Modificación de 'exportFinancialMatrixExcel.ts' y 'exportFinancialMatrixNavitransoExcel.ts'.
+   - Asignación del valor numérico real 0 (typeof number) con su formato numérico contable (#,##0, #,##0.00, 0.0%, 0.0) en todas las celdas de datos con valor 0 o inactivas.
+   - Habilitación de fórmulas diferenciales y restas nativas en Excel (=Navitrans - Petral) sin error #VALUE!.
+   - Preservación total e independiente de los generadores de PDF (exportFinancialMatrixPdf.ts y exportFinancialMatrixNavitransoPdf.ts).
+
+2. Compilación y Git:
+   - Compilación exitosa de frontend (npx vite build, 0 errores, 30.09s).
+   - Merge a main y git push origin main ejecutado.
+================================================================================
+
 TAREAS Y MODIFICACIONES REALIZADAS:
 
 1. Generación de Deck Pericial V4 (DELFOS SHIPPING SOFTWARE):
