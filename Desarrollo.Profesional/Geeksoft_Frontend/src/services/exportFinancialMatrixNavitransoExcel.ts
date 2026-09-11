@@ -223,39 +223,39 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                 const isPercent = textValue.includes('%') || currentMetricName.includes('%');
                 const cleanNumStr = rawClean.replace('%', '');
 
-                let isNumeric = false;
                 let parsedNum = 0;
-                if (isDataCol && textValue !== '-' && textValue !== '' && !isNaN(Number(cleanNumStr)) && cleanNumStr !== '') {
+                let isNumeric = false;
+                if (isDataCol) {
+                    if (textValue !== '-' && textValue !== '' && !isNaN(Number(cleanNumStr)) && cleanNumStr !== '') {
+                        parsedNum = parseFloat(cleanNumStr);
+                    } else {
+                        parsedNum = 0;
+                    }
                     isNumeric = true;
-                    parsedNum = parseFloat(cleanNumStr);
                 }
 
-                // Asignar valor y formato numérico
+                // Asignar valor y formato numérico (incluyendo 0 numérico para fórmulas diferenciales en Excel)
                 if (isDimensionCol || isMetricCol) {
                     cell.value = textValue;
                 } else if (isDataCol) {
-                    if (isNumeric && parsedNum !== 0) {
-                        if (isPercent) {
-                            cell.value = parsedNum > 1 ? parsedNum / 100 : parsedNum;
-                            cell.numFmt = '0.0%';
-                        } else if (currentMetricName.includes('VIAJE') || currentMetricName.includes('FREQ')) {
-                            cell.value = parsedNum;
-                            cell.numFmt = Number.isInteger(parsedNum) ? '#,##0' : '0.0';
-                        } else if (currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || currentMetricName.includes('DÍAS')) {
-                            cell.value = parsedNum;
-                            cell.numFmt = '0.0';
-                        } else if (currentMetricName.includes('TONELADA') || currentMetricName.includes('TONS') || currentMetricName.includes('CARGA')) {
-                            cell.value = parsedNum;
-                            cell.numFmt = '#,##0';
-                        } else if (currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || currentMetricName.includes('TCE') || currentMetricName.includes('$/D')) {
-                            cell.value = parsedNum;
-                            cell.numFmt = '#,##0.00';
-                        } else {
-                            cell.value = parsedNum;
-                            cell.numFmt = '#,##0';
-                        }
+                    if (isPercent) {
+                        cell.value = parsedNum > 1 ? parsedNum / 100 : parsedNum;
+                        cell.numFmt = '0.0%';
+                    } else if (currentMetricName.includes('VIAJE') || currentMetricName.includes('FREQ')) {
+                        cell.value = parsedNum;
+                        cell.numFmt = Number.isInteger(parsedNum) ? '#,##0' : '0.0';
+                    } else if (currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || currentMetricName.includes('DÍAS')) {
+                        cell.value = parsedNum;
+                        cell.numFmt = '0.0';
+                    } else if (currentMetricName.includes('TONELADA') || currentMetricName.includes('TONS') || currentMetricName.includes('CARGA')) {
+                        cell.value = parsedNum;
+                        cell.numFmt = '#,##0';
+                    } else if (currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || currentMetricName.includes('TCE') || currentMetricName.includes('$/D')) {
+                        cell.value = parsedNum;
+                        cell.numFmt = '#,##0.00';
                     } else {
-                        cell.value = '';
+                        cell.value = parsedNum;
+                        cell.numFmt = '#,##0';
                     }
                 } else {
                     cell.value = textValue;
