@@ -585,7 +585,7 @@ def generate_comparative_report():
 
         <!-- FOOTER -->
         <footer class="text-center text-xs text-slate-400 py-6 border-t border-slate-200 space-y-1">
-            <div>DELFOS SHIPPING SOFTWARE & FORECAST SYSTEM — GEEKSOFT</div>
+            <div>PETRAL ONE SHIPPING SOFTWARE & FORECAST SYSTEM — GEEKSOFT</div>
             <div>Documento Técnico y Pericial Confidencial para uso exclusivo de la Gerencia de Naviera Petral S.A.</div>
         </footer>
 
