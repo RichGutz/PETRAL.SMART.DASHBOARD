@@ -667,65 +667,78 @@ def generate_html_deck_v4(ws_path):
             <div class="slide-content">
                 <div class="tag">ARQUITECTURA DE MÓDULOS &bull; VERSATILIDAD MULTIDIMENSIONAL</div>
                 <h2>Slide 3: Pipeline de Inteligencia Comercial & Versatilidad del Motor</h2>
-                <div class="sub">Secuencia de 4 módulos transaccionales de grado corporativo desarrollados muy por encima del alcance cotizado.</div>
+                <div class="sub">Secuencia de 4 módulos transaccionales de grado corporativo con diseño homogéneo y versatilidad total.</div>
 
-                <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 16px; margin-bottom: 12px;">
-                    <!-- TARJETA 1: VOYAGE CALCULATOR CON VERSATILIDAD MULTI POL/POD -->
-                    <div class="card" style="border-left: 5px solid var(--accent); padding: 14px 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <strong style="color: var(--navy); font-size: 11pt;">Paso 1: Voyage Calculator (Motor Multi-Leg / Multi-Drop)</strong>
-                            <span class="badge-pill badge-blue">Versatilidad Total</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+                    <!-- TARJETA 1: VOYAGE CALCULATOR -->
+                    <div class="card" style="border-left: 5px solid var(--accent); padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong style="color: var(--navy); font-size: 10.5pt;">Paso 1: Voyage Calculator (Motor Multi-Leg)</strong>
+                                <span class="badge-pill badge-blue">Versatilidad Total</span>
+                            </div>
+                            <ul style="font-size: 8.4pt; color: #475569; padding-left: 14px; line-height: 1.4; margin: 0;">
+                                <li><strong>Múltiples POLs & PODs:</strong> Viajes de hasta 10 tramos con múltiples cargas y descargas (Multi-Load / Multi-Drop).</li>
+                                <li><strong>Tarifas Diferenciadas por POD:</strong> Fletes independientes por cada puerto de descarga en una misma cotización.</li>
+                                <li><strong>Laytime & Bombeo por Terminal:</strong> Rendimientos de bombeo por muelle y regla de 6h (Time to Count).</li>
+                                <li><strong>Muellajes & Demoras:</strong> Cálculo dinámico de muellaje por terminal y demoras ausentes en los Excels iniciales.</li>
+                                <li><strong>Bunkering:</strong> Escalas técnicas (<code>CALLAO (B)</code>) y consumo en 5 estados operativos.</li>
+                            </ul>
                         </div>
-                        <ul style="font-size: 8.8pt; color: #475569; padding-left: 16px; line-height: 1.45;">
-                            <li><strong>Múltiples POLs & PODs:</strong> Capacidad de estructurar viajes complejos de hasta 10 tramos con múltiples cargas y descargas (Multi-Load / Multi-Drop).</li>
-                            <li><strong>Tarifas Diferenciadas por POD:</strong> Fletes independientes por cada puerto de descarga en una misma cotización/proforma.</li>
-                            <li><strong>Laytime & Bombeo por Terminal:</strong> Ritmos horarios de bombeo según rendimiento de muelle con regla de 6h (Time to Count).</li>
-                            <li><strong>Muellaje & Demoras Incorporadas:</strong> Cálculo dinámico de muellaje por terminal y demoras estadísticas ausentes en los Excels iniciales.</li>
-                            <li><strong>Escalas Técnicas & Bunkering:</strong> Paradas intermedias de combustible (<code>CALLAO (B)</code>) y búnker en 5 estados operativos.</li>
-                        </ul>
                     </div>
 
-                    <!-- TARJETA 2: MATRICES FINANCIERAS DUALES & EXPORTACIÓN DINÁMICA -->
-                    <div class="card" style="border-left: 5px solid var(--green); padding: 14px 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <strong style="color: var(--navy); font-size: 11pt;">Paso 2: Matrices Financieras (Petral & Navitranso)</strong>
-                            <span class="badge-pill badge-green">Dual Reporting + Export</span>
+                    <!-- TARJETA 2: MATRICES FINANCIERAS DUALES -->
+                    <div class="card" style="border-left: 5px solid var(--green); padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong style="color: var(--navy); font-size: 10.5pt;">Paso 2: Matrices Financieras (Petral & Navitranso)</strong>
+                                <span class="badge-pill badge-green">Dual Reporting + Export</span>
+                            </div>
+                            <ul style="font-size: 8.4pt; color: #475569; padding-left: 14px; line-height: 1.4; margin: 0;">
+                                <li><strong>Estructura NAVITRANSO (Fuera de Alcance):</strong> Modelo contable en 4 bloques (Ingresos, Variables, Fijos/Hire, EBITDA).</li>
+                                <li><strong>Reportería Dinámica Exportable:</strong> Generación en 1 clic de libros Excel (no formulados, datos puros) y PDFs vectoriales.</li>
+                                <li><strong>Simulación de 12 Meses:</strong> Consolidación viva para toda la flota con escenarios <em>what-if</em> instantáneos.</li>
+                                <li><strong>Control Presupuestal:</strong> Proyección de ingresos y costos operativos mes a mes.</li>
+                            </ul>
                         </div>
-                        <ul style="font-size: 8.8pt; color: #475569; padding-left: 16px; line-height: 1.45;">
-                            <li><strong>Estructura NAVITRANSO (Fuera de Alcance):</strong> Modelo contable de 4 bloques independientes (Ingresos, Variables, Fijos/Hire, EBITDA).</li>
-                            <li><strong>Reportería Dinámica Exportable:</strong> Generación y descarga en 1 clic de libros <strong>ExcelJS con fórmulas vivas</strong> y <strong>PDFs vectoriales</strong> desde la matriz.</li>
-                            <li><strong>Simulación de 12 Meses:</strong> Consolidación viva para toda la flota con escenarios *what-if* en caliente.</li>
-                        </ul>
                     </div>
-                </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
                     <!-- TARJETA 3: AN GRAF DASHBOARD FINANCIERO -->
-                    <div class="card" style="border-left: 5px solid var(--amber); padding: 14px 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <strong style="color: var(--navy); font-size: 11pt;">Paso 3: AN GRAF (Dashboard Financiero ECharts)</strong>
-                            <span class="badge-pill badge-amber">De Estático a Analítico</span>
+                    <div class="card" style="border-left: 5px solid var(--amber); padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong style="color: var(--navy); font-size: 10.5pt;">Paso 3: AN GRAF (Dashboard Financiero ECharts)</strong>
+                                <span class="badge-pill badge-amber">De Estático a Analítico</span>
+                            </div>
+                            <ul style="font-size: 8.4pt; color: #475569; padding-left: 14px; line-height: 1.4; margin: 0;">
+                                <li><strong>Evolución Analítica:</strong> De 3 gráficos estáticos prometidos a un Dashboard Financiero Interactivo Completo.</li>
+                                <li><strong>Análisis de Varianzas:</strong> Comparativas visuales de Proyectado vs Real en fletes y costos de búnker.</li>
+                                <li><strong>Detección de Fugas:</strong> Descomposición de márgenes brutos y rentabilidad por buque y cliente (SPCC/NEXA).</li>
+                                <li><strong>Interactividad Dinámica:</strong> Filtros por rango de fechas, clientes, puertos y naves en tiempo real.</li>
+                            </ul>
                         </div>
-                        <p style="font-size: 8.8pt; color: #475569; line-height: 1.45;">
-                            Evolucionó de 3 gráficos planos prometidos a un <strong>Dashboard Financiero Interactivo Completo</strong>: análisis de varianzas (Proyectado vs Real), correlación de fletes, descomposición de márgenes brutos y detección instantánea de fugas de rentabilidad por buque y cliente.
-                        </p>
                     </div>
 
                     <!-- TARJETA 4: SPAGHETTI MAP GEOESPACIAL -->
-                    <div class="card" style="border-left: 5px solid var(--purple); padding: 14px 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <strong style="color: var(--navy); font-size: 11pt;">Paso 4: Spaghetti Map (Inteligencia Geoespacial)</strong>
-                            <span class="badge-pill badge-purple">Georreferencial</span>
+                    <div class="card" style="border-left: 5px solid var(--purple); padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <strong style="color: var(--navy); font-size: 10.5pt;">Paso 4: Spaghetti Map (Inteligencia Geoespacial)</strong>
+                                <span class="badge-pill badge-purple">Georreferencial</span>
+                            </div>
+                            <ul style="font-size: 8.4pt; color: #475569; padding-left: 14px; line-height: 1.4; margin: 0;">
+                                <li><strong>Cartografía Marítima:</strong> Visión geoespacial completa del tráfico marítimo en el Pacífico Sur (cabotaje e internacional).</li>
+                                <li><strong>Densidades de Carga:</strong> Trazado visual de rutas, frecuencias y cuellos de botella en puertos de cabotaje.</li>
+                                <li><strong>Balanceo de Flota:</strong> Monitoreo de posicionamiento de buques (Tablones, Moquegua, Huemel, Concón).</li>
+                                <li><strong>Cálculo Visual de Distancias:</strong> Validación interactiva de millas náuticas entre POLs y PODs.</li>
+                            </ul>
                         </div>
-                        <p style="font-size: 8.8pt; color: #475569; line-height: 1.45;">
-                            Visión geoespacial completa del tráfico marítimo en el Pacífico Sur (cabotaje e internacional), con cálculo visual de densidades de carga, cuellos de botella y balanceo de flota en tiempo real.
-                        </p>
                     </div>
                 </div>
 
-                <div class="callout callout-blue" style="margin-top: 4px; padding: 10px 16px;">
-                    <strong style="color: var(--accent); font-size: 10.5pt; display: block; margin-bottom: 2px;">Resultado Tecnológico:</strong>
-                    <p style="font-size: 9.5pt; color: #334155;">
+                <div class="callout callout-blue" style="margin-top: 2px; padding: 8px 14px;">
+                    <strong style="color: var(--accent); font-size: 9.8pt; display: block; margin-bottom: 2px;">Resultado Tecnológico:</strong>
+                    <p style="font-size: 8.8pt; color: #334155; line-height: 1.35; margin: 0;">
                         Petral no recibió un simple visor, sino <strong>PETRAL ONE SHIPPING SOFTWARE</strong>, un ERP transaccional enterprise de inteligencia comercial marítima que conecta desde la cotización multi-puerto hasta el control financiero presupuestal.
                     </p>
                 </div>
@@ -792,40 +805,40 @@ def generate_html_deck_v4(ws_path):
              ========================================== -->
         <div class="slide">
             <div class="slide-content">
-                <div class="tag">DIAGNÓSTICO PERICIAL &bull; RETRABAJO ETL & POST-VOYAGE</div>
-                <h2>Slide 5: Autopsia de Liquidaciones de Viaje & Retrabajo por Inconsistencias</h2>
-                <div class="sub">Por qué el módulo <strong>POST-VOYAGE no se ha culminado</strong> y demandó 3 ciclos de saneamiento forense antes de su pase a Fase 2.</div>
+                <div class="tag">ESTADO DE SITUACIÓN &bull; AVANCE POST-VOYAGE (&ge;50%) & RETRABAJO ETL</div>
+                <h2>Slide 5: Liquidaciones de Viaje: Avance &ge;50%, Retrabajo ETL & Validación Pendiente</h2>
+                <div class="sub">El Post-Voyage cuenta con más del 50% de desarrollo base estructurado, restando la validación matemática experta de Sandra Gálvez.</div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
-                    <div class="card" style="border-left: 5px solid var(--red);">
-                        <strong style="color: var(--red); font-size: 12pt; display: block; margin-bottom: 8px;">
-                            🔄 Triple Iteración ETL por Inconsistencias de Operadores
+                    <div class="card" style="border-left: 5px solid var(--amber);">
+                        <strong style="color: var(--amber); font-size: 11.5pt; display: block; margin-bottom: 8px;">
+                            🔄 Triple Ciclo ETL por Inconsistencias de Operadores
                         </strong>
-                        <p style="font-size: 9.8pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
-                            Se intentó estructurar el pipeline de liquidaciones <strong>3 veces consecutivas</strong>. Sin embargo, las planillas suministradas por los operadores de barco carecían de normalización contable, cambiaban fórmulas de viaje en viaje y omitían variables críticas.
+                        <p style="font-size: 9.6pt; color: #475569; line-height: 1.45; margin-bottom: 8px;">
+                            Se ejecutaron <strong>3 ciclos completos de saneamiento de datos</strong> sobre las planillas de los operadores de buque, las cuales carecían de normalización contable y cambiaban de estructura de viaje en viaje.
                         </p>
-                        <p style="font-size: 9.8pt; line-height: 1.5; font-weight: 700; color: #991B1B;">
-                            Diagnóstico: Hasta la fecha, Petral NO cuenta con liquidaciones de viaje matemáticamente consistentes ni estandarizadas por parte de sus operadores.
+                        <p style="font-size: 9.6pt; color: #334155; line-height: 1.45;">
+                            Se construyó la arquitectura de conciliación y la base de datos de liquidación, dejando la plataforma preparada con un <strong>avance no menor al 50%</strong>.
                         </p>
                     </div>
 
                     <div class="card" style="border-left: 5px solid var(--purple);">
-                        <strong style="color: var(--purple); font-size: 12pt; display: block; margin-bottom: 8px;">
-                            🎯 Pre-Voyage (Entregado 100%) vs. Post-Voyage (Fase 2 Futura)
+                        <strong style="color: var(--purple); font-size: 11.5pt; display: block; margin-bottom: 8px;">
+                            🎯 Estado Actual & Validación Requerida (Sandra Gálvez)
                         </strong>
-                        <p style="font-size: 9.8pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
-                            <strong>Fase 1 (Entregada & En Vivo):</strong> Motor completo de estimación comercial, ruteo multi-leg, matrices financieras y analytics predictivo (*Pre-Voyage Estimation*).
+                        <p style="font-size: 9.6pt; color: #475569; line-height: 1.45; margin-bottom: 8px;">
+                            <strong>Pre-Voyage Estimation (100% Operativo):</strong> Motor comercial, ruteo multi-leg, matrices y analytics en vivo.
                         </p>
-                        <p style="font-size: 9.8pt; color: #475569; line-height: 1.5;">
-                            <strong>Post-Voyage (Aún NO Realizado):</strong> La liquidación contable real de viaje queda como el <strong>Kickoff de Fase 2</strong>, requiriendo que Operaciones capture timings reales de atraque/desatraque y consumos de bombeo.
+                        <p style="font-size: 9.6pt; color: #475569; line-height: 1.45;">
+                            <strong>Post-Voyage (Avance &ge;50%):</strong> Para la culminación y puesta en producción del módulo, <strong>se requiere la validación de los algoritmos de cálculo por parte de la experta Sandra Gálvez</strong>, garantizando que las fórmulas de liquidación reflejen la práctica marítima final consensuada.
                         </p>
                     </div>
                 </div>
 
                 <div class="callout callout-purple">
-                    <strong style="color: var(--purple); font-size: 10.5pt; display: block; margin-bottom: 3px;">Dictamen de Ingeniería de Datos:</strong>
-                    <p style="font-size: 9.8pt; color: #334155; line-height: 1.45;">
-                        El sobreesfuerzo en este frente fue de <strong>consultoría, análisis forense y saneamiento estructural</strong>: no se podía programar la liquidación Post-Voyage sobre datos rotos. La Fase 1 deja la arquitectura lista para que el Post-Voyage se construya con éxito en la Fase 2.
+                    <strong style="color: var(--purple); font-size: 10.5pt; display: block; margin-bottom: 3px;">Dictamen de Ingeniería de Datos & Consultoría:</strong>
+                    <p style="font-size: 9.6pt; color: #334155; line-height: 1.45; margin: 0;">
+                        El esfuerzo desplegado superó la simple programación: se realizó un trabajo pericial de consultoría y saneamiento de datos para resolver inconsistencias operativas. La base técnica está firme al &ge;50% para culminar con el aval técnico de Sandra Gálvez.
                     </p>
                 </div>
 
@@ -844,7 +857,7 @@ def generate_html_deck_v4(ws_path):
             <div class="slide-content">
                 <div class="tag">MÓDULO FUERA DE ALCANCE &bull; CONSULTORÍA FINANCIERA & MULTI-REPORTEADOR</div>
                 <h2>Slide 6: Matriz NAVITRANSO, Definición Consensuada de Conceptos & Multi-Reporteador</h2>
-                <div class="sub">Múltiples iteraciones de consultoría para agrupar conceptos contables con el usuario y construcción de un motor capaz de exportar cualquier informe en Excel y PDF.</div>
+                <div class="sub">Múltiples iteraciones de consultoría para agrupar conceptos contables con el usuario y construcción de un motor de exportación en Excel (no formulado) y PDF.</div>
 
                 <div style="display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 20px; margin-bottom: 14px;">
                     <div class="card" style="border-top: 5px solid var(--accent);">
@@ -852,12 +865,12 @@ def generate_html_deck_v4(ws_path):
                             🏛️ Múltiples Iteraciones & Agrupación Consensuada de Conceptos
                         </strong>
                         <ul style="font-size: 9.5pt; color: #475569; padding-left: 18px; line-height: 1.5;">
-                            <li><strong>Trabajo Codo a Codo con el Usuario:</strong> Se realizaron decenas de iteraciones para homologar, consensuar y clasificar conceptos financieros que no existían de forma estandarizada.</li>
+                            <li><strong>Trabajo Codo a Codo con el Usuario:</strong> Se realizaron múltiples reuniones e iteraciones para homologar, consensuar y clasificar conceptos financieros que carecían de un estándar formal.</li>
                             <li><strong>Estructura Contable en 4 Bloques (NAVITRANSO):</strong>
                                 <ul style="list-style-type: square; padding-left: 14px; margin-top: 3px; font-size: 9pt;">
-                                    <li><em>Bloque 1 - Ingresos Operacionales:</em> Fletes por TM y recargos por demoras brutas.</li>
+                                    <li><em>Bloque 1 - Ingresos Operacionales:</em> Fletes netos por TM y recargos por demoras brutas.</li>
                                     <li><em>Bloque 2 - Costos Variables:</em> Búnker segmentado (IFO/MDO) y agenciamiento.</li>
-                                    <li><em>Bloque 3 - Costos Fijos (HIRE):</em> Arriendo de naves y Time Charter equivalente.</li>
+                                    <li><em>Bloque 3 - Costos Fijos (HIRE):</em> Arriendo diario de naves y Time Charter equivalente.</li>
                                     <li><em>Bloque 4 - Margen & EBITDA:</em> Utilidad neta de viaje y ratio de retorno por nave.</li>
                                 </ul>
                             </li>
@@ -869,10 +882,10 @@ def generate_html_deck_v4(ws_path):
                             📑 Multi-Reporteador Universal Dinámico (Excel & PDF)
                         </strong>
                         <ul style="font-size: 9.5pt; color: #475569; padding-left: 18px; line-height: 1.5;">
-                            <li><strong>No Contemplado en el Contrato:</strong> El alcance solo requería una tabla básica en pantalla. Se construyó un <strong>Multi-Reporteador Universal</strong> de grado corporativo.</li>
-                            <li><strong>Exportador ExcelJS con Fórmulas Vivas:</strong> Genera y descarga cualquier informe contable en Excel manteniendo fórmulas dinámicas nativas sin pérdida de cálculo.</li>
+                            <li><strong>No Contemplado en el Contrato:</strong> El alcance solo requería una vista básica en pantalla. Se diseñó un <strong>Multi-Reporteador Universal</strong> corporativo.</li>
+                            <li><strong>Exportador Excel (No Formulado):</strong> Generación y descarga directa en 1 clic de archivos Excel con <strong>datos limpios estructurados y valores consolidados</strong> (formato no formulado para total fiabilidad).</li>
                             <li><strong>Exportador PDF Vectorial de Alta Resolución:</strong> Informes listos para comités de directorio, bancos y auditorías externas.</li>
-                            <li><strong>Doble Espejo:</strong> Permite bajar estados financieros en Formato Petral, Formato NAVITRANSO o Vista de Solo Lectura.</li>
+                            <li><strong>Doble Espejo:</strong> Descarga de estados financieros en Formato Petral, Formato NAVITRANSO o Vista Ejecutiva.</li>
                         </ul>
                     </div>
                 </div>
@@ -897,9 +910,9 @@ def generate_html_deck_v4(ws_path):
              ========================================== -->
         <div class="slide">
             <div class="slide-content">
-                <div class="tag">EXTRA FUERA DE ALCANCE &bull; CONSULTORÍA DE PROCESOS & MOF DIGITAL</div>
+                <div class="tag">VALOR AÑADIDO ESTRATÉGICO &bull; EXTRA DECANTADO DEL DESARROLLO</div>
                 <h2>Slide 7: Consultoría de Procesos, Organigrama & Definición del MOF</h2>
-                <div class="sub">Un extra de alto valor no contemplado en el contrato: se identificó la oportunidad de estructurar los procesos de la empresa con la ayuda del software y definir su Manual de Organización y Funciones (MOF).</div>
+                <div class="sub">Un valor añadido de alto impacto descubierto y decantado durante la creación del sistema: se identificó la oportunidad de estructurar los procesos de Petral y formalizar su Manual de Organización y Funciones (MOF).</div>
 
                 <div class="kpi-grid-4" style="margin-bottom: 14px;">
                     <div class="kpi-box" style="border-top: 5px solid var(--accent);">
@@ -910,7 +923,7 @@ def generate_html_deck_v4(ws_path):
                     <div class="kpi-box" style="border-top: 5px solid var(--green);">
                         <div class="label">Organigrama Digital</div>
                         <div class="num" style="font-size: 15pt; color: var(--green);">Roles Claros</div>
-                        <div class="desc">Jerarquías y áreas modeladas en la UI.</div>
+                        <div class="desc">Jerarquías y áreas modeladas en la suite.</div>
                     </div>
                     <div class="kpi-box" style="border-top: 5px solid var(--amber);">
                         <div class="label">Manual MOF</div>
@@ -930,24 +943,24 @@ def generate_html_deck_v4(ws_path):
                             🔍 La Oportunidad de Mejora Identificada
                         </strong>
                         <p style="font-size: 9.2pt; color: #475569; line-height: 1.45;">
-                            Durante el diagnóstico inicial, se detectó que Petral operaba con procesos dispersos y sin un MOF formalizado que delimitara las responsabilidades exactas entre Comercial, Operaciones y Finanzas. Cada analista aplicaba criterios distintos para estimar fletes o registrar costos.
+                            Durante el diagnóstico, se identificó que Petral presentaba una oportunidad crítica de mejora: sus procesos no estaban formalizados y carecía de un MOF que delimitara con claridad las funciones entre Comercial, Operaciones y Finanzas.
                         </p>
                     </div>
 
                     <div class="card" style="border-left: 5px solid var(--green); padding: 14px 18px;">
                         <strong style="color: var(--green); font-size: 11pt; display: block; margin-bottom: 6px;">
-                            🏛️ La Solución Entregada como Extra de Consultoría
+                            🏛️ El Extra Decantado del Desarrollo
                         </strong>
                         <p style="font-size: 9.2pt; color: #475569; line-height: 1.45;">
-                            Se aprovechó la ingeniería del software para <strong>ordenar, consensuar y plasmar los flujos operativos reales</strong>, creando un <strong>Organigrama Digital Interactivo</strong> y delimitando las funciones del <strong>MOF</strong> directamente en la plataforma, blindando a la empresa contra errores y dependencia de personas.
+                            A lo largo de la generación del sistema, se aprovechó la arquitectura del software para <strong>ordenar y plasmar los flujos operativos reales</strong>, creando un <strong>Organigrama Digital Interactivo</strong> y facilitando la definición de su <strong>MOF</strong> asistido por el software.
                         </p>
                     </div>
                 </div>
 
                 <div class="callout callout-purple" style="margin-top: 2px; padding: 10px 16px;">
-                    <strong style="color: #6B21A8; font-size: 10.5pt; display: block; margin-bottom: 3px;">Valor Estratégico para Petral:</strong>
-                    <p style="font-size: 9.5pt; color: #334155; line-height: 1.45;">
-                        Este entregable representó más de <strong>120 horas de consultoría de gestión organizacional pura</strong> que trascendió la programación informática, dejando a Naviera Petral con un protocolo operativo formalizado y una cultura de gobernanza corporativa.
+                    <strong style="color: #6B21A8; font-size: 10.5pt; display: block; margin-bottom: 3px;">Valor Añadido para la Gestión de Naviera Petral:</strong>
+                    <p style="font-size: 9.5pt; color: #334155; line-height: 1.45; margin: 0;">
+                        Este entregable constituyó un <strong>extra estratégico de alto valor</strong> que decantó naturalmente del proyecto, dotando a Petral de ordenamiento institucional, protocolos operativos formalizados y gobernanza corporativa.
                     </p>
                 </div>
 
@@ -964,42 +977,50 @@ def generate_html_deck_v4(ws_path):
              ========================================== -->
         <div class="slide">
             <div class="slide-content">
-                <div class="tag">CIBERSEGURIDAD BANCARIA &bull; INTEGRIDAD DE DATOS</div>
-                <h2>Slide 8: Bóveda de Dispositivos (Device Vault) & Libro de Auditoría</h2>
-                <div class="sub">Blindaje de hardware y trazabilidad forense inmutable para la protección de datos dinámicos.</div>
+                <div class="tag">100% FUERA DEL ALCANCE ORIGINAL &bull; CIBERSEGURIDAD BANCARIA & AUDIT LEDGER</div>
+                <h2>Slide 8: Bóveda de Dispositivos (Device Vault) & Libro Mayor de Auditoría</h2>
+                <div class="sub"><strong>Ninguna de estas dos funcionalidades estaba contemplada en el alcance contratado</strong>: blindaje de hardware y trazabilidad forense inmutable.</div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
                     <div class="card" style="border-top: 5px solid var(--navy);">
-                        <strong style="color: var(--navy); font-size: 12pt; display: block; margin-bottom: 8px;">
-                            🔐 Device Vault (Device Fingerprinting & Binding)
-                        </strong>
-                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
-                            Sistema que genera una <strong>huella digital criptográfica de hardware</strong> por terminal autorizada.
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: var(--navy); font-size: 11.5pt;">
+                                🔐 Device Vault (Device Binding)
+                            </strong>
+                            <span class="badge-pill badge-amber">Fuera de Alcance</span>
+                        </div>
+                        <p style="font-size: 9.6pt; color: #475569; line-height: 1.45; margin-bottom: 8px;">
+                            Generación de <strong>huella digital criptográfica de hardware</strong> por terminal autorizada.
                         </p>
-                        <ul style="font-size: 9.8pt; color: #475569; padding-left: 20px; line-height: 1.45;">
+                        <ul style="font-size: 9.4pt; color: #475569; padding-left: 18px; line-height: 1.45;">
                             <li>Restringe accesos exclusivamente a computadoras corporativas validadas.</li>
                             <li>Elimina riesgos de robo de credenciales y accesos concurrentes no autorizados.</li>
+                            <li><em>Totalmente ausente en la cotización base.</em></li>
                         </ul>
                     </div>
 
                     <div class="card" style="border-top: 5px solid var(--green);">
-                        <strong style="color: var(--green); font-size: 12pt; display: block; margin-bottom: 8px;">
-                            📜 Audit Ledger (Libro Mayor Forense Transaccional)
-                        </strong>
-                        <p style="font-size: 10pt; color: #475569; line-height: 1.5; margin-bottom: 8px;">
-                            Mecanismo de <strong>registro inmutable de eventos y transacciones</strong> que audita cada modificación en el sistema.
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <strong style="color: var(--green); font-size: 11.5pt;">
+                                📜 Audit Ledger (Libro Forense)
+                            </strong>
+                            <span class="badge-pill badge-amber">Fuera de Alcance</span>
+                        </div>
+                        <p style="font-size: 9.6pt; color: #475569; line-height: 1.45; margin-bottom: 8px;">
+                            Mecanismo de <strong>registro inmutable de eventos y transacciones</strong> que audita cada modificación.
                         </p>
-                        <ul style="font-size: 9.8pt; color: #475569; padding-left: 20px; line-height: 1.45;">
-                            <li>Trazabilidad completa: quién, cuándo y qué valor sobreescribió en fletes o matrices.</li>
-                            <li>Protección absoluta de la integridad de la data dinámica ante controversias internas.</li>
+                        <ul style="font-size: 9.4pt; color: #475569; padding-left: 18px; line-height: 1.45;">
+                            <li>Trazabilidad total: quién, cuándo y qué valor sobreescribió en fletes o matrices.</li>
+                            <li>Protección absoluta de la integridad de la data ante controversias internas.</li>
+                            <li><em>No formaba parte de los requerimientos iniciales.</em></li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="callout callout-blue">
-                    <strong style="color: var(--accent); font-size: 11pt; display: block; margin-bottom: 3px;">Salto de Alcance de Seguridad:</strong>
-                    <p style="font-size: 10.2pt; color: #334155;">
-                        Se cotizó un inicio de sesión básico; se entregó una arquitectura de ciberseguridad y auditoría transaccional de estándar bancario y de misión crítica.
+                    <strong style="color: var(--accent); font-size: 10.5pt; display: block; margin-bottom: 3px;">Aclaración de Alcance de Seguridad:</strong>
+                    <p style="font-size: 9.8pt; color: #334155; margin: 0;">
+                        El contrato original contemplaba un inicio de sesión básico con usuario y contraseña. <strong>Ambos módulos fueron desarrollados como una capa de seguridad y gobernanza corporativa no incluida en la cotización inicial</strong>.
                     </p>
                 </div>
 
@@ -1012,20 +1033,20 @@ def generate_html_deck_v4(ws_path):
 
 
         <!-- ==========================================
-             SLIDE 9: SUITE DE 13 REPORTES PDF/EXCEL INK-SAVE
+             SLIDE 9: SUITE DE 13 REPORTES PDF/EXCEL PRINT-READY
              ========================================== -->
         <div class="slide">
             <div class="slide-content">
-                <div class="tag">REPORTERÍA EJECUTIVA &bull; DISEÑO PRINT-READY</div>
-                <h2>Slide 9: Suite de 13 Reportes PDF/ExcelJS con Matriz Cromática e Ink-Save</h2>
-                <div class="sub">Maquetación editorial de alta precisión con identidad del cliente y ahorro del 75% de tinta.</div>
+                <div class="tag">REPORTERÍA EJECUTIVA &bull; AHORRO MASIVO DE TIEMPO DEL USUARIO</div>
+                <h2>Slide 9: Suite de 13 Reportes PDF/Excel (Formato No Formulado) Print-Ready</h2>
+                <div class="sub">Maquetación editorial de alta precisión con identidad de cliente: <strong>ahorro radical de tiempo del usuario al generar reportes listos para imprimir</strong> sin retrabajos manuales.</div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 14px;">
                     <div class="card" style="border-top: 5px solid var(--accent);">
                         <strong style="color: var(--navy); font-size: 11.5pt; display: block; margin-bottom: 6px;">
                             📄 8 Reportes PDF Vectoriales (Print-Ready)
                         </strong>
-                        <ul style="font-size: 9.5pt; color: #475569; padding-left: 18px; line-height: 1.45;">
+                        <ul style="font-size: 9.3pt; color: #475569; padding-left: 18px; line-height: 1.45;">
                             <li><strong>1. Estimación Individual de Viaje:</strong> Formato A4 Portrait con desglose de costos y TCE.</li>
                             <li><strong>2. Resumen Ejecutivo de Flota:</strong> Vista A4 Landscape comparativa de naves.</li>
                             <li><strong>3. Comparativa Multirruta SPCC/NEXA:</strong> Matriz de sensibilidad de fletes.</li>
@@ -1039,25 +1060,25 @@ def generate_html_deck_v4(ws_path):
 
                     <div class="card" style="border-top: 5px solid var(--green);">
                         <strong style="color: var(--green); font-size: 11.5pt; display: block; margin-bottom: 6px;">
-                            📊 5 Reportes Excel (.xlsx con ExcelJS) & Matriz Cromática
+                            📊 5 Reportes Excel (.xlsx No Formulado) & Matriz Cromática
                         </strong>
-                        <ul style="font-size: 9.5pt; color: #475569; padding-left: 18px; line-height: 1.45; margin-bottom: 8px;">
-                            <li><strong>1. Matriz Financiera Petral 12 Meses:</strong> Modelo dinámico multidimensional.</li>
-                            <li><strong>2. Matriz Financiera NAVITRANSO 12 Meses:</strong> Control presupuestario en 4 bloques.</li>
-                            <li><strong>3. Maestro de Puertos y Costos Paramétricos:</strong> Tarifario integral editable.</li>
+                        <ul style="font-size: 9.3pt; color: #475569; padding-left: 18px; line-height: 1.45; margin-bottom: 6px;">
+                            <li><strong>1. Matriz Financiera Petral 12 Meses:</strong> Modelo de datos limpios estructurados.</li>
+                            <li><strong>2. Matriz Financiera NAVITRANSO 12 Meses:</strong> Control en 4 bloques contables.</li>
+                            <li><strong>3. Maestro de Puertos y Costos Paramétricos:</strong> Tarifario integral estructurado.</li>
                             <li><strong>4. Base Consolidada de Cotizaciones:</strong> Historial transaccional completo.</li>
                             <li><strong>5. Log Transaccional Audit Ledger:</strong> Trazabilidad forense de cambios.</li>
                         </ul>
-                        <div style="background: rgba(5, 150, 105, 0.08); padding: 8px 12px; border-radius: 8px; font-size: 9pt; color: #065F46; line-height: 1.4;">
-                            <strong>Matriz Cromática & Ink-Save:</strong> Clientes (SPCC/NEXA), Naves y Rutas con colores identitarios y 75% ahorro de tinta.
+                        <div style="background: rgba(5, 150, 105, 0.08); padding: 8px 12px; border-radius: 8px; font-size: 8.8pt; color: #065F46; line-height: 1.35;">
+                            <strong>Ahorro del Usuario:</strong> Reportes diseñados para impresión ejecutiva directa y exportación limpia sin maquetación manual posterior.
                         </div>
                     </div>
                 </div>
 
-                <div class="callout callout-green">
-                    <strong style="color: var(--green); font-size: 11pt; display: block; margin-bottom: 3px;">Entregable Editorial Ejecutivo:</strong>
-                    <p style="font-size: 10.2pt; color: #334155;">
-                        Informes listos para imprimir y presentar directamente a Directorio y Gerencia General sin requerir edición ni formateo manual posterior.
+                <div class="callout callout-green" style="margin-top: 2px; padding: 10px 16px;">
+                    <strong style="color: var(--green); font-size: 10.5pt; display: block; margin-bottom: 3px;">Impacto Operativo para Petral:</strong>
+                    <p style="font-size: 9.6pt; color: #334155; margin: 0;">
+                        Los analistas y directivos de Petral obtienen informes listos en 1 segundo para Directorio y bancos, <strong>ahorrando cientos de horas operativas al año en preparación y formateo de documentos</strong>.
                     </p>
                 </div>
 
