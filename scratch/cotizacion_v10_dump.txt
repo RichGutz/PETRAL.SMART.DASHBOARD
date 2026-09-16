@@ -1,0 +1,160 @@
+--- PAGE 1 ---
+Navigating the Future: Inteligencia Comercial
+Propuesta de Desarrollo y puesta en producción de sistema informático
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 2 ---
+Resumen de la Estructura de Cobro: Inversión en Implantación vs. Tarifa Recurrente.
+Paso 1: Diseño
+Lógica: Pago fijo inicial.
+Esfuerzo: Determinado por 
+la cantidad de reportes
+históricos a reproducir y la 
+complejidad de la lógica de 
+negocios
+Paso 2: Desarrollo
+Lógica: Cobro por entrega de 
+hitos funcionales
+Esfuerzo: Vinculado a la 
+cantidad de pantallas del SW 
+a conectar.
+Paso 3: ETL (Carga)
+Lógica: Tarifa por volumen 
+de carga de datos.
+Esfuerzo: Relacionado con
+los años de histórico de viajes 
+de la flota de Naviera Petral
+que se deseen cargar
+Paso 4: Onboarding
+Lógica: Tarifa fija por
+implementación del sistema.
+Esfuerzo: Medido por el nivel 
+de complejidad del
+entrenamiento de los equipos 
+operativos y comerciales.
+Paso 5: In Situ
+Lógica: Cobro por días/ 
+hombre de soporte
+presencial.
+Esfuerzo: Dependiente de la 
+cantidad de analistas
+comerciales a capacitar cara 
+a cara y horas de refinación 
+en oficina.
+Paso 6: Tarifa Recurrente Mensual de Soporte y Alojamiento (Mantenimiento)
+Lógica de Pago: Suscripción mensual fija posterior al despliegue.
+Cobertura: Asegura el acceso seguro y continuo de Naviera Petral al software web. Incluye el costo del servidor dedicado en la nube (VPS en Contabo), el
+costo de la base de datos centralizada (Supabase PostgreSQL), respaldos diarios de seguridad de la base de datos, resolución de incidentes operativos y 
+mejoras continuas de lógica comercial (mantenimiento correctivo y evolutivo menor). No incluye nuevos desarrollos
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+Esquema Lógico de Pricing
+--- PAGE 3 ---
+Inversión Única (One-Timers) - Parte 1
+Etapa Descripción Comentarios
+Tarifa 
+USD/hr Hrs
+Total sin 
+IGV
+1: Diseño
+Diseño de Herramienta de Forecast: Definición de 
+la interfaz y lógica para proyectar ventas y hacer P&L 
+a nivel Gross Margin.
+Diseño de Herramienta de Cotización 
+(Proformador SPOT): Definición de la interfaz para 
+estructurar paquetes de viajes que maximicen la
+rentabilidad.
+Las siguientes etapas
+requerirán un costo adicional 
+de diseño para MEDIR &
+MEJORAR.
+100 10 1,000
+2:
+Desarrollo
+Stack Tecnológico: Construcción del software 
+conectando la base de datos (Supabase) con un
+frontend rápido (Vite + React + Tailwind + ECharts).
+Lógica Matemática: Programación de algoritmos y 
+APIs para cálculos avanzados y creación de pantallas.
+Si se toman la siguientes
+etapas se requerirán nuevos 
+desarrollos.
+Se incluye la lógica central 
+para futuros desarrollos y 3 
+reportes gráficos a elección 
+del cliente.
+60 110 6,600
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 4 ---
+Inversión Única (One-Timers) - Parte 2
+Etapa Descripción Comentarios
+Tarifa 
+USD/hr Hrs
+Total sin 
+IGV
+3: ETL
+(Carga)
+Alcance de Carga: Integración exclusiva de la data 
+operativa y comercial del año 2026.
+Proceso ETL: Extracción, Transformación y Carga 
+desde los archivos Excel actuales a Supabase.
+Solo se cargarán los meses 
+transcurridos del año 2026.
+De requerirse mas años, se 
+ejecutará el ETL al mismo 
+costo por año
+50 10 500
+Entrenamiento Operativo: Capacitación directa a
+4:
+Onboarding
+los usuarios en el uso de la nueva plataforma web.
+Usuarios Clave:
+• Jorge Neyra • Fernando Harten
+El onboarding será presencial a 
+elección del cliente. 50 10 500
+• Maria Elena Castro • Iosef Zavala
+5: In Situ
+Soporte Presencial (Go-Live): Acompañamiento 
+directo en la oficina operando la plataforma real.
+Convivencia "Dos Mundos": Comparación en
+paralelo de los resultados del nuevo software vs. el 
+Excel actual.
+Se conciliará los resultados de 
+EXCEL para que sean 
+convergentes con los del 
+sistema y asistirá a los 
+usuarios hasta que no hayan
+inconsistencias ni BUGS.
+50 10 500
+TOTAL INVERSIÓN (Sin IGV): $ 9,100
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 5 ---
+Costo Recurrente Mensual que garantizan la Operatividad,  y seguridad del sistema
+Comentarios de Geeksoft: En mi experiencia implementando este tipo de transiciones de procesos legacy 
+(herramientas basadas íntegramente en Excel) hacia ecosistemas centralizados, adoptar un enfoque modular es la 
+estrategia más segura y con mayor tasa de éxito. Permitir que el equipo (especialmente aquellos perfiles muy 
+habituados a sus hojas de cálculo) valide el sistema paso a paso, y tener una etapa formal de convivencia de "dos 
+mundos", reduce drásticamente la resistencia al cambio. Esto asegura que la herramienta no solo sea un avance 
+tecnológico, sino que genere confianza plena en los números que arroja frente a los modelos tradicionales.
+La propiedad intelectual del SW es 100% de PETRAL. Desde el inicio, PETRAL tendrá copia de código del sistema en
+GIT HUB.
+Etapa Descripción Comentarios
+Total 
+Mensual
+6: Tarifa
+Mensual de
+Mantenimiento
+Suscripción Mensual: Asegura la operatividad de la 
+plataforma 24/7.
+Cobertura: Pago de servidor en la nube
+(Contabo), base de datos (Supabase) y labores de 
+soporte evolutivo , salud del sistema y reporte de uso 
+del sistema por usuario (interacciones de los usuarios 
+con el sistema para evitar el uso del LEGACY en Excel)
+Incluye el pago por GEEKSOFT de 
+los costos asociados a la
+base de datos y el servidor.
+No incluye nuevos 
+desarrollos. Pagaderos 
+desde el cierre de la 
+etapa 5.
+$ 500
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026

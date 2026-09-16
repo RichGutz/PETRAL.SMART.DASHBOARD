@@ -1,0 +1,950 @@
+--- PAGE 1 ---
+Navigating the Future: Inteligencia Comercial
+Transición de procesos legacy a un ecosistema de datos centralizado y automatizado
+Objetivo: Modernización integral de la gestión de Forecast Comercial
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 2 ---
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+Lo que suele suceder en desarrollo de sistemas:
+--- PAGE 3 ---
+Roadmap: Enfoque AGILE (Proceso Iterativo)
+1. Alcance
+Diseño del Sistema
+Llegar al mejor
+entendimiento de la
+necesidad.
+➔
+2. Desarrollo
+Escribir el Software
+Stack tecnológico que se
+usará para construir SW.
+➔
+3. ETL
+Carga de Datos
+Extraer, Transformar y
+Cargar la data de
+ejecución del 2026.
+➔
+4. Onboarding
+Implementación
+Despliegue y
+capacitación operativa.
+➔
+5. In Situ
+Acompañamiento
+Mejora continua
+operando en Petral.
+Modifica Alcance Ajusta Software Mejora Extracción Calibra Onboarding
+Feedback Constante (El campo mejora el sistema)
+Fase 6: Soporte y Mantenimiento Recurrente
+El sistema es un organismo vivo, necesita supervisión, correcciones periódicas, crecimiento de nuevas funcionalidades, chequeos de salud, a lo largo de toda su vida.
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 4 ---
+Fase 1: Diseño del Sistema - Alcance
+Objetivo del Desarrollo
+Crear una herramienta capaz de ejecutar el FORECAST COMERCIAL de manera centralizada, usando una 
+herramienta diseñada a medida, con tecnología moderna, segura y en la nube.
+1. PROYECTAR: Proyectar Ventas y hacer un P&L a nivel GROSS MARGIN 
+2. COTIZAR: Cotizar viajes fuera de contrato estructurando "paquetes" que maximicen rentabilidad
+3. MEDIR: Comparar las proyecciones comerciales con la ejecución real a lo largo del tiempo y medir la ejecución 
+mediante una serie de KPI´s
+4. MEJORAR: Basados en los resultados medidos por cada KPI, proponer estrategias comerciales que permitan 
+elevar las ventas y la rentabilidad
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 5 ---
+Pilar A: Commercial 
+Forecast
+Objetivo: Usar "VOYAGE CALCULATIONS" como base estática para 
+determinar costos por ruta y asegurar el margen operativo requerido.
+Alcance: Sistematizar los Maestros en una base centralizada y automatizar 
+las Proyecciones de Ventas y PnL a nivel GROSS MARGIN POR 
+RUTA/VIAJE/BARCO
+Pilar B: Proformador 
+SPOT
+Objetivo: Simular y cotizar viajes fuera de contrato (VOYAGE CHARTER 
+- VCH) con agilidad y precisión.
+Alcance: Traer costos de ruta/viaje/barco y mover tarifas para cotizar 
+propuestas VCHs (paquetes de viajes).
+Pilar C: Control de 
+Gestión
+Objetivo: Medir la precisión de las proyecciones comerciales vs la ejecución 
+operativa real que hoy se lleva centralizada en una herramienta a medida.
+Alcance: Interfaz para ingreso de fletes&gastos reales. Permitirá ajusta 
+VOYAGE CALCULATIONS para futuros contratos si los márgenes REALES 
+lo requieren.
+Fase 1: Los Tres Pilares Lógicos
+Para materializar este nivel de control, diseñaremos la herramienta sobre tres pilares complementarios:
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 6 ---
+Demostración Visual: Pilar A - Commercial Forecast
+Impacto del Pilar A: Visibilidad predictiva por barco y por ruta.
+Ventas Mensuales por Ruta y Buque
+ RUTAS: Callao-Marcona Callao-Matarani Ilo-Mejillones Ilo-Matarani Ilo-Marcona Ilo-Callao
+ BARCOS: T TABLONES M MOQUEGUA  CT CONCON T.  H HUEMEL
+0
+250,000
+500,000
+750,000
+1,000,000
+1,250,000
+Ventas por Buque ($)
+0
+600,000
+1,200,000
+1,800,000
+2,400,000
+3,000,000
+Total Ventas Mes ($)
+Ene 26
+Moquegua
+M M
+M M
+M M
+M M
+M M
+Tablones
+T T
+T T
+T T
+T T
+Concon T.
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT
+Feb 26
+Moquegua
+M M
+M M
+M M
+M M
+M M
+M M
+Tablones
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+Concon T.
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT
+Mar 26
+Moquegua
+M M
+M M
+M M
+M M
+M M
+M M
+M M
+M M
+Tablones
+T T
+T T
+T T
+T T
+T T
+T T
+Concon T.
+CT CT
+CT CT
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT
+Abr 26
+Moquegua
+M M
+M M
+M M
+M M
+M M
+M M
+M M
+Tablones
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+Concon T.
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT 
+CT CT
+May 26
+Moquegua
+M M
+M M
+M M
+M M
+M M
+M M
+M M
+M M
+M M
+Tablones
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+T T
+Concon T.
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT
+Jun 26
+Moquegua
+M M
+M M
+M M
+M M
+M M
+Tablones
+T T
+T T
+T T
+T T
+T T
+T T
+Concon T.
+CT CT
+CT CT 
+CT CT
+CT CT
+CT CT 
+CT CT
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 7 ---
+Variante: Forecast por Rutas (Drill-down Barcos)
+Impacto del Pilar A: Agrupación por Rutas con volumen aportado por barco.
+Ventas Mensuales por Ruta (Composición por Buque)
+ RUTAS: Callao-Marcona Callao-Matarani Ilo-Mejillones Ilo-Matarani Ilo-Marcona Ilo-Callao
+ BARCOS: T TABLONES  M MOQUEGUA  CT CONCON T.  H HUEMEL
+0
+250,000
+500,000
+750,000
+1,000,000
+1,250,000
+Ventas por Ruta ($)
+0
+2,000
+4,000
+6,000
+8,000
+10,00
+Ene 26
+Cal-Mar
+CT
+CT
+Cal-Mat
+T
+T
+M
+M
+M
+Ilo-Mej
+H
+H
+H
+Ilo-Mat
+M
+M
+Ilo-Mar
+M
+M
+T
+T
+T
+Ilo-Cal
+H
+H
+CT
+CT
+CT
+T
+T
+H
+H
+H
+Feb 26
+Cal-Mar
+T
+T
+CT
+CT
+M
+M
+Cal-Mat
+CT
+CT
+H
+H
+M
+M
+M
+Ilo-Mej
+CT  CT
+CT  CT
+CT
+CT
+CT
+T
+T
+T
+M
+M
+M
+Ilo-Mat
+T
+T
+T
+Ilo-Mar
+T
+T
+H
+H
+H
+H
+Ilo-Cal
+CT
+CT
+T
+T
+CT
+CT
+CT
+Mar 26
+Cal-Mar
+T
+T
+T
+Cal-Mat
+H
+H
+CT
+CT
+Ilo-Mej
+CT
+CT
+CT
+T
+T
+Ilo-Mat
+H
+H
+Ilo-Mar
+T
+T
+CT
+CT
+CT
+H
+H
+Ilo-Cal
+H
+H
+H
+CT
+CT
+T
+T
+CT
+CT
+CT
+Abr 26
+Cal-Mar
+H
+H
+H
+T
+T
+H
+H
+M
+M
+Cal-Mat
+T
+T
+Ilo-Mej
+M
+M
+M
+H
+H
+H
+H
+H
+CT
+CT
+CT
+Ilo-Mat
+M
+M
+M
+Ilo-Mar
+CT
+CT
+CT
+T
+T
+Ilo-Cal
+CT  CT
+CT  CT
+T
+T
+T
+M
+M
+M
+CT
+CT
+CT
+May 26
+Cal-Mar
+CT
+CT
+M
+M
+Cal-Mat
+M
+M
+M
+CT
+CT
+T
+T
+Ilo-Mej
+M
+M
+Ilo-Mat
+H
+H
+H
+Ilo-Mar
+T
+T
+T
+Ilo-Cal
+H
+H
+H
+T
+T
+T
+Jun 26
+Cal-Mar
+H
+H
+H
+T
+T
+CT
+CT
+CT
+Cal-Mat
+CT
+CT
+CT
+H
+H
+H
+T
+T
+M
+M
+Ilo-Mej
+T
+T
+T
+T
+T
+M
+M
+Ilo-Mat
+M
+M
+Ilo-Mar
+M
+M
+Ilo-Cal
+H
+H
+T
+T
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 8 ---
+Variante: Composición Estructural (Rutas vs Buques)
+RUTAS: Cal-Mar Cal-Mat Ilo-Mej Ilo-Mat Ilo-Mar BUQUES: T TABLONES M MOQUEGUA CT CONCON T. H HUEMEL
+Enero 26: Agrupado por Ruta
+Cal Cal Ilo-Mej Ilo-Mat Ilo-Mar Ilo-Cal
+M
+$377k
+M
+$364k
+H
+$247k M
+$351k
+H
+$650k
+CT
+$247k
+M
+$260k
+T
+$390kT
+$390kT
+$286k
+Enero 26: Agrupado por Buque
+M T H CT
+Cal-Mar
+$377k
+Ilo-Mej
+$286k
+Ilo-Mej
+$247k
+Ilo
+$247k
+Cal-Mat
+$364k Ilo-Mat
+$390k
+Ilo-Mar
+$650k
+Ilo-Mej
+$260k
+Ilo-Cal
+$390kIlo-Mat
+$351k
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+Ilo-Callao
+--- PAGE 9 ---
+Demostración Visual: Pilar B - Proformador SPOT
+Impacto del Pilar B: Propuestas comerciales ágiles basadas en el PnL del Paquete.
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 10 ---
+Demostración Visual: Pilar C - Control de Gestión
+Impacto del Pilar C: Midiendo la varianza operativa y ajustando costos a la realidad.
+Ejecución de Gross Profit: Proyectado (P) vs Real Ejecutado (R)
+RUTAS:
+Callao- 
+Marcona
+Callao- 
+Matarani
+Ilo-
+Mejillones
+Ilo-
+Matarani
+Ilo-
+Marcona
+Ilo-
+Callao
+ ESTADO:
+(P)
+Proyectado
+(R) Real 
+(Composición)
+0
+200,000
+400,000
+600,000
+800,000
+1,000,000
+Gross Profit ($)
+-200,000
+-100,000
+0 (Target)
++100,000
++200,000
++300,000
+Varianza de Gross Profit ($)
+Ene 26
+Moquegua
+P
+R
+Tablones
+P R
+Concon T.
+P
+R
+Huemel
+P
+R
+Feb 26
+Moquegua
+P R
+Tablones
+P R
+Concon T.
+P
+R
+Huemel
+P R
+Mar 26
+Moquegua
+P
+R
+Tablones
+P
+R
+Concon T.
+P R
+Huemel
+P
+R
+Abr 26
+Moquegua
+P
+R
+Tablones
+P R
+Concon T.
+P R
+Huemel
+P
+R
+May 26
+Moquegua
+P
+R
+Tablones
+P R
+Concon T.
+P R
+Huemel
+P R
+Jun 26
+Moquegua
+R
+P
+Tablones
+P
+R
+Concon T.
+P R
+Huemel
+P
+R
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 11 ---
+Análisis de Tráfico: Spaghetti Map de Rutas / Data GPS
+OCEANO PACIFICO
+IVIA
+Callao
+Marcona
+Matarani
+Ilo
+Mejillones
+Filtros de Dashboard
+Periodo mensual:
+Filtrar por Buque:
+Filtrar por Ruta:
+Rutas de Viaje
+Callao-Marcona 
+Callao-Matarani 
+Ilo-Callao
+Ilo-Matarani 
+Ilo-Marcona 
+Ilo-Mejillones
+GeekSoft Forecast System | Mockup V2
+˅Junio 2026 (Proyectado)
+˅
+ Todos los Buques (Consolidado)
+˅
+ Todas las Rutas (Spaghetti completo)
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 12 ---
+Estructura de Flota: Participación por Puerto y Ruta
+Callao
+Ilo
+Puertos de Salida
+Callao Matarani MejillonesMarcona
+Puertos de Llegada
+T
+M
+CT
+H
+$1,350k
+T
+M
+CT
+$950k
+M
+CT
+H
+$750k
+T
+M
+CT
+H
+$850k
+T
+M
+CT
+H
+$1,450k
+T
+M
+CT
+$1,100k
+H
+KPIs de Flota
+GROSS MARGIN TOTAL:
+$6,450,000
+VIAJES EJECUTADOS:
+27 Viajes / Mes
+BUQUE MÁS RENTABLE:
+Moquegua (42.5%)
+Distribución de Flota
+T TABLONES
+M MOQUEGUA
+CT CONCON T.
+H  HUEMEL
+GeekSoft Forecast System | Mockup V2
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 13 ---
+Venta 
+por 
+Buque
+Ingreso bruto 
+asignado a cada 
+nave en el período.
+Venta 
+por Ruta
+Concentración de 
+ingresos por ruta
+Venta 
+por 
+Cliente
+Participación de 
+cada cliente en la 
+facturación total.
+Ejemplos sugeridos de KPIs Operativos y Comerciales
+Indicadores Clave de Desempeño (KPIs) para la toma de decisiones ágiles.
+Ventas 
+  Operativos
+Días 
+con 
+Carga
+Tiempo productivo: 
+buque navegando 
+con mercancía. Mide 
+eficiencia operativa.
+Tiempo de espera,
+Días en carga y descarga.
+Puerto Detecta cuellos de
+botella logísticos.
+ Gross Margin
+Margen 
+por 
+Buque
+Rentabilidad neta de 
+cada activo flotante 
+sobre sus costos 
+operativos reales.
+Margen 
+por Ruta
+Eficiencia 
+económica de cada 
+tramo operado.
+Revela rutas que 
+drenan rentabilidad.
+Margen 
+por 
+Cliente
+Beneficio real tras 
+descontar costos 
+operativos 
+asignados a cada 
+cliente.
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 14 ---
+Fase 2: Desarrollo del Sistema (CODING)
+Para materializar el alcance, desarrollaremos el sistema reemplazando los silos de información manuales con 
+un Stack Tecnológico de última generación, robusto y escalable.
+Base de Datos
+SUPABASE
+(PostgreSQL)
+Actuará como la única fuente de 
+verdad en la nube, centralizando 
+maestros,  tarifas,  forecasts  y 
+ejecución.
+Backend & Visualización
+STREAMLIT + ECHARTS
+(Python / Apache ECharts)
+Desarrollo ágil de User Interface
+(UI), gráficas avanzadas 
+interactivas a medida y lógica   
+matemática   libre   de errores.
+Infraestructura
+CONTABO
+(Cloud VPS)
+Servidor  dedicado  en  la  nube 
+que garantizará que Petral tenga 
+acceso  continuo  24/7  a  la 
+herramienta con 99.99% de
+disponibilidad garantizada.
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+
+--- PAGE 15 ---
+El Stack tecnológico en analogía de ARMADOR
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+
+--- PAGE 16 ---
+Comparativa Tecnológica: Estado Actual vs. Estado Futuro
+ Dimensión / Criterio Estado Actual (Excel + SharePoint) Estado Futuro (Supabase + Streamlit)
+Lógica Matemática
+Expuesta
+Frágil y manipulable: Fórmulas 
+expuestas en celdas. Alto riesgo de 
+alteración involuntaria por parte de 
+usuarios comerciales u operativos.
+Centralizada y blindada: Algoritmos 
+matemáticos y fórmulas compiladas en el 
+servidor web, resguardadas ante errores de 
+digitación.
+Colaboración Limitada y 
+Bloqueo de Acceso
+Secuencial y restrictivo: Bloqueos de 
+archivos por uso simultáneo. Generación 
+de duplicados y confusión de versiones 
+cotizadas.
+Concurrente e instantánea: Múltiples 
+usuarios cotizando tarifas, simulando 
+rutas y operando de forma simultánea sin 
+interferencias.
+Trazabilidad del Dato
+Inexistente: No hay bitácora de quién 
+cotizó, cuándo se cambió una tarifa 
+base o bajo qué criterios se aprobó un 
+margen histórico.
+Auditable y automática: Historial de
+transacciones completo. Registro 
+centralizado de usuarios, cotizaciones y 
+cambios autorizados.
+Consolidación de KPIs
+Manual y lenta: Consolidar la varianza 
+operativa (PnL real vs. proyectado) 
+requiere copiado de
+archivos y reportes mensuales manuales.
+Automatizada: Dashboards interactivos 
+de Ventas / Gross Profit y varianzas de 
+viaje actualizados al instante mediante 
+base de datos integrada.
+Seguridad y Backups
+Baja: Archivos expuestos en carpetas de 
+SharePoint que pueden descargarse, 
+borrarse o sobrescribirse libremente sin 
+restricción robusta.
+Alta (Grado Empresarial): Perfiles de 
+acceso restringidos por roles, backups 
+automáticos en la nube y servidor dedicado 
+en VPS.
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 17 ---
+Fase 3, 4 y 5: ETL, Implementación y Acompañamiento
+El éxito de la herramienta no solo depende del código de la Fase 2, sino de tener data adecuada para 
+ejecutar mediciones REALES, la adopción TOTAL de los usuarios operativos y comerciales de Petral.
+Fase 4: Implementación
+ y Onboarding
+Involucramiento directo del 
+equipo operativo y gerencial 
+para asegurar el 
+entendimiento y capacitación 
+sobre la plataforma con 
+datos reales.
+➔
+Fase 5: Acompañamiento
+ In Situ
+Trabajo codo a codo con 
+USERS para verificar
+UI/UX. Nos permite 
+identificar mejoras UI/UX, 
+corregir bugs y calibrar el 
+motor algorítmico al
+instante.
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+➔
+Fase 3:Extract, Transform
+–Load
+Extraer de los exceles de
+JN/MEC la data de los
+viajes del 2026 para poder
+tener una comparación
+entre un forecast
+simulado en Ene 26 contra 
+ejecución
+--- PAGE 18 ---
+Esquema Lógico de Pricing
+Resumen de la Estructura de Cobro: Inversión en Implantación vs. Tarifa Recurrente.
+Paso 1: Diseño
+Lógica: Pago fijo inicial.
+Esfuerzo: Determinado por 
+la cantidad de reportes
+históricos a reproducir y la 
+complejidad de la lógica de 
+negocios
+Paso 2: Desarrollo
+Lógica: Cobro por entrega de 
+hitos funcionales
+Esfuerzo: Vinculado a la 
+cantidad de pantallas del SW 
+a conectar.
+Paso 3: ETL (Carga)
+Lógica: Tarifa por volumen 
+de carga de datos.
+Esfuerzo: Relacionado con
+los años de histórico de viajes 
+de la flota de Naviera Petral
+que se deseen cargar
+Paso 4: Onboarding
+Lógica: Tarifa fija por
+implementación del sistema.
+Esfuerzo: Medido por el nivel 
+de complejidad del
+entrenamiento de los equipos 
+operativos y comerciales.
+Paso 5: In Situ
+Lógica: Cobro por días/ 
+hombre de soporte
+presencial.
+Esfuerzo: Dependiente de la 
+cantidad de analistas
+comerciales a capacitar cara 
+a cara y horas de refinación 
+en oficina.
+Paso 6: Tarifa Recurrente Mensual de Soporte y Alojamiento (Mantenimiento)
+Lógica de Pago: Suscripción mensual fija posterior al despliegue.
+Cobertura: Asegura el acceso seguro y continuo de Naviera Petral al software web. Incluye el costo del servidor dedicado en la nube (VPS en Contabo), el
+costo de la base de datos centralizada (Supabase PostgreSQL), respaldos diarios de seguridad de la base de datos, resolución de incidentes operativos y 
+mejoras continuas de lógica comercial (mantenimiento correctivo y evolutivo menor). No incluye nuevos desarrollos
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+--- PAGE 19 ---
+Demos : SUPABASE – STREAMLIT – CHAT IA
+PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT | JUNIO 2026
+https://inandes.geeksoft.tech/CRM_Chat
+https://supabase.com/dashboard/project/mancsrsbtzgctgorpogs/editor/17496?schema=public
