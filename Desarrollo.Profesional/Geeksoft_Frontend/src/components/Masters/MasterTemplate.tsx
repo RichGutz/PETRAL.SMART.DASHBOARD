@@ -63,7 +63,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                     <div className="flex items-center gap-3">
                         <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain" />
                         <div className="flex items-center border-l border-slate-200 pl-3">
-                            <img src="/LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg" alt="DELFOS" className="object-contain" style={{ height: '42px', maxHeight: '42px' }} />
+                            <img src="/LOGO.PETRAL.ONE.HORIZONTAL.png" alt="PETRAL ONE" className="object-contain" style={{ height: '38px', maxHeight: '38px' }} />
                         </div>
                     </div>
 
