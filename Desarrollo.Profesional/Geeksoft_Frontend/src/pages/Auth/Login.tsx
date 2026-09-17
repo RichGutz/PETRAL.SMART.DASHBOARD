@@ -195,27 +195,28 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="relative min-h-screen w-screen flex flex-col justify-center items-center md:justify-end md:items-end p-4 md:p-6 lg:p-8 overflow-hidden font-sans select-none bg-slate-950">
+        <div className="relative min-h-screen w-screen flex flex-col justify-center items-center md:justify-end md:items-start p-4 md:p-6 lg:p-8 overflow-hidden font-sans select-none bg-slate-950">
             
-            {/* Fondo con la imagen de pantalla de inicio */}
+            {/* Fondo con la imagen de pantalla de inicio con proporciones cuidadas */}
             <div 
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
                 style={{ 
                     backgroundImage: "url('/login-bg.png')",
+                    backgroundPosition: 'center 20%',
                 }}
             />
 
-            {/* Tarjeta Flotante Inferior Derecha (Glassmorphism Ultra Traslúcido) */}
-            <div className="relative w-full max-w-[340px] bg-slate-950/40 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] p-5 z-10 flex flex-col justify-between transition-all duration-300">
+            {/* Tarjeta Flotante Inferior Izquierda (90% Transparente / Glassmorphism) */}
+            <div className="relative w-full max-w-[340px] bg-slate-950/10 backdrop-blur-md border border-white/25 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 z-10 flex flex-col justify-between transition-all duration-300">
                 <div>
                     {step === 'EMAIL_ENTRY' ? (
                         /* === PASO 1: ENTRADA DE CORREO PASSWORDLESS === */
                         <>
                             <div className="text-center mb-3">
-                                <h2 className="text-lg font-bold text-white tracking-tight drop-shadow">
+                                <h2 className="text-lg font-bold text-white tracking-tight drop-shadow-md">
                                     Acceso Seguro 2FA
                                 </h2>
-                                <p className="text-[11px] text-slate-200/90 font-medium">
+                                <p className="text-[11px] text-slate-100 font-medium drop-shadow">
                                     Ingresa tu correo corporativo para recibir tu código OTP
                                 </p>
                             </div>
@@ -228,7 +229,7 @@ export const Login: React.FC = () => {
                                 )}
 
                                 <div className="space-y-1">
-                                    <label htmlFor="email" className="block text-[10px] font-bold text-slate-200 uppercase tracking-wider">
+                                    <label htmlFor="email" className="block text-[10px] font-bold text-white uppercase tracking-wider drop-shadow">
                                         Correo Electrónico
                                     </label>
                                     <div className="relative">
@@ -238,11 +239,11 @@ export const Login: React.FC = () => {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="nombre@petral.com.pe"
-                                            className="w-full rounded-lg border border-white/25 pl-9 pr-3 py-2 text-xs text-white bg-slate-900/60 placeholder-slate-400 transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 font-medium"
+                                            className="w-full rounded-lg border border-white/30 pl-9 pr-3 py-2 text-xs text-white bg-slate-950/40 placeholder-slate-300 transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 font-medium"
                                             required
                                             autoFocus
                                         />
-                                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">
+                                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-200">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                                             </svg>
@@ -262,7 +263,7 @@ export const Login: React.FC = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-3.5 h-3.5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-3.5 h-3.5 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                             </svg>
                                             <span>Enviar Código de Acceso</span>
@@ -275,13 +276,13 @@ export const Login: React.FC = () => {
                         /* === PASO 2: VERIFICACIÓN 2FA OTP === */
                         <div className="animate-fadeIn">
                             <div className="text-center mb-3">
-                                <h2 className="text-base font-bold text-white tracking-tight drop-shadow">
+                                <h2 className="text-base font-bold text-white tracking-tight drop-shadow-md">
                                     Código de Seguridad
                                 </h2>
-                                <p className="text-[11px] text-slate-200 mt-0.5">
-                                    Hola <strong className="text-blue-300">{userName}</strong>, código enviado a:
+                                <p className="text-[11px] text-slate-100 mt-0.5 drop-shadow">
+                                    Hola <strong className="text-blue-200">{userName}</strong>, código enviado a:
                                 </p>
-                                <p className="text-[11px] font-mono font-bold text-blue-300 bg-blue-950/60 border border-blue-600/40 rounded px-2 py-0.5 mt-0.5 inline-block">
+                                <p className="text-[11px] font-mono font-bold text-blue-200 bg-blue-950/60 border border-blue-400/40 rounded px-2 py-0.5 mt-0.5 inline-block">
                                     {maskedEmail}
                                 </p>
                             </div>
@@ -311,16 +312,16 @@ export const Login: React.FC = () => {
                                         value={digit}
                                         onChange={(e) => handleDigitChange(idx, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(idx, e)}
-                                        className="w-10 h-11 text-center text-lg font-mono font-bold text-white bg-slate-900/70 border border-white/30 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition-all"
+                                        className="w-10 h-11 text-center text-lg font-mono font-bold text-white bg-slate-950/50 border border-white/30 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition-all"
                                         autoComplete="off"
                                     />
                                 ))}
                             </div>
 
                             {/* Timer y Reenvío */}
-                            <div className="flex items-center justify-between text-[11px] text-slate-300 mb-3 px-0.5">
+                            <div className="flex items-center justify-between text-[11px] text-slate-200 mb-3 px-0.5 drop-shadow">
                                 <span className="flex items-center gap-1 font-medium">
-                                    Vence en: <strong className={timeLeft < 60 ? 'text-red-400' : 'text-slate-100'}>{formatTime(timeLeft)}</strong>
+                                    Vence en: <strong className={timeLeft < 60 ? 'text-red-400' : 'text-white'}>{formatTime(timeLeft)}</strong>
                                 </span>
 
                                 <button
@@ -364,7 +365,7 @@ export const Login: React.FC = () => {
                                         setStep('EMAIL_ENTRY');
                                         setError('');
                                     }}
-                                    className="text-[11px] font-semibold text-slate-300 hover:text-white transition-colors"
+                                    className="text-[11px] font-semibold text-slate-200 hover:text-white transition-colors drop-shadow"
                                 >
                                     ← Cambiar correo corporativo
                                 </button>
@@ -373,16 +374,16 @@ export const Login: React.FC = () => {
                     )}
                 </div>
 
-                {/* Footer Geeksoft */}
-                <div className="flex flex-col items-center pt-2.5 mt-3 border-t border-white/10">
-                    <span className="text-[8px] font-bold text-slate-300/80 uppercase tracking-widest mb-1">
-                        Desarrollado por Geeksoft
+                {/* Footer Geeksoft con logo más grande */}
+                <div className="flex flex-col items-center pt-2.5 mt-3 border-t border-white/15">
+                    <span className="text-[9px] font-bold text-slate-200 uppercase tracking-widest mb-1.5 drop-shadow">
+                        Desarrollado por
                     </span>
                     <a href="https://geeksoft.tech" target="_blank" rel="noopener noreferrer" className="flex items-center">
                         <img 
                             src="/Logo.Geeksoft.png" 
                             alt="Geeksoft" 
-                            className="h-6 object-contain opacity-80 hover:opacity-100 transition-opacity drop-shadow" 
+                            className="h-9 object-contain opacity-95 hover:opacity-100 transition-opacity drop-shadow-md" 
                         />
                     </a>
                 </div>
