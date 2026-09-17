@@ -8,14 +8,14 @@ Logo URL Pública: https://forecast.geeksoft.tech/LOGO.DELFOS.NUEVO.BLANCO.3.hor
 def generate_2fa_email_html(user_name: str, otp_code: str, valid_minutes: int = 5) -> str:
     # Formatear el código OTP con espacios para legibilidad (ej: "5  7  5  0  7  5")
     formatted_code = "  ".join(list(str(otp_code)))
-    logo_url = "https://forecast.geeksoft.tech/LOGO.DELFOS.NUEVO.BLANCO.3.horizontal.jpg"
+    logo_url = "https://forecast.geeksoft.tech/LOGO.PETRAL.ONE.HORIZONTAL.png"
     
     html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Código de Seguridad DELFOS</title>
+  <title>Código de Seguridad PETRAL ONE</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;">
   <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 0;">
@@ -28,10 +28,10 @@ def generate_2fa_email_html(user_name: str, otp_code: str, valid_minutes: int = 
             <td style="background:linear-gradient(135deg, #0b2545 0%, #0284c7 100%);height:6px;"></td>
           </tr>
 
-          <!-- CABECERA CON LOGO OFICIAL DELFOS -->
+          <!-- CABECERA CON LOGO OFICIAL PETRAL ONE -->
           <tr>
             <td style="padding:32px 30px 20px 30px;text-align:center;">
-              <img src="{logo_url}" alt="DELFOS Shipping Software" width="280" style="display:block;margin:0 auto;max-width:280px;width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
+              <img src="{logo_url}" alt="PETRAL ONE Shipping Software" width="280" style="display:block;margin:0 auto;max-width:280px;width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
               <div style="margin-top:12px;color:#0284c7;font-size:10.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">
                 PLATAFORMA INTEGRAL DE GESTIÓN MARÍTIMA &amp; COMERCIAL
               </div>
@@ -59,7 +59,7 @@ def generate_2fa_email_html(user_name: str, otp_code: str, valid_minutes: int = 
               </p>
 
               <p style="margin:0 0 20px 0;font-size:13.5px;color:#475569;line-height:1.6;">
-                Se ha registrado una solicitud de inicio de sesión en <strong>DELFOS SHIPPING SOFTWARE</strong> desde un nuevo dispositivo o sesión corporativa asociada a su cuenta.
+                Se ha registrado una solicitud de inicio de sesión en <strong>PETRAL ONE SHIPPING SOFTWARE</strong> desde un nuevo dispositivo o sesión corporativa asociada a su cuenta.
               </p>
 
               <!-- RECUADRO CÓDIGO OTP -->
@@ -94,7 +94,7 @@ def generate_2fa_email_html(user_name: str, otp_code: str, valid_minutes: int = 
           <tr>
             <td style="background-color:#0f172a;padding:18px 30px;text-align:center;">
               <p style="margin:0 0 6px 0;font-size:11px;color:#cbd5e1;line-height:1.5;font-weight:600;">
-                DELFOS SHIPPING SOFTWARE • GEEKSOFT TECHNOLOGY PARTNER
+                PETRAL ONE SHIPPING SOFTWARE • GEEKSOFT TECHNOLOGY PARTNER
               </p>
               <p style="margin:0;font-size:10px;color:#94a3b8;line-height:1.4;">
                 Remitente Oficial: <span style="color:#38bdf8;">petral@geeksoft.tech</span> • Cifrado TLS 1.3 de Extremo a Extremo<br>

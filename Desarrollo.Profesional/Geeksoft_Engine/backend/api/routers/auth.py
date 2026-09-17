@@ -132,7 +132,7 @@ def login_step_one(payload: LoginRequest):
         if not row:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"El correo '{payload.email}' no se encuentra registrado en DELFOS."
+                detail=f"El correo '{payload.email}' no se encuentra registrado en PETRAL ONE."
             )
             
         user_id, email, full_name, role = row

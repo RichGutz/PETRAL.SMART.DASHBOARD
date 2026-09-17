@@ -12,13 +12,16 @@ if str(root_dir) not in sys.path:
 # Importar el generador de plantilla
 from backend.services.email_template_2fa import generate_2fa_email_html
 
-def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str = "DELFOS Security <petral@geeksoft.tech>"):
-    html_content = generate_2fa_email_html(user_name=user_name, otp_code=otp_code, valid_minutes=5)
+def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str = "PETRAL ONE Security <petral@geeksoft.tech>"):
+    """
+    Envía el correo con código OTP de 6 dígitos para autenticación 2FA.
+    """
+    html_content = generate_2fa_email_html(user_name=user_name, otp_code=otp_code)
     
     payload = {
         "from": from_email,
         "to": [to_email],
-        "subject": f"Código de Seguridad DELFOS: {otp_code}",
+        "subject": f"Código de Seguridad PETRAL ONE: {otp_code}",
         "html": html_content
     }
     
