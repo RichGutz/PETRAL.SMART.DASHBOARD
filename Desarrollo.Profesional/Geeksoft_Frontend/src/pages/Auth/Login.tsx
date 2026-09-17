@@ -197,12 +197,11 @@ export const Login: React.FC = () => {
     return (
         <div className="relative min-h-screen w-screen flex flex-col justify-center items-center md:justify-end md:items-start p-4 md:p-6 lg:p-8 overflow-hidden font-sans select-none bg-slate-950">
             
-            {/* Fondo con la imagen de pantalla de inicio con proporciones cuidadas */}
+            {/* Fondo con la imagen panorámica de portada ancha */}
             <div 
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
                 style={{ 
-                    backgroundImage: "url('/login-bg.png')",
-                    backgroundPosition: 'center 20%',
+                    backgroundImage: "url('/PORTADA.ANCHA.jpg')",
                 }}
             />
 
