@@ -634,3 +634,13 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-10 13:30:00] Seeding Masivo de Demoras P en Supabase (routes_quotes): 36 rutas comerciales actualizadas con promedios matemáticos oficiales (ILO 1.86d, CALLAO 0.67d, MARCONA 2.38d, MATARANI 1.67d, MEJILLONES 2.04d). Generado Reporte_Auditoria_Seeding_Demurrage_P.pdf y desplegado al VPS.
 [2026-09-16 10:32:00] CIERRE DE SESIÓN: BUSHIDO V3 (PETRAL ONE SHIPPING SOFTWARE) generado, enriquecido y desplegado exitosamente al VPS (https://forecast.geeksoft.tech/BUSHIDO_V3/). Se incorporaron todos los requerimientos comerciales de gerencia (Slide 3 simétrica, Slide 5 Post-Voyage >=50% con validación experta Sandra Gálvez, Slide 6 Excel no formulado, Slide 7 MOF como extra decantado del desarrollo sin imputación de horas, Slide 8 módulos 100% fuera de alcance y Slide 9 ahorro de tiempo del usuario al generar reportes print-ready).
 
+
+[2026-09-17 13:08:32] SESIÓN FINALIZADA CON ÉXITO
+- Rediseño integral de pantalla de inicio / Login con PORTADA.ANCHA.jpg.
+- Tarjeta de acceso seguro 2FA reubicada a la esquina inferior izquierda, 90% transparente y con box 20% más angosto.
+- Logo de GEEKSOFT 50% más grande con texto superior 'DESARROLLADO POR GEEKSOFT'.
+- Reemplazo del logo DELFOS por LOGO.PETRAL.ONE.jpg en el Slide Master / Navbar y en plantillas de correo 2FA.
+- Homologación de mensajes de autenticación a PETRAL ONE.
+- Favicon oficial exclusivo con el isotipo 'P' (sin texto) y cache-busting v3.
+- Aprobación de dispositivo en Device Vault de base de datos de producción.
+- Tags de versión generados (v2.1 a v2.9) y despliegues automáticos SFTP/SSH a VPS (https://forecast.geeksoft.tech).

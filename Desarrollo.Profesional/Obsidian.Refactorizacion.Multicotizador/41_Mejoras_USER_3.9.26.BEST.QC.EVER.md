@@ -28,6 +28,7 @@
 | **R7.2** | Super Loop QC Multi-Drop: Rutas Complejas $\text{POL} \rightarrow \text{POD 1} \rightarrow \text{POD 2}$ (Rotulación Canónica y P&L Fiel $0.00 Delta) | Engine (`forecast_service.py`), Frontend & Script | `FEAT.MULTIDROP.POL.POD.POD.MATRIZ`<br>`38ee821` | ✅ **RESUELTO & CERTIFICADO** |
 | **R8** | Super Loop QC Máximo: 60/60 Rutas en BD vs JSON Matriz de Escenarios Sintéticos | Engine (`forecast_service.py`) & Scripts QC | `SUPER.LOOP.QC.SINTETICO.60.RUTAS` | ✅ **RESUELTO & 100% CERTIFICADO** |
 | **R9** | Caso Forense: Rutas SPCC Bunkering en Grilla React (Cero Fantasma, Edición de Viajes & Orientación Badge Callao 3ra Pierna) | Frontend (`ForecastGrid.tsx`, `ForecastContext_V2.tsx`) | `FIX.REACT.GRID.BUNKERING.SPCC` | 🔍 **DIAGNOSTICADO & EN CURSO** |
+| **R10** | Caso Forense CONCON TRADER: Rutas Prospecto Libres, Distancias Pisco, Demurrage Guard, Balance de Ácido & Fidelidad Q en PDF | Frontend (`routeDistancesService.ts`, `MulticotizadorCalculationEngine.ts`, `SaveLoadQuoteModals.tsx`, `multicotizadorPdfPrintService.ts`) | `FIX.MULTICOTIZADOR.BALANCE.ACIDO.CONCON.PDF` | ✅ **RESUELTO & CERTIFICADO** |
 | **VPS** | Despliegue Automatizado a Producción en Vivo (`forecast.geeksoft.tech`) | VPS Producción (`91.108.125.253`) | `deploy_forecast_kickoff.py` | 🚀 **PUBLICADO EN VIVO** |
 
 ---

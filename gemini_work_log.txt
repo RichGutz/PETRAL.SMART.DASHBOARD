@@ -613,3 +613,13 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-08 10:00:00] Rediseño integral de UI para Organigrama (CompanyOrganigram_V2.tsx) y Manual MOF (MofManual_V2.tsx) a tema corporativo luminoso blanco/slate, homologado 100% con la estética general de PETRAL ERP. Validado con npx vite build (8.81s) y desplegado al VPS de Producción https://forecast.geeksoft.tech.
 [2026-09-10 13:21:00] [Reconciliación Modo O/P/C Demurrage] - Corregido fallo de sobredeterminación y fallback a 0.00 en MultiCotizadorExcel.tsx. Sincronizado congelamiento de snapshot al guardar y lectura fiel en [ O ] con conmutación reactiva a [ P ]. Desplegado en vivo al VPS https://forecast.geeksoft.tech.
 [2026-09-10 13:30:00] [Seeding Masivo Supabase Demoras P] - Ejecutado saneamiento de 36 rutas comerciales con estadías en PostgreSQL Supabase (routes_quotes), homologando puertos operativos a sus promedios oficiales de 24 meses (ILO 1.86d, CALLAO 0.67d, MARCONA 2.38d, MATARANI 1.67d, MEJILLONES 2.04d). Generado Reporte_Auditoria_Seeding_Demurrage_P.pdf y desplegado al VPS.
+
+[2026-09-17 13:08:32] SESIÓN FINALIZADA CON ÉXITO
+- Rediseño integral de pantalla de inicio / Login con PORTADA.ANCHA.jpg.
+- Tarjeta de acceso seguro 2FA reubicada a la esquina inferior izquierda, 90% transparente y con box 20% más angosto.
+- Logo de GEEKSOFT 50% más grande con texto superior 'DESARROLLADO POR GEEKSOFT'.
+- Reemplazo del logo DELFOS por LOGO.PETRAL.ONE.jpg en el Slide Master / Navbar y en plantillas de correo 2FA.
+- Homologación de mensajes de autenticación a PETRAL ONE.
+- Favicon oficial exclusivo con el isotipo 'P' (sin texto) y cache-busting v3.
+- Aprobación de dispositivo en Device Vault de base de datos de producción.
+- Tags de versión generados (v2.1 a v2.9) y despliegues automáticos SFTP/SSH a VPS (https://forecast.geeksoft.tech).

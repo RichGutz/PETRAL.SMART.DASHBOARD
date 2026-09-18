@@ -193,19 +193,17 @@ export class MulticotizadorCalculationEngine {
             portDays0 = idleDays0 + opDays0;
             totalPortDays += portDays0;
 
-            // Demurrage en Fila 0 (Solo si CARGAR y con volumen qVal0 > 0 o input explícito)
+            // Demurrage en Fila 0 (Solo si CARGAR)
             if (pCfg0.action === 'CARGAR') {
                 if (pCfg0.demurrage_days !== undefined && pCfg0.demurrage_days !== '' && pCfg0.demurrage_days !== null) {
                     demurrageDays0 = Number(pCfg0.demurrage_days);
-                } else if (qVal0 > 0) {
+                } else {
                     demurrageDays0 = PortDemurrageRatesService.resolveDemurrageDays(
                         originPort0,
                         selectedVessel || vesselParams?.vessel_id || '',
                         demurrageMode,
                         validFrom
                     );
-                } else {
-                    demurrageDays0 = 0.0;
                 }
                 totalDemurrageDays += demurrageDays0;
             }
@@ -279,21 +277,19 @@ export class MulticotizadorCalculationEngine {
             const opDays = (pCfg.action !== 'NONE' && pCfg.action !== 'BUNKERING') ? ((qVal / rVal) / rateFactor) : 0;
             const calcPortDays = idleDays + opDays;
 
-            // Demurrage en tramos 1..N (Solo en CARGAR o DESCARGAR con volumen qVal > 0 o input explícito)
+            // Demurrage en tramos 1..N (Solo en CARGAR o DESCARGAR)
             const isCargoOp = pCfg.action === 'CARGAR' || pCfg.action === 'DESCARGAR';
             let legDemurrageDays = 0;
             if (isCargoOp) {
                 if (pCfg.demurrage_days !== undefined && pCfg.demurrage_days !== '' && pCfg.demurrage_days !== null) {
                     legDemurrageDays = Number(pCfg.demurrage_days);
-                } else if (qVal > 0) {
+                } else {
                     legDemurrageDays = PortDemurrageRatesService.resolveDemurrageDays(
                         destPortId,
                         selectedVessel || vesselParams?.vessel_id || '',
                         demurrageMode,
                         validFrom
                     );
-                } else {
-                    legDemurrageDays = 0.0;
                 }
             }
             totalDemurrageDays += legDemurrageDays;

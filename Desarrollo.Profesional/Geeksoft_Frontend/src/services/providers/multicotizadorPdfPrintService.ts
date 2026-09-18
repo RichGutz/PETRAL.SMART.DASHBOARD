@@ -161,9 +161,9 @@ export class MulticotizadorPdfPrintService {
                 <td class="text-right">${pCfg0.action !== 'NONE' ? (pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : 6) : '-'}</td>
                 <td class="text-right">${pCfg0.action !== 'NONE' ? (pCfg0.positioning || (pCfg0.action === 'CARGAR' ? 1.0 : 0.0)) : '-'}</td>
                 <td class="text-center font-extrabold ${pCfg0.action === 'CARGAR' ? 'text-blue-700' : pCfg0.action === 'DESCARGAR' ? 'text-emerald-700' : 'text-slate-500'}">${pCfg0.action || 'NONE'}</td>
-                <td class="text-center text-slate-400">-</td>
-                <td class="text-right text-slate-400">-</td>
-                <td class="text-right text-slate-400">-</td>
+                <td class="text-center">${pCfg0.action !== 'NONE' && pCfg0.op_rate ? `${pCfg0.op_rate} ${pCfg0.rate_unit === 'TD' ? 'T/D' : 'T/H'}` : '-'}</td>
+                <td class="text-right font-semibold">${q0 > 0 ? this.fmtNum(q0, 0) : '-'}</td>
+                <td class="text-right font-semibold">${f0 > 0 ? this.fmtNum(f0, 2) : '-'}</td>
                 <td class="text-right text-slate-700">${mCost0 > 0 ? this.fmtCur(mCost0) : '$0'}</td>
                 <td class="text-right text-slate-700">${flete0 > 0 ? this.fmtCur(flete0) : '$0'}</td>
                 <td class="text-right font-bold text-amber-900">${calc.bunkerCost0 > 0 ? this.fmtCur(calc.bunkerCost0) : '$0'}</td>

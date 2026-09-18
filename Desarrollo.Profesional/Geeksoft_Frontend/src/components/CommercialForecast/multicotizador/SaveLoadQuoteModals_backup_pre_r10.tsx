@@ -15,7 +15,6 @@ export interface SaveLoadQuoteModalsProps {
     isSaving: boolean;
     isLoadingRoutes: boolean;
     savedRoutes: any[];
-    puertosConfig?: any[];
     setShowSaveModal: (val: boolean) => void;
     setShowLoadModal: (val: boolean) => void;
     setRouteSuffix: (val: string) => void;
@@ -44,7 +43,6 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     isSaving,
     isLoadingRoutes,
     savedRoutes,
-    puertosConfig = [],
     setShowSaveModal,
     setShowLoadModal,
     setRouteSuffix,
@@ -104,23 +102,6 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
             setSaveMode('NEW');
         }
     };
-
-    // Validación de Balance de Ácido (Delta Stock = ∑Q_carga - ∑Q_descarga)
-    const cargoSummary = React.useMemo(() => {
-        let totalLoaded = 0;
-        let totalDischarged = 0;
-        if (puertosConfig && Array.isArray(puertosConfig)) {
-            puertosConfig.forEach(p => {
-                const q = Number(p.quantity) || 0;
-                if (p.action === 'CARGAR') totalLoaded += q;
-                else if (p.action === 'DESCARGAR') totalDischarged += q;
-            });
-        }
-        const delta = totalLoaded - totalDischarged;
-        const isBalanced = delta === 0 && totalLoaded > 0;
-        const isZeroVoyage = totalLoaded === 0 && totalDischarged === 0;
-        return { totalLoaded, totalDischarged, delta, isBalanced, isZeroVoyage };
-    }, [puertosConfig]);
 
     const isLoadedRoute = Boolean(loadedRouteName && loadedRouteName.trim() !== '');
     const isSameClient = targetClient === selectedClient;
@@ -335,39 +316,6 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                 </div>
                             </div>
                         )}
-
-                        {/* BLOQUE 4: VALIDACIÓN DE BALANCE DE ÁCIDO (DELTA STOCK) */}
-                        <div className="pt-0.5">
-                            {cargoSummary.isBalanced ? (
-                                <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-2 text-xs text-emerald-900 flex items-center justify-between font-sans">
-                                    <span className="font-bold flex items-center gap-1 text-emerald-800">
-                                        ⚖️ Balance de Ácido Cuadrado
-                                    </span>
-                                    <span className="font-mono text-[11px] font-bold text-emerald-950">
-                                        {cargoSummary.totalLoaded.toLocaleString()} MT cargadas = {cargoSummary.totalDischarged.toLocaleString()} MT descargadas (Δ: 0 MT)
-                                    </span>
-                                </div>
-                            ) : cargoSummary.isZeroVoyage ? (
-                                <div className="bg-slate-50 border border-slate-250 rounded-lg p-2 text-xs text-slate-700 flex items-center gap-1.5 font-sans">
-                                    <span>ℹ️</span>
-                                    <span className="text-[11px] font-medium">Viaje cotizado en lastre / sin carga comercial (0 MT transportadas).</span>
-                                </div>
-                            ) : (
-                                <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 text-xs text-amber-950 flex flex-col gap-0.5 font-sans">
-                                    <div className="font-bold flex items-center gap-1 text-amber-900 text-[11.5px]">
-                                        <span>⚠️ Advertencia de Balance de Ácido (Δ Stock ≠ 0):</span>
-                                    </div>
-                                    <div className="text-[11px] font-mono text-amber-900 font-semibold">
-                                        Cargando: <strong>{cargoSummary.totalLoaded.toLocaleString()} MT</strong> | Descargando: <strong>{cargoSummary.totalDischarged.toLocaleString()} MT</strong>
-                                    </div>
-                                    <div className="text-[10.5px] text-amber-800 font-medium">
-                                        {cargoSummary.delta > 0 
-                                            ? `⚠️ El buque retornaría con ${cargoSummary.delta.toLocaleString()} MT de ácido remanente a bordo sin descargar.`
-                                            : `⚠️ Se están descargando ${Math.abs(cargoSummary.delta).toLocaleString()} MT más de lo embarcado a bordo.`}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
 
                         {/* BOTONES DE ACCIÓN */}
                         <div className="flex justify-end gap-2 text-xs font-sans border-t border-slate-200 pt-2.5">

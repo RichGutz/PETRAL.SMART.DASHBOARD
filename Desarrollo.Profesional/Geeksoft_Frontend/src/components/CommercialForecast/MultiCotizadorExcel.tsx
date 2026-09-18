@@ -1546,6 +1546,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 isSaving={isSaving}
                 isLoadingRoutes={false}
                 savedRoutes={savedRoutes}
+                puertosConfig={puertosConfig}
                 setShowSaveModal={setShowSaveModal}
                 setShowLoadModal={setShowLoadModal}
                 setRouteSuffix={setRouteSuffix}
