@@ -6,3 +6,5 @@ pydantic
 searoute
 python-multipart
 weasyprint
+psycopg2-binary
+
