@@ -28,3 +28,9 @@ Thumbs.db
 audio_transcrip/
 *.xlsx
 *.xlsx.tmp
+
+# Backups, Scratch & Mudanza Docs (Protección de Secretos)
+Desarrollo.Profesional/Backups/
+Desarrollo.Profesional/Obsidian.Mudanza.Contabo/
+scratch/
+

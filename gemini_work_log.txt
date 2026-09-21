@@ -1,5 +1,17 @@
 ================================================================================
-GEMINI WORK LOG: 2026-09-11 (Homologación Ceros Numéricos en Excel Petral y Navitrans)
+GEMINI WORK LOG: 2026-09-18 (Caso R10 - CONCON TRADER, Distancias Pisco, Demurrage Guard, Balance Ácido & Fidelidad PDF)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Device Vault Security: Auto-aprobación blindada para usuarios ADMIN y Master Creator (rgutil@gmail.com) ante cambios de huella de hardware en backend (device_vault_service.py).
+- Caso Forense R10: Diagnóstico pericial exhaustivo del Voyage Calculator ante Buques Inusuales / Clientes Prospectos (CONCON TRADER con CARGILL en ruta Pisco - Ilo - Pisco).
+- Distancias Náuticas: Integración de los 66 pares oficiales de la tabla PostgreSQL distances en routeDistancesService.ts (PISCO PLUSPETROL <-> ILO: 409 NM, CALLAO: 131 NM, etc.).
+- Demurrage Guard: MulticotizadorCalculationEngine.ts blindado para no disparar demoras históricas automáticas si el volumen de carga es 0 MT (qVal == 0).
+- Validación de Balance de Ácido (Delta Stock = 0): Implementado en SaveLoadQuoteModals.tsx con advertencia visual ante desbalance entre carga y descarga antes de guardar la cotización.
+- Fidelidad Impresión PDF: multicotizadorPdfPrintService.ts corregido para renderizar dinámicamente Ritmo, Cantidad Q y Tarifa F en Fila 0 (Carga), eliminando guiones estáticos ("-").
+- Super Loop QC Masivo: 334/334 escenarios sintéticos ensayados con 100.00% de convergencia matemática y balance.
+- Frontend Build: npx vite build (SUCCESS, 0 ERRORS, 25.05s, 1110 módulos).
+- Documentación Obsidian: 47_El.Caso.Pisco.Barco.Fantasma.CONCON.md y 41_Mejoras_USER_3.9.26.BEST.QC.EVER.md actualizados.
+- VPS Deployment Status: LIVE & PUBLICADO EN VIVO en https://forecast.geeksoft.tech (Hostinger VPS 91.108.125.253 | Nginx + Certbot SSL | HTTP 200 OK verificado).
 ================================================================================
 CONCURRENCY & QC SUMMARY:
 - Requerimiento: Ceros numéricos reales (0) en exportación Excel para permitir fórmulas diferenciales entre Matriz Petral y Matriz Navitrans.
