@@ -6,9 +6,10 @@ Logo URL Pública: https://forecast.geeksoft.tech/LOGO.DELFOS.NUEVO.BLANCO.3.hor
 """
 
 def generate_2fa_email_html(user_name: str, otp_code: str, valid_minutes: int = 5) -> str:
-    # Formatear el código OTP con espacios para legibilidad (ej: "5  7  5  0  7  5")
     formatted_code = "  ".join(list(str(otp_code)))
-    logo_url = "https://forecast.geeksoft.tech/LOGO.PETRAL.ONE.HORIZONTAL.png"
+    # URL Pública del Logo Oficial PETRAL ONE
+    logo_url = "https://petral-one.geeksoft.tech/LOGO.PETRAL.ONE.jpg"
+
     
     html = f"""<!DOCTYPE html>
 <html lang="es">
