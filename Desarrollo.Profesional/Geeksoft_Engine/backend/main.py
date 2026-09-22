@@ -5,17 +5,9 @@ from backend.api.routers import voyage, forecast, auth, utils
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: warm up master data cache
-    try:
-        print("[Startup] Pre-cargando tablas maestras en caché...")
-        from backend.database import get_supabase
-        from backend.services.forecast_service import get_cached_masters
-        supabase = get_supabase()
-        get_cached_masters(supabase)
-        print("[Startup] Caché de tablas maestras listo.")
-    except Exception as e:
-        print(f"[Startup] Advertencia: No se pudo calentar caché: {e}")
+    # Startup no bloqueante
     yield
+
     # Shutdown: nothing to clean up
 
 app = FastAPI(title="Geeksoft P&L Engine", lifespan=lifespan)
