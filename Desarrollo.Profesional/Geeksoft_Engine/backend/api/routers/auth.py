@@ -159,11 +159,11 @@ def login_step_one(payload: LoginRequest):
         temp_token = str(uuid.uuid4())
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
-        # 4. Guardar en tabla user_2fa_tokens
+        # 4. Guardar en tabla user_2fa_tokens con attempts=0 e is_used=FALSE explícitos
         cur.execute(
             """
-            INSERT INTO user_2fa_tokens (user_id, temp_token, otp_code, expires_at)
-            VALUES (%s, %s, %s, %s);
+            INSERT INTO user_2fa_tokens (user_id, temp_token, otp_code, attempts, is_used, expires_at)
+            VALUES (%s, %s, %s, 0, FALSE, %s);
             """,
             (user_id, temp_token, otp_code, expires_at)
         )
@@ -218,39 +218,56 @@ def verify_two_factor(payload: Verify2FARequest):
         token_id, user_id, expected_otp, attempts, is_used, expires_at, email, full_name, role = row
 
         # Validar si ya fue usado
-        if is_used:
+        is_used_bool = str(is_used).lower() in ("true", "1", "t") if is_used is not None else False
+        if is_used_bool:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Este código de verificación ya fue utilizado. Solicite uno nuevo."
             )
 
         # Validar intentos máximos (3)
-        if attempts >= 3:
+        attempts_count = int(attempts or 0)
+        if attempts_count >= 3:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Ha superado el límite de intentos permitidos (3). Por favor reinicie su inicio de sesión."
             )
 
-        # Validar expiración (5 min)
+        # Validar expiración (5 min) de forma robusta para str o datetime
         now_utc = datetime.now(timezone.utc)
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if isinstance(expires_at, str):
+            try:
+                clean_exp = expires_at.replace("Z", "+00:00")
+                expires_at_dt = datetime.fromisoformat(clean_exp)
+            except Exception:
+                try:
+                    expires_at_dt = datetime.strptime(expires_at[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+                except Exception:
+                    expires_at_dt = now_utc + timedelta(minutes=5)
+        elif isinstance(expires_at, datetime):
+            expires_at_dt = expires_at
+        else:
+            expires_at_dt = now_utc + timedelta(minutes=5)
 
-        if now_utc > expires_at:
+        if expires_at_dt.tzinfo is None:
+            expires_at_dt = expires_at_dt.replace(tzinfo=timezone.utc)
+
+        if now_utc > expires_at_dt:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El código de verificación ha expirado (5 minutos de validez). Solicite un nuevo código."
             )
 
         # Validar código OTP
-        if payload.otp_code.strip() != expected_otp:
+        if str(payload.otp_code).strip() != str(expected_otp).strip():
             # Incrementar intentos
+            new_attempts = attempts_count + 1
             cur.execute(
-                "UPDATE user_2fa_tokens SET attempts = attempts + 1 WHERE id = %s;",
-                (token_id,)
+                "UPDATE user_2fa_tokens SET attempts = %s WHERE id = %s;",
+                (new_attempts, token_id)
             )
             conn.commit()
-            remaining = 3 - (attempts + 1)
+            remaining = max(0, 3 - new_attempts)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Código de verificación incorrecto. Le quedan {remaining} intento(s)."
@@ -262,6 +279,7 @@ def verify_two_factor(payload: Verify2FARequest):
             (token_id,)
         )
         conn.commit()
+
 
         # Cargar permisos
         permissions = {}
