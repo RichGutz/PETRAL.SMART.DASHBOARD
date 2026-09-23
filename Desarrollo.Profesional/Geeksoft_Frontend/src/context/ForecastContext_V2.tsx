@@ -625,7 +625,18 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             setStartDate(newStartDate);
             setEndDate(newEndDate);
             
-            const loadedLines = loadedData.projection_lines || [];
+            let loadedLines = loadedData.projection_lines || [];
+            if (typeof loadedLines === 'string') {
+                try {
+                    loadedLines = JSON.parse(loadedLines);
+                } catch {
+                    loadedLines = [];
+                }
+            }
+            if (!Array.isArray(loadedLines)) {
+                loadedLines = [];
+            }
+
             if (loadedLines.length > 0) {
                 const firstLine = loadedLines[0];
                 if (firstLine.metadata_demurrage_pct !== undefined) setDemurragePct(firstLine.metadata_demurrage_pct);

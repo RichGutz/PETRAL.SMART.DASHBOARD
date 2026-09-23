@@ -98,18 +98,26 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
             setQuotesList(quotes || []);
             
-            const enriched = await Promise.all((list || []).map(async (item: any) => {
+            const safeList = Array.isArray(list) ? list : [];
+            const enriched = await Promise.all(safeList.map(async (item: any) => {
                 try {
                     const full = await ForecastService.loadForecast(item.id);
                     const sc = full || item;
-                    if (sc && sc.projection_lines && sc.projection_lines.length > 0 && !sc.aggregated_data) {
+                    let pLines = sc.projection_lines;
+                    if (typeof pLines === 'string') {
+                        try { pLines = JSON.parse(pLines); } catch { pLines = []; }
+                    }
+                    if (!Array.isArray(pLines)) pLines = [];
+                    sc.projection_lines = pLines;
+
+                    if (sc && pLines && pLines.length > 0 && !sc.aggregated_data) {
                         try {
                             const sDate = sc.start_date && sc.start_date.length === 7 ? `${sc.start_date}-01` : (sc.start_date || '2027-01-01');
                             const eDate = sc.end_date && sc.end_date.length === 7 ? `${sc.end_date}-28` : (sc.end_date || '2027-12-31');
                             const sim = await ForecastService.runSimulation({
                                 start_date: sDate,
                                 end_date: eDate,
-                                projection_lines: sc.projection_lines,
+                                projection_lines: pLines,
                                 port_cost_mode: 'DETAILED'
                             });
                             if (sim && sim.aggregated_data) {
@@ -158,7 +166,12 @@ export const FinancialProjectionsMaster: React.FC = () => {
     // Procesar y calcular métricas respetando el modelo 1:1 de FORMATO.MEC.BUDGETS.2026.xlsx
     const processedScenarios = useMemo<ScenarioCardItem[]>(() => {
         return (rawForecasts || []).map((f: any) => {
-            const lines: any[] = f.projection_lines || [];
+            let lines: any[] = f.projection_lines || [];
+            if (typeof lines === 'string') {
+                try { lines = JSON.parse(lines); } catch { lines = []; }
+            }
+            if (!Array.isArray(lines)) lines = [];
+
             const startDate = f.start_date || '2026-01-01';
             const endDate = f.end_date || '2026-12-31';
             const name = f.name || 'Escenario sin nombre';
@@ -178,9 +191,14 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 'GUAYAQUIL', 'ESMERALDAS', 'MANTA', 'BUENAVENTURA', 'LAZARO CARDENAS'
             ];
 
-            if (f.aggregated_data && Object.keys(f.aggregated_data).length > 0) {
+            let aggData = f.aggregated_data;
+            if (typeof aggData === 'string') {
+                try { aggData = JSON.parse(aggData); } catch { aggData = null; }
+            }
+
+            if (aggData && typeof aggData === 'object' && Object.keys(aggData).length > 0) {
                 // PARSEO 1:1 DIRECTO DESDE LA SIMULACIÓN OFICIAL DE LA MATRIZ FINANCIERA
-                for (const [client, routesDict] of Object.entries(f.aggregated_data as Record<string, any>)) {
+                for (const [client, routesDict] of Object.entries(aggData as Record<string, any>)) {
                     for (const [rName, vesselsDict] of Object.entries(routesDict as Record<string, any>)) {
                         for (const [vName, monthsDict] of Object.entries(vesselsDict as Record<string, any>)) {
                             const cleanVessel = vName.replace('_', ' ').toUpperCase();

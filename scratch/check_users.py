@@ -1,34 +1,36 @@
-import psycopg2
+import paramiko
+import sys
 
-conn_str = "postgresql://postgres.hjjxooxcpvlvbaxgifbn:VivaLaVida2026$@aws-1-us-east-2.pooler.supabase.com:6543/postgres"
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-try:
-    conn = psycopg2.connect(conn_str)
-    cur = conn.cursor()
+VPS_HOST = "169.58.168.107"
+VPS_PORT = 22
+VPS_USER = "root"
+VPS_PASS = "VivaLaVida2026$"
 
-    # List all tables in public schema
-    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
-    tables = cur.fetchall()
-    print("Tablas en public schema:", [t[0] for t in tables])
+def main():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        client.connect(hostname=VPS_HOST, port=VPS_PORT, username=VPS_USER, password=VPS_PASS, timeout=15)
+        
+        cmds = [
+            ("Tokens 2FA generados", "docker exec petral-backend python -c \"from backend.database import get_db_connection; conn=get_db_connection(); cur=conn.cursor(); cur.execute('SELECT email, otp_code, expires_at, is_used FROM user_2fa_tokens ORDER BY created_at DESC LIMIT 5'); [print(r) for r in cur.fetchall()]; cur.close(); conn.close()\""),
+            ("Logs de petral-backend", "docker logs --tail 30 petral-backend")
+        ]
+        
+        for title, cmd in cmds:
+            print("=" * 60)
+            print(f" 📊 {title}")
+            print("=" * 60)
+            stdin, stdout, stderr = client.exec_command(cmd, timeout=30)
+            print(stdout.read().decode('utf-8', errors='replace').strip())
+            print()
+            
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        client.close()
 
-    # Check users table if exists
-    user_tables = [t[0] for t in tables if 'user' in t[0] or 'auth' in t[0] or 'role' in t[0]]
-    print("\nTablas relacionadas con usuarios:", user_tables)
-
-    for table in user_tables:
-        try:
-            cur.execute(f"SELECT * FROM public.{table} LIMIT 10;")
-            rows = cur.fetchall()
-            cur.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table}';")
-            cols = [c[0] for c in cur.fetchall()]
-            print(f"\n--- Contenido de {table} (columnas: {cols}) ---")
-            for r in rows:
-                print(r)
-        except Exception as e:
-            print(f"Error al leer {table}: {e}")
-
-    cur.close()
-    conn.close()
-
-except Exception as ex:
-    print("Error conectando a BD:", ex)
+if __name__ == "__main__":
+    main()

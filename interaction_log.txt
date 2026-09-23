@@ -1,4 +1,58 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-09-22 (Habilitación de Dominio petral-one.kaizencapital.pe y Blindaje de IP Directa en Contabo)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Diagnóstico de Infraestructura y Enrutamiento:
+   - Registro A: petral-one.kaizencapital.pe -> 169.58.168.107 (Propagación mundial inmediata).
+   - Verificación de Convivencia: Contenedores InAndes, APEFAC y PETRAL verificados sin conflictos de puertos ni nombres.
+
+2. Blindaje de Enrutamiento en Traefik Proxy Inverso:
+   - Configuración de /data/coolify/proxy/dynamic/petral_one.yaml con IP fija directa de contenedor:
+     • Backend LoadBalancer URL: http://10.0.1.15:80 (Evita pérdidas de resolución interna en Docker).
+     • Routers independientes por dominio (evita colapso de SAN con dominios no propagados).
+     • Middleware de Redirección Forzada: force-https-petral (HTTP 80 -> HTTPS 443 automático).
+     • Certificado SSL TLS emitido y validado 100% por Let's Encrypt CA bundle.
+
+3. Verificación Funcional E2E en Vivo:
+   - Frontend HTTPS: https://petral-one.kaizencapital.pe -> HTTP 200 OK (Certificado Seguro Let's Encrypt).
+   - Backend API: https://petral-one.kaizencapital.pe/api/v1/forecast/list -> HTTP 200 OK.
+   - Backend API: https://petral-one.kaizencapital.pe/api/v1/forecast/benchmarks -> HTTP 200 OK.
+   - Estado: 100% OPERATIVO, SEGURO Y EN VIVO.
+
+4. Documentación y Memoria Técnica en Obsidian:
+   - Archivo creado: Desarrollo.Profesional/Obsidian.Mudanza.Contabo/24. Separacion Containers PETRAL ONE en Contabo.md
+   - Contenido: Diagrama de arquitectura, matriz de puertos multi-tenant, configuración Nginx/Traefik, comandos de diagnóstico y blindaje de IP fija.
+================================================================================
+================================================================================
+REGISTRO DE SESIÓN: 2026-09-22 (Activación de Dominio Producción Contabo petral-one.bolt-usa.shop y Expediente Hostinger)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Diagnóstico de Incidencia en Dominio geeksoft.tech:
+   - Verificación ICANN/RDAP: El dominio geeksoft.tech fue suspendido por Hostinger ('client hold') debido a un falso positivo de seguridad en su servidor legacy KVM 1.
+   - Verificación de VPS Contabo (169.58.168.107): Servidor 100% activo y operativo.
+
+2. Habilitación de Dominio Alternativo:
+   - Registro A: petral-one.bolt-usa.shop -> 169.58.168.107 (TTL 14400s).
+   - Propagación DNS verificada a nivel mundial.
+
+3. Configuración de Proxy Inverso Traefik y Certificado SSL:
+   - Archivo /data/coolify/proxy/dynamic/petral_one.yaml configurado con router independiente.
+   - Certificado Let's Encrypt TLS emitido e instalado automáticamente.
+
+4. Verificación Funcional E2E:
+   - Frontend: https://petral-one.bolt-usa.shop -> HTTP 200 OK.
+   - Backend API: POST https://petral-one.bolt-usa.shop/api/v1/auth/login -> HTTP 200 OK con emisión de 2FA y conexión a PostgreSQL (verificado con usuario izavala@petral.com.pe y rgutil@gmail.com).
+   - Estado: LIVE Y OPERATIVO EN VIVO.
+
+5. Expediente Legal y KYC de Descargo ante Hostinger Compliance:
+   - Directorio creado: Desarrollo.Profesional/Expediente.Hostinger.Compliance/
+   - Documentación consolidada: DNI, Recibo de Servicios Sep 2026, Ficha RUC SUNAT (ZEN HOLDINGS S.A.C.), Vigencia de Poderes, Testimonio de Constitución y Statement of Purpose en inglés.
+   - Expediente enviado y escalado a revisión de especialista humano en Hostinger.
+   - Cierre de sesión satisfactorio.
+================================================================================
+================================================================================
 REGISTRO DE SESIÓN: 2026-09-11 (Homologación Ceros Numéricos en Excel Petral y Navitrans)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
@@ -644,3 +698,12 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Favicon oficial exclusivo con el isotipo 'P' (sin texto) y cache-busting v3.
 - Aprobación de dispositivo en Device Vault de base de datos de producción.
 - Tags de versión generados (v2.1 a v2.9) y despliegues automáticos SFTP/SSH a VPS (https://forecast.geeksoft.tech).
+
+======================================================================
+SESIÓN CERRADA: 2026-09-21 21:35:21
+- Diagnóstico y solución de carga de escenarios en Matriz Financiera (PB 2027 y 2028 +10% DEM 22/26K).
+- Causa raíz: projection_lines con comillas simples (literales Python) en PostgreSQL causaban fallo silencioso en json.loads().
+- Fix aplicado: Implementado fallback con ast.literal_eval en backend database.py y forecast.py, desplegado a Contabo (petral-one.geeksoft.tech).
+- Verificación: Ambos escenarios cargan sus 72 líneas completas y agregaciones con HTTP 200 OK.
+- Redacción y preparación de correo formal de Puesta en Producción y mantenimiento recurrente (USD 500) para Naviera Petral.
+======================================================================

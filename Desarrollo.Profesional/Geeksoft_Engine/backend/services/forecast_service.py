@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 # --- MEMORY CACHE FOR MASTER DATA ---
 _masters_cache = {}
 _cache_time = 0.0
-CACHE_TTL = 5.0  # 5 segundos TTL para forzar lectura fresca de Supabase
+CACHE_TTL = 300.0  # 5 minutos TTL con invalidación explícita en mutaciones
 
 def clear_forecast_cache():
     global _masters_cache, _cache_time

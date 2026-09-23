@@ -22,6 +22,32 @@ def get_db_connection():
         
     return psycopg2.connect(db_uri)
 
+import json
+import ast
+
+def _clean_value(val):
+    if isinstance(val, str):
+        s = val.strip()
+        if (s.startswith('{') and s.endswith('}')) or (s.startswith('[') and s.endswith(']')):
+            try:
+                return json.loads(s)
+            except Exception:
+                try:
+                    return ast.literal_eval(s)
+                except Exception:
+                    return val
+    return val
+
+def _clean_row(row_dict):
+    if not isinstance(row_dict, dict):
+        return row_dict
+    return {k: _clean_value(v) for k, v in row_dict.items()}
+
+def _prepare_param(val):
+    if isinstance(val, (dict, list)):
+        return json.dumps(val)
+    return val
+
 class SupabaseResponse:
     def __init__(self, data):
         self.data = data
@@ -109,7 +135,7 @@ class TableQuery:
                         query += f" LIMIT {self._limit}"
                     cur.execute(query, params)
                     rows = cur.fetchall()
-                    return SupabaseResponse([dict(r) for r in rows])
+                    return SupabaseResponse([_clean_row(dict(r)) for r in rows])
 
                 elif self._action == "INSERT":
                     results = []
@@ -117,19 +143,19 @@ class TableQuery:
                         cols = list(row.keys())
                         cols_str = ', '.join([f'"{c}"' for c in cols])
                         placeholders = ', '.join(['%s'] * len(cols))
-                        vals = [row[c] for c in cols]
+                        vals = [_prepare_param(row[c]) for c in cols]
                         query = f'INSERT INTO "{self.table_name}" ({cols_str}) VALUES ({placeholders}) RETURNING *;'
                         cur.execute(query, vals)
                         res = cur.fetchone()
                         if res:
-                            results.append(dict(res))
+                            results.append(_clean_row(dict(res)))
                     conn.commit()
                     return SupabaseResponse(results)
 
                 elif self._action == "UPDATE":
                     cols = list(self._update_data.keys())
                     set_clauses = [f'"{c}" = %s' for c in cols]
-                    params = [self._update_data[c] for c in cols]
+                    params = [_prepare_param(self._update_data[c]) for c in cols]
                     query = f'UPDATE "{self.table_name}" SET ' + ', '.join(set_clauses)
                     if self._filters:
                         where_clauses = []
@@ -141,7 +167,7 @@ class TableQuery:
                     cur.execute(query, params)
                     rows = cur.fetchall()
                     conn.commit()
-                    return SupabaseResponse([dict(r) for r in rows])
+                    return SupabaseResponse([_clean_row(dict(r)) for r in rows])
 
                 elif self._action == "DELETE":
                     query = f'DELETE FROM "{self.table_name}"'
@@ -156,7 +182,7 @@ class TableQuery:
                     cur.execute(query, params)
                     rows = cur.fetchall()
                     conn.commit()
-                    return SupabaseResponse([dict(r) for r in rows])
+                    return SupabaseResponse([_clean_row(dict(r)) for r in rows])
         finally:
             conn.close()
 

@@ -908,6 +908,23 @@ A partir de la auditoría pericial de Benoit Blanc (10.09.2026), se investigó l
   * `MEJILLONES` (Descarga): **`2.04 d`** (49.0 h) sobre 60 recaladas.
   * `BARQUITO` / `OTROS`: **`0.00 d`** (Sin historial de demoras contractuales).
 
+### ───────────────
+
+### 🕵️‍♂️ 5.39. Trigésima Novena Vuelta (Serie 58: Optimización Pericial de Carga y Rendimiento - Exterminio del Payload Base64 de Buques y Desacople Asíncrono de Clientes)
+
+A partir del reporte de lentitud general en recargas tras el despliegue de contenedores (23.09.2026), se llevó a cabo una auditoría forense milisegundo a milisegundo identificando y erradicando 3 cuellos de botella críticos:
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **58.1** | **`FastAPI Backend (`/api/v1/forecast/vessels`)`** | Payload monstruoso de **1,667,206 bytes (1.67 MB)** por inclusión de cadenas Base64 gigantes en `image_url` (838k chars en CONCON TRADER, 755k en HUEMUL). Latencia de red de hasta **95.89s**. | **Sanitización de Payload:** `get_vessels(include_images=False)` filtra y remueve los strings Base64 pesados por defecto. El payload se redujo a **3,807 bytes** (reducción del **99.8%**). | **El Elefante Blanco de Base64:** La transferencia no comprimida de megabytes de texto binario saturaba los sockets HTTP en cada petición. | ✅ RESUELTO |
+| **58.2** | **`forecast_service.py` (`CACHE_TTL = 5.0`)** | TTL efímero de **5.0 segundos**. En cada clic o recarga la caché expiraba, disparando 11 consultas masivas en paralelo a PostgreSQL y saturando los workers de FastAPI. | **Ampliación de TTL a 300s (5 min):** `CACHE_TTL = 300.0` con política estricta de invalidación inmediata `clear_forecast_cache()` al guardar o mutar maestros. | **Tormenta de Re-consultas DB:** Múltiples peticiones simultáneas del frontend competían lanzando 22 queries a la BD. | ✅ RESUELTO |
+| **58.3** | **`MultiCotizadorExcel.tsx` (Paso 1: Selector de Clientes)** | `Promise.all` monolítico bloqueaba el renderizado de la UI entera hasta que terminara de bajar el endpoint más pesado (`vessels`). El Paso 1 de Clientes quedaba congelado. | **Carga Progresiva Asíncrona:** Desacople total de `Promise.all`. Clientes (`getClients()`) y Puertos (`getPorts()`) se resuelven y pintan de inmediato en **< 100ms** sin esperar al resto de catálogos. | **Bloqueo Monolítico en UI:** `Promise.all` forzaba a la interfaz a esperar la promesa más lenta antes de habilitar el selector de clientes. | ✅ RESUELTO |
+
+#### 📊 Resultados Cuantitativos Certificados Post-Optimización:
+* **Endpoint `/api/v1/forecast/vessels`:** Pasó de **1.67 MB (95.89 s)** ➔ **3.8 KB (1.02 s)**.
+* **Dropdown de Clientes (Paso 1):** Carga y visualización instantánea en **0.64 s**.
+* **Rama de Trabajo:** `BENOIT.OPTIMIZACION.PERF.CACHE.XXIX` (Desplegado en producción Contabo `169.58.168.107`).
+
 ---
 
 ## 📄 Archivos Relacionados

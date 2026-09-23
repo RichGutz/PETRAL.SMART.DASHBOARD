@@ -1,4 +1,50 @@
 ================================================================================
+GEMINI WORK LOG: 2026-09-23 (Optimización Pericial Rendimiento, Reducción 99.8% Payload Buques y Desacople Asíncrono)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Safe Branch: Creada rama aislada `BENOIT.OPTIMIZACION.PERF.CACHE.XXIX`.
+- Diagnóstico Pericial de Latencia (Benoit Blanc):
+  • Endpoint `/api/v1/forecast/vessels` pesaba 1.67 MB debido a strings Base64 gigantes en `image_url` (838k chars CONCON TRADER, 755k HUEMUL).
+  • `CACHE_TTL = 5.0s` provocaba tormenta de 11 queries a Postgres en cada recarga.
+  • `Promise.all` bloqueaba el selector de Clientes del Paso 1 en Multicotizador.
+- Corrección & Arquitectura:
+  • Backend `forecast.py`: `get_vessels(include_images=False)` filtra Base64 por defecto. Payload reducido de 1.67 MB a 3.8 KB (99.8% de ahorro).
+  • Backend `forecast_service.py`: `CACHE_TTL` ampliado a 300.0s (5 min) con invalidación inmediata `clear_forecast_cache()` en mutaciones.
+  • Frontend `MultiCotizadorExcel.tsx`: Carga progresiva desacoplada. Clientes y Puertos se pintan en < 100ms.
+- Verificación en Terminal & VPS Contabo (169.58.168.107):
+  • `npx vite build`: Exitoso (0 errores).
+  • Deploy y sincronización en vivo a contenedores `petral-frontend` y `petral-backend`.
+  • Mediciones en vivo post-deploy: `/vessels` pasó de 95.89s a 1.02s. Clientes y Puertos en 0.64s.
+- Documentación Obsidian: Vuelta 39 (Serie 58) registrada en `07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
+================================================================================
+================================================================================
+GEMINI WORK LOG: 2026-09-22 (Habilitación petral-one.kaizencapital.pe y Blindaje de IP Directa Contabo)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Dominio Nuevo: DNS Registro A petral-one.kaizencapital.pe -> 169.58.168.107 verificado y propagado.
+- Arquitectura Multi-Tenant Contabo: Cero colisiones con InAndes ni APEFAC (redes y puertos 8020/8021 aislados).
+- Blindaje de Enrutamiento Traefik: IP fija interna asignada en LoadBalancer (http://10.0.1.15:80), eliminando latencia de resolución de nombres interna en Docker.
+- Separación de Routers & Middleware: Routers independientes por dominio y middleware force-https-petral activo para redirección 301 automática a HTTPS.
+- Verificación E2E en Vivo:
+  • Frontend HTTPS: https://petral-one.kaizencapital.pe -> HTTP 200 OK.
+  • Backend API: /api/v1/forecast/list -> HTTP 200 OK.
+  • Backend API: /api/v1/forecast/benchmarks -> HTTP 200 OK.
+  • Certificado SSL: Let's Encrypt TLS emitido, verificado y validado con éxito (0 advertencias).
+================================================================================
+================================================================================
+GEMINI WORK LOG: 2026-09-22 (Activación de Dominio Producción Contabo petral-one.bolt-usa.shop)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Diagnóstico Forense de Infraestructura: Dominio geeksoft.tech suspendido por Hostinger (client hold / falso positivo en KVM 1).
+- Infraestructura Contabo: Servidor Cloud VPS Plus 6 (169.58.168.107) verificado 100% operativo con Coolify Traefik + Petral Stack (petral-frontend:80, petral-backend:8000).
+- Configuración de Dominio Alternativo: Registro A petral-one.bolt-usa.shop -> 169.58.168.107 configurado y propagado globalmente.
+- Traefik Dynamic Router: /data/coolify/proxy/dynamic/petral_one.yaml configurado con router exclusivo HTTP/HTTPS y Let's Encrypt TLS certResolver.
+- Validación E2E:
+  • HTTPS: https://petral-one.bolt-usa.shop -> HTTP 200 OK (Vite React 19 Frontend activo).
+  • API Backend: POST /api/v1/auth/login -> HTTP 200 OK (Postgres DB conectada, 2FA token emitido exitosamente).
+- Estado de Publicación: LIVE & OPERATIVO EN VIVO en https://petral-one.bolt-usa.shop
+================================================================================
+================================================================================
 GEMINI WORK LOG: 2026-09-18 (Caso R10 - CONCON TRADER, Distancias Pisco, Demurrage Guard, Balance Ácido & Fidelidad PDF)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
@@ -635,3 +681,12 @@ CONCURRENCY & QC SUMMARY:
 - Favicon oficial exclusivo con el isotipo 'P' (sin texto) y cache-busting v3.
 - Aprobación de dispositivo en Device Vault de base de datos de producción.
 - Tags de versión generados (v2.1 a v2.9) y despliegues automáticos SFTP/SSH a VPS (https://forecast.geeksoft.tech).
+
+======================================================================
+SESIÓN CERRADA: 2026-09-21 21:35:21
+- Diagnóstico y solución de carga de escenarios en Matriz Financiera (PB 2027 y 2028 +10% DEM 22/26K).
+- Causa raíz: projection_lines con comillas simples (literales Python) en PostgreSQL causaban fallo silencioso en json.loads().
+- Fix aplicado: Implementado fallback con ast.literal_eval en backend database.py y forecast.py, desplegado a Contabo (petral-one.geeksoft.tech).
+- Verificación: Ambos escenarios cargan sus 72 líneas completas y agregaciones con HTTP 200 OK.
+- Redacción y preparación de correo formal de Puesta en Producción y mantenimiento recurrente (USD 500) para Naviera Petral.
+======================================================================

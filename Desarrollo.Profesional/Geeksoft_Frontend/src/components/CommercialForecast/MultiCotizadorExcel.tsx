@@ -160,60 +160,67 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
     };
 
-    // Carga de Catálogos Iniciales (Mapeo a tablas reales BD)
+    // Carga de Catálogos Iniciales Progresiva (Prioridad Inmediata a Clientes y Puertos)
     useEffect(() => {
-        const init = async () => {
-            try {
-                const [vData, pData, cData, spotData, quoteList, latestBunker, staticCosts] = await Promise.all([
-                    ForecastService.getVessels(),       // tabla: vessels
-                    ForecastService.getPorts(),         // tabla: ports
-                    ForecastService.getClients(),       // tabla: clients
-                    ForecastService.getSpotVoyages(),   // tabla: routes_quotes (unificada)
-                    MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
-                    // SERIE 36: getContractsMaster() eliminado — contracts dado de baja
-                    BunkerProviderService.fetchLatestBunkerPrices(), // tabla: bunker_prices
-                    ForecastService.getPortCostsStatic() // tabla: port_cost_static
-                ]);
-                setVessels(vData || []);
-                setStaticCostsData(staticCosts || []);
-                
-                // Ordenar puertos geográficamente de Norte (arriba) a Sur (abajo) según su latitud
-                const sortedPortsData = [...(pData || [])].sort((a: any, b: any) => {
+        let isMounted = true;
+
+        // 1. Carga Ultrarrápida Prioritaria: Clientes y Puertos (< 100ms)
+        ForecastService.getClients().then(cData => {
+            if (isMounted && cData) setRawClients(cData);
+        }).catch(e => console.error("Error cargando clientes:", e));
+
+        ForecastService.getPorts().then(pData => {
+            if (isMounted && pData) {
+                const sortedPortsData = [...pData].sort((a: any, b: any) => {
                     const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : (a.latitude !== undefined && a.latitude !== null ? parseFloat(a.latitude) : 0);
                     const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : (b.latitude !== undefined && b.latitude !== null ? parseFloat(b.latitude) : 0);
-                    return latB - latA; // Mayor latitud (Norte) a menor latitud (Sur)
+                    return latB - latA;
                 });
                 setPorts(sortedPortsData);
-
-                setRawClients(cData || []);
-                setSavedRoutes(quoteList || []);
-                // SERIE 36: contractsList ya no se carga de BD. Se mantiene [] para compatibilidad con BunkerProviderService.
-                setLatestSpotPrices(latestBunker || { ifo: 0, mdo: 0 });
-
-                // Carga de rutas desde routes_quotes (tabla unificada)
-                if (spotData && Array.isArray(spotData)) {
-                    const allQuoteRoutes = spotData.filter((s: any) => s.table_source === 'routes_quotes' || s.is_quote === true || s.is_contract === true);
-                    setRoutes(allQuoteRoutes);
-                }
-
-                // Detección y Carga Automática de Cotización enviada desde Maestros (sessionStorage)
-                try {
-                    const rawStored = sessionStorage.getItem('petral_load_quote');
-                    if (rawStored) {
-                        sessionStorage.removeItem('petral_load_quote');
-                        const parsedQuote = JSON.parse(rawStored);
-                        setTimeout(() => {
-                            handleLoadRoute(parsedQuote);
-                        }, 150);
-                    }
-                } catch (err) {
-                    console.error("Error al recuperar cotización de sessionStorage:", err);
-                }
-            } catch (e) {
-                console.error("Error cargando catálogos BD:", e);
             }
+        }).catch(e => console.error("Error cargando puertos:", e));
+
+        // 2. Carga Paralela de Buques, Rutas y Precios de Bunker
+        ForecastService.getVessels().then(vData => {
+            if (isMounted && vData) setVessels(vData);
+        }).catch(e => console.error("Error cargando buques:", e));
+
+        ForecastService.getPortCostsStatic().then(staticCosts => {
+            if (isMounted && staticCosts) setStaticCostsData(staticCosts);
+        }).catch(e => console.error("Error cargando costos estaticos:", e));
+
+        BunkerProviderService.fetchLatestBunkerPrices().then(latestBunker => {
+            if (isMounted && latestBunker) setLatestSpotPrices(latestBunker);
+        }).catch(e => console.error("Error cargando precios bunker:", e));
+
+        MulticotizadorRetrieverService.searchSavedQuotes('', true, true, '').then(quoteList => {
+            if (isMounted && quoteList) setSavedRoutes(quoteList);
+        }).catch(e => console.error("Error cargando cotizaciones guardadas:", e));
+
+        ForecastService.getSpotVoyages().then(spotData => {
+            if (isMounted && spotData && Array.isArray(spotData)) {
+                const allQuoteRoutes = spotData.filter((s: any) => s.table_source === 'routes_quotes' || s.is_quote === true || s.is_contract === true);
+                setRoutes(allQuoteRoutes);
+            }
+        }).catch(e => console.error("Error cargando rutas spot:", e));
+
+        // 3. Detección y Carga Automática de Cotización enviada desde Maestros (sessionStorage)
+        try {
+            const rawStored = sessionStorage.getItem('petral_load_quote');
+            if (rawStored) {
+                sessionStorage.removeItem('petral_load_quote');
+                const parsedQuote = JSON.parse(rawStored);
+                setTimeout(() => {
+                    if (isMounted) handleLoadRoute(parsedQuote);
+                }, 150);
+            }
+        } catch (err) {
+            console.error("Error al recuperar cotización de sessionStorage:", err);
+        }
+
+        return () => {
+            isMounted = false;
         };
-        init();
     }, []);
 
     // Ejecución Reactiva de Búsqueda de Búnker según Fuente y Parámetros

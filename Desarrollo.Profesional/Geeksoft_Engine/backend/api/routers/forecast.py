@@ -129,6 +129,20 @@ def load_forecast(forecast_id: str):
         
         fc = res.data[0]
         raw_lines = fc.get("projection_lines") or []
+        if isinstance(raw_lines, str):
+            try:
+                import json
+                raw_lines = json.loads(raw_lines)
+            except Exception:
+                try:
+                    import ast
+                    raw_lines = ast.literal_eval(raw_lines)
+                except Exception:
+                    raw_lines = []
+        if not isinstance(raw_lines, list):
+            raw_lines = []
+        fc["projection_lines"] = raw_lines
+
         if raw_lines:
             try:
                 from backend.services.forecast_service import run_forecast_simulation
@@ -136,6 +150,8 @@ def load_forecast(forecast_id: str):
                 
                 clean_lines = []
                 for l in raw_lines:
+                    if not isinstance(l, dict):
+                        continue
                     clean_lines.append(ProjectionLine(
                         month_index=str(l.get("month_index", "2027-01")),
                         client_id=str(l.get("client_id", "SPCC")),
@@ -807,7 +823,7 @@ def delete_spot_route(spot_id: str, is_prospect: bool = False):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/vessels")
-def get_vessels():
+def get_vessels(include_images: bool = False):
     try:
         from backend.database import get_supabase
         from backend.services.forecast_service import get_cached_masters
@@ -815,6 +831,17 @@ def get_vessels():
         masters = get_cached_masters(sb)
         vessels = masters.get("vessels", [])
         vessels_sorted = sorted(vessels, key=lambda x: x.get("display_order") or 999)
+        
+        if not include_images:
+            cleaned_vessels = []
+            for v in vessels_sorted:
+                v_copy = dict(v)
+                img = v_copy.get("image_url")
+                if img and isinstance(img, str) and len(img) > 300:
+                    v_copy["image_url"] = ""
+                cleaned_vessels.append(v_copy)
+            return cleaned_vessels
+            
         return vessels_sorted
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
