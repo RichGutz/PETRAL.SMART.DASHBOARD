@@ -45,35 +45,39 @@ export const DeviceVaultMaster: React.FC = () => {
         loadDevices();
     }, []);
 
-    const handleApproveDevice = async (deviceId: string) => {
-        if (!user?.email) return;
-        setActionLoading(deviceId);
+    const handleApproveDevice = async (deviceId: string, fingerprint?: string) => {
+        const targetId = (deviceId && deviceId !== 'None') ? deviceId : (fingerprint || '');
+        if (!targetId || !user?.email) return;
+        setActionLoading(targetId);
         setError('');
         setSuccess('');
         try {
-            await AuthService.approveDevice(deviceId, user.email);
+            await AuthService.approveDevice(targetId, user.email);
             setSuccess('Dispositivo autorizado con éxito. El usuario ahora puede ingresar con 2FA.');
             await loadDevices();
         } catch (err: any) {
-            setError('Error al autorizar el dispositivo.');
+            const errorMsg = err.response?.data?.detail || err.message || 'Error al autorizar el dispositivo.';
+            setError(`Error al autorizar: ${errorMsg}`);
             console.error(err);
         } finally {
             setActionLoading(null);
         }
     };
 
-    const handleRevokeDevice = async (deviceId: string) => {
-        if (!user?.email) return;
+    const handleRevokeDevice = async (deviceId: string, fingerprint?: string) => {
+        const targetId = (deviceId && deviceId !== 'None') ? deviceId : (fingerprint || '');
+        if (!targetId || !user?.email) return;
         if (!confirm('¿Desea revocar el acceso a este dispositivo? El usuario no podrá ingresar desde este equipo.')) return;
-        setActionLoading(deviceId);
+        setActionLoading(targetId);
         setError('');
         setSuccess('');
         try {
-            await AuthService.revokeDevice(deviceId, user.email);
+            await AuthService.revokeDevice(targetId, user.email);
             setSuccess('Acceso del dispositivo revocado exitosamente.');
             await loadDevices();
         } catch (err: any) {
-            setError('Error al revocar el dispositivo.');
+            const errorMsg = err.response?.data?.detail || err.message || 'Error al revocar el dispositivo.';
+            setError(`Error al revocar: ${errorMsg}`);
             console.error(err);
         } finally {
             setActionLoading(null);
@@ -319,8 +323,8 @@ export const DeviceVaultMaster: React.FC = () => {
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     {dev.status !== 'APPROVED' && (
                                                         <button
-                                                            onClick={() => handleApproveDevice(dev.id)}
-                                                            disabled={actionLoading === dev.id}
+                                                            onClick={() => handleApproveDevice(dev.id, dev.device_fingerprint)}
+                                                            disabled={actionLoading === dev.id || actionLoading === dev.device_fingerprint}
                                                             className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer disabled:opacity-50"
                                                             title="Autorizar este dispositivo"
                                                         >
@@ -330,8 +334,8 @@ export const DeviceVaultMaster: React.FC = () => {
                                                     )}
                                                     {dev.status !== 'REVOKED' && (
                                                         <button
-                                                            onClick={() => handleRevokeDevice(dev.id)}
-                                                            disabled={actionLoading === dev.id}
+                                                            onClick={() => handleRevokeDevice(dev.id, dev.device_fingerprint)}
+                                                            disabled={actionLoading === dev.id || actionLoading === dev.device_fingerprint}
                                                             className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-rose-200 cursor-pointer disabled:opacity-50"
                                                             title="Revocar acceso de este dispositivo"
                                                         >

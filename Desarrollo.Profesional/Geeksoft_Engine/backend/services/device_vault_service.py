@@ -5,6 +5,7 @@ Manejo de estados: PENDING -> APPROVED -> REJECTED -> REVOKED
 """
 
 from typing import Dict, Any, List, Optional
+import uuid
 from datetime import datetime, timezone
 import psycopg2
 from backend.database import get_db_connection
@@ -70,21 +71,22 @@ class DeviceVaultService:
                     initial_approved_by = "ADMIN_AUTO_APPROVE"
                     initial_approved_at = datetime.now(timezone.utc)
 
+                device_uuid = str(uuid.uuid4())
                 cur.execute(
                     """
                     INSERT INTO user_authorized_devices (
-                        user_email, device_fingerprint, device_name, ip_address, status, approved_by, approved_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        id, user_email, device_fingerprint, device_name, ip_address, status, approved_by, approved_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id, status, created_at;
                     """,
-                    (email_clean, device_fingerprint, device_name, ip_address, initial_status, initial_approved_by, initial_approved_at)
+                    (device_uuid, email_clean, device_fingerprint, device_name, ip_address, initial_status, initial_approved_by, initial_approved_at)
                 )
                 new_row = cur.fetchone()
                 device_id, status, created_at = new_row
                 conn.commit()
                 
                 return {
-                    "device_id": str(device_id),
+                    "device_id": str(device_id or device_uuid),
                     "status": status,
                     "is_authorized": (status == "APPROVED"),
                     "device_name": device_name,
@@ -98,7 +100,7 @@ class DeviceVaultService:
     @staticmethod
     def approve_device(device_id: str, admin_email: str) -> Dict[str, Any]:
         """
-        Autoriza un dispositivo para acceso permanente.
+        Autoriza un dispositivo para acceso permanente por id o device_fingerprint.
         """
         conn = get_db_connection()
         cur = conn.cursor()
@@ -107,17 +109,17 @@ class DeviceVaultService:
                 """
                 UPDATE user_authorized_devices
                 SET status = 'APPROVED', approved_by = %s, approved_at = CURRENT_TIMESTAMP
-                WHERE id = %s
+                WHERE id = %s OR device_fingerprint = %s
                 RETURNING id, user_email, device_name, status, approved_at;
                 """,
-                (admin_email, device_id)
+                (admin_email, device_id, device_id)
             )
             row = cur.fetchone()
             if not row:
-                raise ValueError("Dispositivo no encontrado.")
+                raise ValueError(f"Dispositivo '{device_id}' no encontrado en la bóveda.")
             conn.commit()
             return {
-                "id": str(row[0]),
+                "id": str(row[0]) if (row[0] is not None and str(row[0]) != "None") else str(device_id),
                 "user_email": row[1],
                 "device_name": row[2],
                 "status": row[3],
@@ -130,7 +132,7 @@ class DeviceVaultService:
     @staticmethod
     def revoke_device(device_id: str, admin_email: str) -> Dict[str, Any]:
         """
-        Revoca el acceso de un dispositivo.
+        Revoca el acceso de un dispositivo por id o device_fingerprint.
         """
         conn = get_db_connection()
         cur = conn.cursor()
@@ -139,17 +141,17 @@ class DeviceVaultService:
                 """
                 UPDATE user_authorized_devices
                 SET status = 'REVOKED', approved_by = %s, approved_at = CURRENT_TIMESTAMP
-                WHERE id = %s
+                WHERE id = %s OR device_fingerprint = %s
                 RETURNING id, user_email, device_name, status;
                 """,
-                (admin_email, device_id)
+                (admin_email, device_id, device_id)
             )
             row = cur.fetchone()
             if not row:
-                raise ValueError("Dispositivo no encontrado.")
+                raise ValueError(f"Dispositivo '{device_id}' no encontrado en la bóveda.")
             conn.commit()
             return {
-                "id": str(row[0]),
+                "id": str(row[0]) if (row[0] is not None and str(row[0]) != "None") else str(device_id),
                 "user_email": row[1],
                 "device_name": row[2],
                 "status": row[3]
@@ -187,7 +189,7 @@ class DeviceVaultService:
             rows = cur.fetchall()
             return [
                 {
-                    "id": str(r[0]),
+                    "id": str(r[0]) if (r[0] is not None and str(r[0]) != "None" and str(r[0]).strip() != "") else str(r[2]),
                     "user_email": r[1],
                     "device_fingerprint": r[2],
                     "device_name": r[3],
