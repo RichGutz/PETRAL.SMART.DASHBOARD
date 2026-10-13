@@ -912,5 +912,14 @@ TAG CREADO: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
 - Frontend Build: 'npx vite build' exitoso (1110 módulos, 0 errores, 16.95s).
 - Backend Headless Test: validada herencia de aprobación y tiempo de vida de 15 min.
 - Base de datos saneada: eliminados registros temporales de prueba.
+
+4. DESPLIEGUE A PRODUCCIÓN VPS (91.108.125.253 | https://forecast.geeksoft.tech):
+--------------------------------------------------------------------------------
+- Paso 1: Merge de BENOIT.FIX.DEVICE.VAULT.2FA.OCT13 a main y git push origin main ejecutado.
+- Paso 2: npx vite build completado exitosamente en 14.26s (0 errores).
+- Paso 3: Despliegue automatizado SFTP/SSH ejecutado vía Push.VPS/deploy_forecast_kickoff.py.
+- Servicio FastAPI geeksoft-engine reiniciado en el VPS.
+- Nginx reload y certificado Let's Encrypt SSL verificado.
+- Verificación en vivo: Frontend HTTP 200 OK y API Login Probe HTTP 200 OK con 2FA verificado.
 ================================================================================
 

@@ -822,8 +822,9 @@ TAG CREADO: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
 - deviceFingerprint generaba hashes volátiles por resolución de pantalla y userAgent exacto (docking, monitores externos, zoom DPI).
 - 2FA en Microsoft 365 EOP (@petral.com.pe) sufría retrasos de 3 a 6 minutos; expiración a los 5 minutos causaba códigos vencidos.
 
-2. REMEDIACIÓN:
+2. REMEDIACIÓN & DESPLIEGUE VPS:
 - Front: token persistente en localStorage, exclusión de resolución en hash, temporizador 15m.
 - Back: auto-aprobación heredada para cuentas previamente aprobadas por admin; expiración 15 minutos en auth.py; cabeceras de alta prioridad en Resend API.
-- QC: npx vite build exitoso (0 errores), prueba headless backend OK.
+- Despliegue VPS (91.108.125.253): Merge a main, npx vite build (0 errores), deploy_forecast_kickoff.py OK.
+- Verificación en vivo: Frontend HTTPS 200 OK y Backend FastAPI HTTPS 200 OK en https://forecast.geeksoft.tech.
 ================================================================================
