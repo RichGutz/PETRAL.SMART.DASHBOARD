@@ -3,7 +3,7 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { AuthService } from '../../services/api';
 import type { UserPermissions, PermissionLevel } from '../../context/AuthContext';
 import { useAuth } from '../../context/AuthContext';
-import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle } from 'lucide-react';
+import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle, Key, RefreshCw } from 'lucide-react';
 
 interface FullUser {
     id: string;
@@ -32,6 +32,12 @@ export const UsersPermissions: React.FC = () => {
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [newRole, setNewRole] = useState<'ADMIN' | 'USER'>('USER');
+
+    // Estado para el modal de resetear contraseña administrativa
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [targetResetUser, setTargetResetUser] = useState<FullUser | null>(null);
+    const [adminNewPassword, setAdminNewPassword] = useState('');
+    const [resetLoading, setResetLoading] = useState(false);
 
     const [newPerms, setNewPerms] = useState<UserPermissions>({
         multicotizador_spot: 'Visor',
@@ -181,6 +187,33 @@ export const UsersPermissions: React.FC = () => {
             loadUsers();
         } catch (err: any) {
             showNotification(err.response?.data?.detail || 'Error al crear usuario.', 'error');
+        }
+    };
+
+    const handleOpenResetPasswordModal = (u: FullUser) => {
+        setTargetResetUser(u);
+        setAdminNewPassword('Petral2026!');
+        setShowResetModal(true);
+    };
+
+    const handleExecuteResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!targetResetUser) return;
+        if (adminNewPassword.trim().length < 4) {
+            showNotification('La contraseña debe tener al menos 4 caracteres.', 'error');
+            return;
+        }
+        setResetLoading(true);
+        try {
+            await AuthService.adminResetPassword(targetResetUser.id, adminNewPassword.trim(), user?.email);
+            showNotification(`Contraseña actualizada exitosamente para ${targetResetUser.full_name}.`, 'success');
+            setShowResetModal(false);
+            setTargetResetUser(null);
+            setAdminNewPassword('');
+        } catch (err: any) {
+            showNotification(err.response?.data?.detail || 'Error al actualizar contraseña.', 'error');
+        } finally {
+            setResetLoading(false);
         }
     };
 
@@ -399,6 +432,13 @@ export const UsersPermissions: React.FC = () => {
                                                         ) : (
                                                             <>
                                                                 <button 
+                                                                    onClick={() => handleOpenResetPasswordModal(userItem)}
+                                                                    className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                                                                    title="Resetear Contraseña"
+                                                                >
+                                                                    <Key size={13} />
+                                                                </button>
+                                                                <button 
                                                                     onClick={() => handleEditClick(userItem)}
                                                                     className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                                     title="Editar Usuario y Permisos"
@@ -533,6 +573,66 @@ export const UsersPermissions: React.FC = () => {
                                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-md cursor-pointer"
                                 >
                                     Guardar Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Resetear Contraseña (Administrador) */}
+            {showResetModal && targetResetUser && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-white rounded-2xl w-full max-w-[440px] shadow-2xl relative border border-slate-200 overflow-hidden">
+                        <div className="flex justify-between items-center bg-slate-50 border-b border-slate-200 px-6 py-4">
+                            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <Key size={16} className="text-amber-600" /> Resetear Contraseña de Usuario
+                            </h3>
+                            <button onClick={() => setShowResetModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-md cursor-pointer">
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleExecuteResetPassword} className="p-6 flex flex-col gap-4">
+                            <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+                                Asignando nueva contraseña para <strong className="font-bold text-slate-900">{targetResetUser.full_name}</strong>
+                                <div className="font-mono text-[11px] text-amber-700 font-semibold mt-0.5">{targetResetUser.email}</div>
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nueva Contraseña</label>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        required
+                                        value={adminNewPassword}
+                                        onChange={(e) => setAdminNewPassword(e.target.value)}
+                                        placeholder="Mínimo 4 caracteres"
+                                        className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:border-slate-800"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setAdminNewPassword('Petral' + Math.floor(1000 + Math.random() * 9000) + '!')}
+                                        className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                                        title="Generar contraseña aleatoria"
+                                    >
+                                        <RefreshCw size={12} />
+                                        <span>Generar</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowResetModal(false)}
+                                    className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold transition-colors cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={resetLoading}
+                                    className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-lg font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                >
+                                    {resetLoading ? 'Guardando...' : 'Asignar Contraseña'}
                                 </button>
                             </div>
                         </form>

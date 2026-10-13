@@ -303,7 +303,11 @@ export const AuthService = {
         const response = await api.post('/auth/login', payload);
         return response.data;
     },
-    loginStep1: async (payload: { email: string; password: string; device_fingerprint?: string; device_name?: string }) => {
+    loginPassword: async (payload: { email: string; password: string; device_fingerprint?: string; device_name?: string }) => {
+        const response = await api.post('/auth/login-password', payload);
+        return response.data;
+    },
+    loginStep1: async (payload: { email: string; password?: string; device_fingerprint?: string; device_name?: string }) => {
         const response = await api.post('/auth/login', payload);
         return response.data;
     },
@@ -333,6 +337,10 @@ export const AuthService = {
     },
     changePassword: async (payload: any) => {
         const response = await api.post('/auth/change-password', payload);
+        return response.data;
+    },
+    adminResetPassword: async (userId: string, newPassword: string, adminEmail?: string) => {
+        const response = await api.post(`/users/${userId}/reset-password`, { new_password: newPassword, admin_email: adminEmail });
         return response.data;
     },
     getDevices: async (email?: string) => {

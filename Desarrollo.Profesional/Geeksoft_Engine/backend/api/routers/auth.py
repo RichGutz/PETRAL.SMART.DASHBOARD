@@ -67,6 +67,10 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
 
+class AdminResetPasswordRequest(BaseModel):
+    new_password: str
+    admin_email: Optional[str] = None
+
 
 
 # --- Helpers de Permisos ---
@@ -181,6 +185,187 @@ def login_step_one(payload: LoginRequest):
             "masked_destination": mask_email(email),
             "user_name": full_name
         }
+    finally:
+        cur.close()
+        conn.close()
+
+
+@router.post("/auth/login-password", response_model=LoginResponse)
+def login_with_password(payload: LoginRequest):
+    """
+    Inicio de sesión directo con correo y contraseña (Vía 1 de Opción 3).
+    Verifica credenciales mediante pgcrypto crypt, valida Device Vault y emite sesión completa.
+    """
+    email_clean = payload.email.strip().lower()
+    password = (payload.password or "").strip()
+    
+    if not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Debe ingresar su contraseña para acceder."
+        )
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT id, email, full_name, role, password_hash,
+                   (crypt(%s, password_hash) = password_hash) AS is_valid_pwd
+            FROM app_users
+            WHERE LOWER(email) = %s;
+            """,
+            (password, email_clean)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"El correo '{payload.email}' no se encuentra registrado en PETRAL ONE."
+            )
+        
+        user_id, email, full_name, role, password_hash, is_valid_pwd = row
+        
+        if not is_valid_pwd:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Contraseña incorrecta. Verifique sus datos o use la opción de ingresar con código temporal (2FA)."
+            )
+        
+        # Validar Bóveda de Dispositivos (Device Vault)
+        device_fp = payload.device_fingerprint or "DEV-UNKNOWN"
+        device_nm = payload.device_name or "Dispositivo Web Desconocido"
+        
+        device_check = DeviceVaultService.verify_or_register_device(
+            user_email=email,
+            device_fingerprint=device_fp,
+            device_name=device_nm,
+            user_role=role
+        )
+
+        if not device_check.get("is_authorized", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Dispositivo no autorizado. Su equipo ({device_nm}) ha sido registrado como PENDIENTE en el Device Vault y requiere aprobación del Administrador para ingresar."
+            )
+        
+        # Cargar permisos
+        permissions = {}
+        if role == "ADMIN":
+            permissions = ADMIN_PERMISSIONS
+        else:
+            cur.execute(
+                """
+                SELECT multicotizador_spot, matriz_financiera, maestro_buques, maestro_rutas, 
+                       maestro_puertos, maestro_contratos, maestro_tarifas, maestro_costos_agencia
+                FROM user_permissions
+                WHERE user_id = %s;
+                """,
+                (user_id,)
+            )
+            p_row = cur.fetchone()
+            if p_row:
+                permissions = {
+                    "multicotizador_spot": p_row[0],
+                    "matriz_financiera": p_row[1],
+                    "maestro_buques": p_row[2],
+                    "maestro_rutas": p_row[3],
+                    "maestro_puertos": p_row[4],
+                    "maestro_contratos": p_row[5],
+                    "maestro_tarifas": p_row[6],
+                    "maestro_costos_agencia": p_row[7]
+                }
+            else:
+                permissions = DEFAULT_PERMISSIONS
+        
+        try:
+            AuditService.log_event(
+                user_email=email,
+                action="LOGIN_PASSWORD",
+                entity_name="Autenticación con Contraseña",
+                entity_id=f"PWD-{email}",
+                metadata={"user_name": full_name, "role": role, "device": device_nm}
+            )
+        except Exception as ae:
+            print(f"[AUDIT LOG WARN] {ae}")
+        
+        return {
+            "user": {
+                "id": str(user_id),
+                "email": email,
+                "full_name": full_name,
+                "role": role
+            },
+            "permissions": permissions
+        }
+    finally:
+        cur.close()
+        conn.close()
+
+
+@router.post("/auth/change-password")
+def change_password(payload: ChangePasswordRequest):
+    """
+    Permite a un usuario cambiar su propia contraseña validando su contraseña actual.
+    """
+    email_clean = payload.email.strip().lower()
+    current_pwd = payload.current_password.strip()
+    new_pwd = payload.new_password.strip()
+    
+    if len(new_pwd) < 4:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La nueva contraseña debe tener al menos 4 caracteres."
+        )
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT id, full_name, role, password_hash,
+                   (crypt(%s, password_hash) = password_hash) AS is_valid_pwd
+            FROM app_users
+            WHERE LOWER(email) = %s;
+            """,
+            (current_pwd, email_clean)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado."
+            )
+        
+        user_id, full_name, role, password_hash, is_valid_pwd = row
+        if not is_valid_pwd:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La contraseña actual ingresada es incorrecta."
+            )
+        
+        cur.execute(
+            """
+            UPDATE app_users
+            SET password_hash = crypt(%s, gen_salt('bf'))
+            WHERE id = %s;
+            """,
+            (new_pwd, user_id)
+        )
+        conn.commit()
+        
+        try:
+            AuditService.log_event(
+                user_email=email_clean,
+                action="CHANGE_PASSWORD",
+                entity_name="Cambio de Contraseña Autoservicio",
+                entity_id=f"PWD-CHANGE-{email_clean}",
+                metadata={"user_name": full_name, "role": role}
+            )
+        except Exception as ae:
+            print(f"[AUDIT LOG WARN] {ae}")
+        
+        return {"message": "Contraseña actualizada exitosamente."}
     finally:
         cur.close()
         conn.close()
@@ -675,49 +860,65 @@ def delete_user(user_id: str):
         conn.close()
 
 
-@router.post("/auth/change-password")
-def change_password(payload: ChangePasswordRequest):
-    email_clean = payload.email.strip().lower()
+@router.post("/users/{user_id}/reset-password")
+def admin_reset_password(user_id: str, payload: AdminResetPasswordRequest):
+    """
+    Permite al Administrador resetear o asignar una nueva contraseña a cualquier usuario.
+    """
+    new_pwd = payload.new_password.strip()
+    if len(new_pwd) < 4:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La nueva contraseña debe tener al menos 4 caracteres."
+        )
+    
     conn = get_db_connection()
     cur = conn.cursor()
-    
     try:
-        # Verificar contraseña actual
-        cur.execute(
-            """
-            SELECT id FROM app_users 
-            WHERE LOWER(email) = %s AND password_hash = crypt(%s, password_hash);
-            """,
-            (email_clean, payload.current_password)
-        )
-        if not cur.fetchone():
+        cur.execute("SELECT email, full_name, role FROM app_users WHERE id = %s;", (user_id,))
+        row = cur.fetchone()
+        if not row:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="La contraseña actual es incorrecta."
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado."
             )
         
-        # Actualizar contraseña
+        email, full_name, role = row
+        
         cur.execute(
             """
-            UPDATE app_users 
+            UPDATE app_users
             SET password_hash = crypt(%s, gen_salt('bf'))
-            WHERE LOWER(email) = %s;
+            WHERE id = %s;
             """,
-            (payload.new_password, email_clean)
+            (new_pwd, user_id)
         )
         conn.commit()
-        return {"message": "Contraseña actualizada exitosamente."}
+        
+        try:
+            AuditService.log_event(
+                user_email=payload.admin_email or "admin",
+                action="ADMIN_RESET_PASSWORD",
+                entity_name=f"Reset de Contraseña a {email}",
+                entity_id=f"ADMIN-RESET-{email}",
+                metadata={"target_user": email, "target_name": full_name}
+            )
+        except Exception as ae:
+            print(f"[AUDIT LOG WARN] {ae}")
+        
+        return {"message": f"Contraseña actualizada exitosamente para {full_name} ({email})."}
     except Exception as e:
         conn.rollback()
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en el servidor: {e}"
+            detail=f"Error al resetear contraseña: {e}"
         )
     finally:
         cur.close()
         conn.close()
+
 
 
 # --- Endpoints de Administración de Bóveda de Dispositivos (Device Vault) ---

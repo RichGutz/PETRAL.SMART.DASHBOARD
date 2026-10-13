@@ -44,7 +44,7 @@ interface AuthContextType {
     permissions: UserPermissions | null;
     isAuthenticated: boolean;
     loading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, device_fingerprint?: string, device_name?: string) => Promise<void>;
     loginStepOne: (email: string, password?: string, device_fingerprint?: string, device_name?: string) => Promise<LoginStep1Result>;
     verifyTwoFactor: (temp_token: string, otp_code: string) => Promise<void>;
     resendTwoFactor: (temp_token: string) => Promise<any>;
@@ -140,9 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return await AuthService.resend2FA({ temp_token });
     };
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, device_fingerprint?: string, device_name?: string) => {
         try {
-            const data = await AuthService.login({ email, password });
+            const data = await AuthService.loginPassword({ email, password, device_fingerprint, device_name });
             if (data.user && data.permissions) {
                 const loggedUser: User = data.user;
                 const userPerms: UserPermissions = data.permissions;

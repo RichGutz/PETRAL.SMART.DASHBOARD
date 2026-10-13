@@ -2,17 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { generateDeviceFingerprint } from '../../utils/deviceFingerprint';
+import { Lock, Mail, Eye, EyeOff, ShieldCheck, Key, ArrowLeft, RefreshCw, Send, CheckCircle2 } from 'lucide-react';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
-    const { loginStepOne, verifyTwoFactor, resendTwoFactor } = useAuth();
+    const { login, loginStepOne, verifyTwoFactor, resendTwoFactor } = useAuth();
     
-    // Estados de flujo
-    const [step, setStep] = useState<'EMAIL_ENTRY' | '2FA_OTP'>('EMAIL_ENTRY');
+    // Estados de flujo: 'PASSWORD_ENTRY' | '2FA_REQUEST' | '2FA_OTP'
+    const [step, setStep] = useState<'PASSWORD_ENTRY' | '2FA_REQUEST' | '2FA_OTP'>('PASSWORD_ENTRY');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
 
     // Estados de 2FA
     const [tempToken, setTempToken] = useState('');
@@ -26,7 +28,7 @@ export const Login: React.FC = () => {
     // Referencias a los 6 inputs numéricos
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // Temporizador regresivo de 5 minutos para expiración de OTP
+    // Temporizador regresivo de expiración de OTP
     useEffect(() => {
         let timer: any;
         if (step === '2FA_OTP' && timeLeft > 0) {
@@ -62,7 +64,34 @@ export const Login: React.FC = () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Paso 1: Enviar Email para recibir OTP
+    // Vía 1: Login directo con Contraseña
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            const deviceInfo = generateDeviceFingerprint(email);
+            await login(
+                email.trim(),
+                password,
+                deviceInfo.fingerprint,
+                deviceInfo.deviceName
+            );
+            navigate('/dashboard');
+        } catch (err: any) {
+            console.error(err);
+            if (err.response && err.response.data && err.response.data.detail) {
+                setError(err.response.data.detail);
+            } else {
+                setError('Correo o contraseña incorrectos. Intente de nuevo.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Vía 2: Solicitar código OTP por correo
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -71,8 +100,8 @@ export const Login: React.FC = () => {
         try {
             const deviceInfo = generateDeviceFingerprint(email);
             const response = await loginStepOne(
-                email, 
-                undefined, // Sin contraseña (Passwordless)
+                email.trim(), 
+                undefined, // Sin contraseña (Passwordless OTP)
                 deviceInfo.fingerprint, 
                 deviceInfo.deviceName
             );
@@ -91,7 +120,7 @@ export const Login: React.FC = () => {
             if (err.response && err.response.data && err.response.data.detail) {
                 setError(err.response.data.detail);
             } else {
-                setError('Error de conexión con el servidor. Intente más tarde.');
+                setError('Error de conexión al solicitar código. Intente más tarde.');
             }
         } finally {
             setLoading(false);
@@ -149,7 +178,7 @@ export const Login: React.FC = () => {
         }
     };
 
-    // Paso 2: Verificar OTP
+    // Verificar OTP de 6 dígitos
     const handleVerifyOtp = async (codeToVerify?: string) => {
         const fullCode = codeToVerify || otpDigits.join('');
         if (fullCode.length !== 6) {
@@ -170,7 +199,6 @@ export const Login: React.FC = () => {
             } else {
                 setError('Código de verificación inválido o expirado.');
             }
-            // Limpiar inputs en caso de error y enfocar el primero
             setOtpDigits(['', '', '', '', '', '']);
             inputRefs.current[0]?.focus();
         } finally {
@@ -205,30 +233,31 @@ export const Login: React.FC = () => {
                 }}
             />
 
-            {/* Tarjeta Flotante Inferior Izquierda (90% Transparente / Glassmorphism Compacto) */}
-            <div className="relative w-full max-w-[275px] bg-slate-950/10 backdrop-blur-md border border-white/25 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-4 z-10 flex flex-col justify-between transition-all duration-300">
+            {/* Tarjeta Flotante Inferior Izquierda (Glassmorphism Compacto) */}
+            <div className="relative w-full max-w-[290px] bg-slate-950/20 backdrop-blur-md border border-white/25 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] p-4 z-10 flex flex-col justify-between transition-all duration-300">
                 <div>
-                    {step === 'EMAIL_ENTRY' ? (
-                        /* === PASO 1: ENTRADA DE CORREO PASSWORDLESS === */
-                        <>
+                    {/* === MODO 1: INGRESO DIRECTO CON CONTRASEÑA === */}
+                    {step === 'PASSWORD_ENTRY' && (
+                        <div className="animate-fadeIn">
                             <div className="text-center mb-2.5">
-                                <h2 className="text-base font-bold text-white tracking-tight drop-shadow-md">
-                                    Acceso Seguro 2FA
+                                <h2 className="text-base font-bold text-white tracking-tight drop-shadow-md flex items-center justify-center gap-1.5">
+                                    <Lock className="w-4 h-4 text-blue-400" />
+                                    Acceso Petral
                                 </h2>
-                                <p className="text-[10.5px] text-slate-100 font-medium drop-shadow leading-tight mt-0.5">
-                                    Ingresa tu correo corporativo
+                                <p className="text-[10px] text-slate-200 font-medium drop-shadow leading-tight mt-0.5">
+                                    Ingresa con tu correo y contraseña
                                 </p>
                             </div>
 
-                            <form onSubmit={handleEmailSubmit} className="space-y-2.5">
+                            <form onSubmit={handlePasswordSubmit} className="space-y-2">
                                 {error && (
-                                    <div className="bg-red-500/30 border border-red-500/50 text-white rounded-lg p-2 text-[11px] font-semibold leading-relaxed animate-shake">
+                                    <div className="bg-red-500/40 border border-red-500/60 text-white rounded-lg p-2 text-[10.5px] font-semibold leading-relaxed animate-shake">
                                         {error}
                                     </div>
                                 )}
 
                                 <div className="space-y-1">
-                                    <label htmlFor="email" className="block text-[9.5px] font-bold text-white uppercase tracking-wider drop-shadow">
+                                    <label htmlFor="email" className="block text-[9px] font-bold text-white uppercase tracking-wider drop-shadow">
                                         Correo Corporativo
                                     </label>
                                     <div className="relative">
@@ -238,14 +267,117 @@ export const Login: React.FC = () => {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="nombre@petral.com.pe"
-                                            className="w-full rounded-lg border border-white/30 pl-8 pr-2.5 py-1.5 text-xs text-white bg-slate-950/40 placeholder-slate-300 transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 font-medium"
+                                            className="w-full rounded-lg border border-white/30 pl-8 pr-2.5 py-1.5 text-xs text-white bg-slate-950/50 placeholder-slate-400 transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 font-medium"
                                             required
                                             autoFocus
                                         />
-                                        <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-200">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                                            </svg>
+                                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">
+                                            <Mail className="w-3.5 h-3.5" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label htmlFor="password" className="block text-[9px] font-bold text-white uppercase tracking-wider drop-shadow">
+                                        Contraseña
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            id="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full rounded-lg border border-white/30 pl-8 pr-8 py-1.5 text-xs text-white bg-slate-950/50 placeholder-slate-400 transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 font-medium"
+                                            required
+                                        />
+                                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">
+                                            <Key className="w-3.5 h-3.5" />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-white transition-colors"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || !email || !password}
+                                    className="w-full mt-1 bg-blue-600/90 hover:bg-blue-500 active:bg-blue-700 text-white py-2 px-3 rounded-lg font-bold text-xs transition-all duration-200 shadow-md shadow-blue-600/30 cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full"></div>
+                                            <span>Ingresando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Lock className="w-3.5 h-3.5 text-blue-100" />
+                                            <span>Iniciar Sesión</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Enlace a Vía Alternativa 2FA */}
+                                <div className="text-center pt-1 border-t border-white/10 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setError('');
+                                            setStep('2FA_REQUEST');
+                                        }}
+                                        className="text-[10px] font-semibold text-blue-200 hover:text-white transition-colors drop-shadow cursor-pointer flex items-center justify-center gap-1 w-full py-0.5"
+                                    >
+                                        <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                                        ¿Ingresar con código temporal (2FA)?
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* === MODO 2: SOLICITAR CÓDIGO TEMPORAL (2FA) === */}
+                    {step === '2FA_REQUEST' && (
+                        <div className="animate-fadeIn">
+                            <div className="text-center mb-2.5">
+                                <h2 className="text-base font-bold text-white tracking-tight drop-shadow-md flex items-center justify-center gap-1.5">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                                    Acceso Seguro 2FA
+                                </h2>
+                                <p className="text-[10px] text-slate-200 font-medium drop-shadow leading-tight mt-0.5">
+                                    Enviaremos un código a tu correo
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleEmailSubmit} className="space-y-2.5">
+                                {error && (
+                                    <div className="bg-red-500/40 border border-red-500/60 text-white rounded-lg p-2 text-[10.5px] font-semibold leading-relaxed animate-shake">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <div className="space-y-1">
+                                    <label htmlFor="email2fa" className="block text-[9px] font-bold text-white uppercase tracking-wider drop-shadow">
+                                        Correo Corporativo
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="email"
+                                            id="email2fa"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="nombre@petral.com.pe"
+                                            className="w-full rounded-lg border border-white/30 pl-8 pr-2.5 py-1.5 text-xs text-white bg-slate-950/50 placeholder-slate-400 transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 font-medium"
+                                            required
+                                            autoFocus
+                                        />
+                                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">
+                                            <Mail className="w-3.5 h-3.5" />
                                         </div>
                                     </div>
                                 </div>
@@ -253,47 +385,63 @@ export const Login: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={loading || !email}
-                                    className="w-full bg-blue-600/90 hover:bg-blue-500 active:bg-blue-700 text-white py-2 px-3 rounded-lg font-bold text-xs transition-all duration-200 shadow-md shadow-blue-600/30 cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
+                                    className="w-full bg-emerald-600/90 hover:bg-emerald-500 active:bg-emerald-700 text-white py-2 px-3 rounded-lg font-bold text-xs transition-all duration-200 shadow-md shadow-emerald-600/30 cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
                                 >
                                     {loading ? (
                                         <>
                                             <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full"></div>
-                                            <span>Enviando...</span>
+                                            <span>Enviando código...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <svg className="w-3.5 h-3.5 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                            </svg>
-                                            <span>Enviar Código</span>
+                                            <Send className="w-3.5 h-3.5 text-emerald-100" />
+                                            <span>Enviar Código 2FA</span>
                                         </>
                                     )}
                                 </button>
+
+                                <div className="text-center pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setError('');
+                                            setStep('PASSWORD_ENTRY');
+                                        }}
+                                        className="text-[10px] font-semibold text-slate-300 hover:text-white transition-colors drop-shadow cursor-pointer flex items-center justify-center gap-1 w-full"
+                                    >
+                                        <ArrowLeft className="w-3 h-3" />
+                                        Volver a ingreso con contraseña
+                                    </button>
+                                </div>
                             </form>
-                        </>
-                    ) : (
-                        /* === PASO 2: VERIFICACIÓN 2FA OTP === */
+                        </div>
+                    )}
+
+                    {/* === MODO 3: INGRESO DE 6 DÍGITOS 2FA OTP === */}
+                    {step === '2FA_OTP' && (
                         <div className="animate-fadeIn">
-                            <div className="text-center mb-2.5">
-                                <h2 className="text-sm font-bold text-white tracking-tight drop-shadow-md">
+                            <div className="text-center mb-2">
+                                <h2 className="text-sm font-bold text-white tracking-tight drop-shadow-md flex items-center justify-center gap-1">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
                                     Código de Seguridad
                                 </h2>
-                                <p className="text-[10px] text-slate-100 mt-0.5 drop-shadow">
-                                    Hola <strong className="text-blue-200">{userName}</strong>, código a:
+                                <p className="text-[10px] text-slate-200 mt-0.5 drop-shadow">
+                                    Hola <strong className="text-blue-300">{userName}</strong>, código a:
                                 </p>
-                                <p className="text-[10px] font-mono font-bold text-blue-200 bg-blue-950/60 border border-blue-400/40 rounded px-1.5 py-0.5 mt-0.5 inline-block truncate max-w-full">
+                                <p className="text-[10px] font-mono font-bold text-blue-200 bg-blue-950/70 border border-blue-400/40 rounded px-1.5 py-0.5 mt-0.5 inline-block truncate max-w-full">
                                     {maskedEmail}
                                 </p>
                             </div>
 
                             {error && (
-                                <div className="bg-red-500/30 border border-red-500/50 text-white rounded-lg p-1.5 text-[11px] font-semibold leading-relaxed mb-2 text-center animate-shake">
+                                <div className="bg-red-500/40 border border-red-500/60 text-white rounded-lg p-1.5 text-[10.5px] font-semibold leading-relaxed mb-2 text-center animate-shake">
                                     {error}
                                 </div>
                             )}
 
                             {resendSuccess && (
-                                <div className="bg-emerald-500/30 border border-emerald-500/50 text-emerald-200 rounded-lg p-1.5 text-[11px] font-semibold leading-relaxed mb-2 text-center">
+                                <div className="bg-emerald-500/40 border border-emerald-500/60 text-emerald-200 rounded-lg p-1.5 text-[10.5px] font-semibold leading-relaxed mb-2 text-center flex items-center justify-center gap-1">
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
                                     {resendSuccess}
                                 </div>
                             )}
@@ -311,14 +459,14 @@ export const Login: React.FC = () => {
                                         value={digit}
                                         onChange={(e) => handleDigitChange(idx, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(idx, e)}
-                                        className="w-8 h-9 text-center text-base font-mono font-bold text-white bg-slate-950/50 border border-white/30 rounded-md focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition-all"
+                                        className="w-8 h-9 text-center text-base font-mono font-bold text-white bg-slate-950/60 border border-white/30 rounded-md focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition-all"
                                         autoComplete="off"
                                     />
                                 ))}
                             </div>
 
                             {/* Timer y Reenvío */}
-                            <div className="flex items-center justify-between text-[10px] text-slate-200 mb-2.5 px-0.5 drop-shadow">
+                            <div className="flex items-center justify-between text-[10px] text-slate-200 mb-2 px-0.5 drop-shadow">
                                 <span className="flex items-center gap-0.5 font-medium">
                                     Vence: <strong className={timeLeft < 60 ? 'text-red-400' : 'text-white'}>{formatTime(timeLeft)}</strong>
                                 </span>
@@ -327,12 +475,13 @@ export const Login: React.FC = () => {
                                     type="button"
                                     onClick={handleResend}
                                     disabled={resendCooldown > 0}
-                                    className={`font-bold transition-colors ${
+                                    className={`font-bold transition-colors flex items-center gap-0.5 ${
                                         resendCooldown > 0 
                                             ? 'text-slate-400 cursor-not-allowed' 
-                                            : 'text-blue-300 hover:text-white cursor-pointer underline'
+                                             : 'text-blue-300 hover:text-white cursor-pointer underline'
                                     }`}
                                 >
+                                    <RefreshCw className={`w-2.5 h-2.5 ${resendCooldown > 0 ? '' : 'hover:rotate-180 transition-transform'}`} />
                                     {resendCooldown > 0 ? `Reenviar (${resendCooldown}s)` : 'Reenviar'}
                                 </button>
                             </div>
@@ -356,24 +505,35 @@ export const Login: React.FC = () => {
                                 )}
                             </button>
 
-                            {/* Volver a ingresar email */}
-                            <div className="text-center mt-1.5">
+                            {/* Opciones de retorno */}
+                            <div className="flex items-center justify-between mt-2 pt-1 border-t border-white/10 text-[9.5px]">
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setStep('EMAIL_ENTRY');
                                         setError('');
+                                        setStep('PASSWORD_ENTRY');
                                     }}
-                                    className="text-[10px] font-semibold text-slate-200 hover:text-white transition-colors drop-shadow"
+                                    className="font-semibold text-slate-300 hover:text-white transition-colors drop-shadow cursor-pointer flex items-center gap-0.5"
                                 >
-                                    ← Cambiar correo
+                                    <Lock className="w-2.5 h-2.5" />
+                                    Ingreso con contraseña
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setError('');
+                                        setStep('2FA_REQUEST');
+                                    }}
+                                    className="font-semibold text-slate-300 hover:text-white transition-colors drop-shadow cursor-pointer"
+                                >
+                                    Cambiar correo
                                 </button>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Footer Geeksoft con logo 50% mas grande y titulo exacto */}
+                {/* Footer Geeksoft con logo */}
                 <div className="flex flex-col items-center pt-2.5 mt-2.5 border-t border-white/15">
                     <span className="text-[8.5px] font-extrabold text-slate-100 tracking-wider mb-1.5 drop-shadow text-center uppercase">
                         DESARROLLADO POR GEEKSOFT
@@ -410,3 +570,4 @@ export const Login: React.FC = () => {
         </div>
     );
 };
+
