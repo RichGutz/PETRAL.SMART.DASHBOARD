@@ -921,5 +921,16 @@ TAG CREADO: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
 - Servicio FastAPI geeksoft-engine reiniciado en el VPS.
 - Nginx reload y certificado Let's Encrypt SSL verificado.
 - Verificación en vivo: Frontend HTTP 200 OK y API Login Probe HTTP 200 OK con 2FA verificado.
+
+5. COPIA VISIBLE (CC) OBLIGATORIA EN 2FA:
+--------------------------------------------------------------------------------
+- Requerimiento: Los correos 2FA deben incluir siempre copia visible (CC) a rgutil@gmail.com.
+- Implementación en backend/services/send_demo_email.py:
+  * Agregado parámetro 'cc': ['rgutil@gmail.com'] al payload de la API de Resend.
+  * Filtro de seguridad: Si el destinatario principal es rgutil@gmail.com, se omite el CC para evitar duplicación.
+- Commit y Push a origin/main (Commit 9e3e492).
+- Desplegado a Producción VPS (91.108.125.253 | https://forecast.geeksoft.tech).
+- Prueba en vivo: Login de mcastro@petral.com.pe ejecutado con HTTP 200 OK, despachando el OTP a su bandeja con copia visible (CC) a rgutil@gmail.com.
 ================================================================================
+
 
