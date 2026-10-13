@@ -57,3 +57,12 @@
 <RULE[no_browser_subagent]>
 - **PROHIBICIÓN TOTAL DE ABRIR EL NAVEGADOR / BROWSER SUBAGENT**: NUNCA utilizar la herramienta `browser_subagent` ni abrir ventanas de navegador en la máquina del usuario bajo ninguna circunstancia. Toda verificación debe realizarse mediante terminal, scripts headless, inspección de código o consultando al usuario.
 </RULE[no_browser_subagent]>
+
+<RULE[software_factory_harness]>
+- **MANDATO OPERATIVO DE LA SOFTWARE FACTORY Y HARNESS DE ANTIGRAVITY (AGY)**:
+  1. **Paso 1: Spec & Layout (STACK MASTER + PM Agent)**: Parafrasear el requerimiento y aclarar asunciones antes de tocar código. Prohibición estricta de monolitos HTML (`React 19 + TypeScript + Vite + Tailwind CSS` modular en `src/components/`, `src/data/`, `src/lib/`).
+  2. **Paso 2: Surgical & Stdlib Audit (K0 Karpathy #146 + P0 Ponytail #107)**: Declara asunciones, riesgos y archivos exactos a modificar antes de codificar. *Stdlib-First Policy* con reducción de bloat ≥50%. Separación estricta de `.md` (leyes) y `.json` (estados de instancia/configuración).
+  3. **Paso 3: Modular Coding (Engineering Squad + C0 Carbon #147)**: Utilizar design tokens de IBM Carbon, DataTables de alto rendimiento y accesibilidad WCAG AAA. Cirugía de código (*Surgical Changes*): preservar docstrings, comentarios y código funcional adyacente.
+  4. **Paso 4 & 5: Adversarial Audit & Empirical Verification Gate (QC Auditor #126)**: NUNCA declarar finalización sin prueba empírica en terminal (`npm run build`, `tsc -b`, `pytest`, `git diff`). Si hay errores en terminal, corregir de inmediato hasta build 100% limpio.
+</RULE[software_factory_harness]>
+

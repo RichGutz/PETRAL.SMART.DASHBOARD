@@ -1,4 +1,35 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-13 (Reestructuración Jerárquica del Organigrama a 3 Niveles & Inclusión de Patricia Rueda)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Requerimiento Comercial y de Estructura:
+  • Reorganizar el organigrama de Naviera Petral S.A. en 3 niveles canónicos.
+  • Nivel 1: Fernando Harten (Gerente General).
+  • Nivel 2: Iosef Zavala (Gerente Comercial), subordinado directo de Fernando Harten.
+  • Nivel 3: Subgrupo operativo y liquidaciones bajo la gerencia de Iosef Zavala:
+    - Sub-rama 1 (Operaciones Marítimas): Maria Elena Castro (M/N Moquegua) y Jorge Neyra (M/N Tablones).
+    - Sub-rama 2 (Liquidaciones & Costos Portuarios): Sandra Gálvez (Liquidaciones) y Patricia Rueda (Costos Portuarios & PDA/FDA).
+- Implementación Frontend:
+  • `CompanyOrganigram_V2.tsx`: Árbol jerárquico reconfigurado a 3 niveles con banners de subgrupo (Opción A), contadores de 6 integrantes, filtros de área y matriz RACI actualizada.
+  • `MofManual_V2.tsx`: Ficha MOF `MOF-FIN-02` creada para Patricia Rueda, dependencias de reporte corregidas y conteo oficial a 6 integrantes.
+- QC Gate & Verificación Empírica:
+  • Ejecución de `npx vite build`: 1110 módulos transformados, 0 errores, código de salida 0.
+================================================================================
+================================================================================
+GEMINI WORK LOG: 2026-10-07 (Resolución Pericial Error al Guardar Clientes en PETRAL ONE)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Diagnóstico Forense de Falla (Benoit Blanc):
+  • Al hacer clic en "Guardar Cambios" en el Maestro de Clientes (`https://petral.one.geeksoft.tech/masters/clients`), saltaba la alerta "Error al guardar clientes." (HTTP 500).
+  • Causa raíz: La tabla `clients` en la base de datos `petral_db` (PostgreSQL en VPS Contabo `169.58.168.107`) carecía de la restricción `PRIMARY KEY` o `UNIQUE` en la columna `client_id`.
+  • En `forecast.py` (`save_clients_master`), la sentencia SQL ejecuta `INSERT INTO clients (...) ON CONFLICT (client_id) DO UPDATE SET ...`, la cual requiere obligatoriamente una clave primaria o índice único para operar. PostgreSQL arrojaba `psycopg2.errors.InvalidColumnReference: there is no unique or exclusion constraint matching the ON CONFLICT specification`.
+- Corrección & Aplicación en Producción:
+  • Se ejecutó la migración `ALTER TABLE clients ADD PRIMARY KEY (client_id);` en la base de datos `petral_db` en Contabo.
+  • Se creó el script de migración versionado en `Geeksoft_Engine/supabase/migrations/20261007000001_add_clients_primary_key.sql`.
+- Verificación Empírica:
+  • Prueba directa con los 6 clientes (SPCC, NEXA, CARGILL, R TRADING, OTROS, SIMA) arrojó `Save result: {'status': 'success'}` y `HTTP 200 {"status":"success"}`.
+================================================================================
+================================================================================
 GEMINI WORK LOG: 2026-10-02 (Corrección de Autorización de Equipos en Device Vault - PETRAL ONE)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
@@ -778,4 +809,21 @@ REPOSITORIO INDEPENDIENTE DESTINO: C:\Users\rguti\petral.biai.geeksoft.tech (htt
 - Repositorio listo, ordenado y sincronizado.
 - Harness agéntico `.agents/` configurado para operar de forma autónoma y precisa.
 - Sesión en PETRAL.SMART.DASHBOARD concluida; transición completa al nuevo repositorio.
+================================================================================
+================================================================================
+REGISTRO DE SESIÓN: 2026-10-13 (Auditoría Forense Benoit Blanc: Device Vault y 2FA)
+USUARIOS: mcastro@petral.com.pe y jneyra@petral.com.pe
+BRANCH ACTIVO: BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
+TAG CREADO: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
+================================================================================
+
+1. HALLAZGOS PERICIALES BENOIT BLANC:
+- user_authorized_devices en Supabase no tenía revocaciones manuales de admins.
+- deviceFingerprint generaba hashes volátiles por resolución de pantalla y userAgent exacto (docking, monitores externos, zoom DPI).
+- 2FA en Microsoft 365 EOP (@petral.com.pe) sufría retrasos de 3 a 6 minutos; expiración a los 5 minutos causaba códigos vencidos.
+
+2. REMEDIACIÓN:
+- Front: token persistente en localStorage, exclusión de resolución en hash, temporizador 15m.
+- Back: auto-aprobación heredada para cuentas previamente aprobadas por admin; expiración 15 minutos en auth.py; cabeceras de alta prioridad en Resend API.
+- QC: npx vite build exitoso (0 errores), prueba headless backend OK.
 ================================================================================

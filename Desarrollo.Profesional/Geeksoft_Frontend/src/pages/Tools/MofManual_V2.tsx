@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { 
-    FileText, Download, Search, ChevronRight, ChevronDown, 
-    Award, CheckCircle2, Cpu, Layers, ShieldCheck, Briefcase, 
-    Anchor, DollarSign, ArrowRight, BookOpen, Clock, Building2, ExternalLink,
-    Ship, Fuel, FileSpreadsheet, UserCheck, GitFork
+    FileText, Search, 
+    Award, CheckCircle2, Cpu, Layers, ShieldCheck, 
+    BookOpen, Building2, ExternalLink,
+    Ship, GitFork
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoPetral from '../../assets/Logo.Petral.png';
@@ -44,13 +44,13 @@ export const MOF_ROLES: MofRole[] = [
     {
         id: 'mof-fernando',
         code: 'MOF-DIR-01',
-        personName: 'Fernando',
+        personName: 'Fernando Harten',
         title: 'Gerente General (GG) / Dirección General',
         shortTitle: 'Gerente General',
         department: 'Dirección General & Estrategia Naviera',
         assignedAsset: 'Flota Consolidada Petral',
         immediateBoss: 'Directorio Naviera Petral S.A.',
-        subordinates: 'Iosef (Comercial), Maria Elena (Op. Moquegua), Jorge (Op. Tablones), Sandra (Liquidaciones)',
+        subordinates: 'Iosef Zavala (Gerente Comercial)',
         mainPurpose: 'Liderar la estrategia naviera, aprobar presupuestos anuales (PB 2027), supervisar el Time Charter Equivalent (TCE) y auditar el margen bruto consolidado de la flota.',
         coreResponsibilities: [
             {
@@ -101,13 +101,13 @@ export const MOF_ROLES: MofRole[] = [
     {
         id: 'mof-iosef',
         code: 'MOF-COM-01',
-        personName: 'Iosef',
+        personName: 'Iosef Zavala',
         title: 'Gerente Comercial (G Comercial) & Fletamentos',
         shortTitle: 'Gerente Comercial',
         department: 'Gerencia Comercial & Chartering',
         assignedAsset: 'Contratos & Fletamentos Spot / COA',
-        immediateBoss: 'Fernando (Gerente General)',
-        subordinates: 'Gestión comercial directa de clientes y brokers marítimos',
+        immediateBoss: 'Fernando Harten (Gerente General)',
+        subordinates: 'Subgrupo Operaciones (Maria Elena Castro, Jorge Neyra) y Subgrupo Liquidaciones & Costos (Sandra Gálvez, Patricia Rueda)',
         mainPurpose: 'Estructurar y asegurar los contratos de fletamento marítimo (COA / Spot), optimizar el Net Revenue, fijar tarifas con Motor BAF y modelar el forecast comercial mensual.',
         coreResponsibilities: [
             {
@@ -158,12 +158,12 @@ export const MOF_ROLES: MofRole[] = [
     {
         id: 'mof-maria-elena',
         code: 'MOF-OPS-01',
-        personName: 'Maria Elena',
+        personName: 'Maria Elena Castro',
         title: 'Operadora de Buque — M/N MOQUEGUA',
         shortTitle: 'Operadora M/N MOQUEGUA',
         department: 'Operaciones Marítimas',
         assignedAsset: '🚢 M/N MOQUEGUA (DWT 28,000 MT / Draft 9.8m)',
-        immediateBoss: 'Fernando (Gerente General)',
+        immediateBoss: 'Iosef Zavala (Gerente Comercial)',
         subordinates: 'Coordinación con Capitán, Agencias Portuarias y Proveedores de Búnker',
         mainPurpose: 'Asegurar la operación náutica, portuaria y de carga eficiente del buque M/N MOQUEGUA, minimizando demoras, supervisando consumos de combustible y auditando costos de puerto.',
         coreResponsibilities: [
@@ -215,12 +215,12 @@ export const MOF_ROLES: MofRole[] = [
     {
         id: 'mof-jorge',
         code: 'MOF-OPS-02',
-        personName: 'Jorge',
+        personName: 'Jorge Neyra',
         title: 'Operador de Buque — M/N TABLONES',
         shortTitle: 'Operador M/N TABLONES',
         department: 'Operaciones Marítimas',
         assignedAsset: '🚢 M/N TABLONES (DWT 25,000 MT / Draft 9.2m)',
-        immediateBoss: 'Fernando (Gerente General)',
+        immediateBoss: 'Iosef Zavala (Gerente Comercial)',
         subordinates: 'Coordinación con Capitán, Agencias Portuarias y Proveedores de Búnker',
         mainPurpose: 'Asegurar la operación náutica, portuaria y de carga eficiente del buque M/N TABLONES, coordinando rotaciones de cabotaje e internacional y controlando costos operativos.',
         coreResponsibilities: [
@@ -272,13 +272,13 @@ export const MOF_ROLES: MofRole[] = [
     {
         id: 'mof-sandra',
         code: 'MOF-FIN-01',
-        personName: 'Sandra',
+        personName: 'Sandra Gálvez',
         title: 'Responsable de Liquidaciones & Control Financiero de Viajes Reales',
         shortTitle: 'Liquidaciones Viajes Reales',
         department: 'Liquidaciones Post-Fixture & Finanzas',
         assignedAsset: 'Liquidaciones de Viajes Reales (Flota Completa)',
-        immediateBoss: 'Fernando (Gerente General)',
-        subordinates: 'Conciliación con Contabilidad, Clientes y Proveedores Portuarios',
+        immediateBoss: 'Iosef Zavala (Gerente Comercial)',
+        subordinates: 'Trabajo conjunto con Patricia Rueda (Costos Portuarios), conciliación con Contabilidad y Clientes',
         mainPurpose: 'Ejecutar el cierre financiero y liquidación de cada viaje marítimo real, auditando fletes facturados, facturas de búnker, cuentas de desembolso final de puertos (FDA) y demoras.',
         coreResponsibilities: [
             {
@@ -325,6 +325,64 @@ export const MOF_ROLES: MofRole[] = [
             { metric: 'Conciliación de Facturas Portuarias FDA', target: '100% de facturas auditadas', erpSource: 'Maestro de Costos Portuarios' }
         ],
         competencies: ['Liquidaciones Marítimas Post-Fixture', 'Auditoría de Costos Portuarios & Búnker', 'Cálculo Pericial de Demurrage', 'Conciliación Financiera Naviera']
+    },
+    {
+        id: 'mof-patricia',
+        code: 'MOF-FIN-02',
+        personName: 'Patricia Rueda',
+        title: 'Especialista en Costos Portuarios & Liquidaciones',
+        shortTitle: 'Costos Portuarios & FDA',
+        department: 'Liquidaciones Post-Fixture & Costos Portuarios',
+        assignedAsset: 'Costos Portuarios (PDA / FDA Flota)',
+        immediateBoss: 'Iosef Zavala (Gerente Comercial)',
+        subordinates: 'Trabajo conjunto con Sandra Gálvez (Liquidaciones) y Agencias Portuarias',
+        mainPurpose: 'Gestionar y auditar la estructura integral de costos portuarios (proformas PDA y desembolsos finales FDA), controlando tarifas de agenciamiento, practicaje y muellaje en soporte directo a las liquidaciones de viajes reales.',
+        coreResponsibilities: [
+            {
+                num: '6.1',
+                activity: 'Auditoría Exhaustiva de Cuentas de Desembolso Final (FDA vs PDA)',
+                erpModule: 'Maestro de Costos Portuarios',
+                erpRoute: '/port-costs',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Cuadro de Conciliación Portuaria FDA vs PDA por buque y escala.'
+            },
+            {
+                num: '6.2',
+                activity: 'Parametrización y Actualización del Tarifario Portuario Oficial',
+                erpModule: 'Catálogo de Puertos & Terminales',
+                erpRoute: '/ports',
+                frequency: 'Mensual / A Demanda',
+                deliverable: 'Tarifario Oficial de Puertos Peruanos y Chilenos validado en ERP.'
+            },
+            {
+                num: '6.3',
+                activity: 'Conciliación de Costos Portuarios en Cierres de Viaje',
+                erpModule: 'Maestro de Liquidaciones de Viajes',
+                erpRoute: '/liquidations',
+                frequency: 'Por Viaje Real',
+                deliverable: 'Imputación de costos portuarios definitivos en la liquidación post-fixture.'
+            },
+            {
+                num: '6.4',
+                activity: 'Monitoreo de Variaciones Portuarias vs Presupuesto',
+                erpModule: 'Matriz Financiera Consolidada',
+                erpRoute: '/dashboard',
+                frequency: 'Mensual',
+                deliverable: 'Informe de Desviaciones de Costos Portuarios para Gerencia Comercial.'
+            }
+        ],
+        systemPermissions: [
+            { moduleName: 'Maestro de Costos Portuarios', accessLevel: 'Control Total (Editor)', keyActions: 'Auditoría, validación y carga de tarifas portuarias reales PDA/FDA.' },
+            { moduleName: 'Catálogo de Puertos & Terminales', accessLevel: 'Control Total (Editor)', keyActions: 'Mantenimiento de especificaciones y servicios portuarios por terminal.' },
+            { moduleName: 'Maestro de Liquidaciones de Viajes', accessLevel: 'Control Total (Editor)', keyActions: 'Cierre y conciliación del rubro de puertos en el acta de liquidación.' },
+            { moduleName: 'Matriz Financiera Consolidada', accessLevel: 'Consulta & Auditoría (Visor)', keyActions: 'Supervisión de costos portuarios reales vs proyectados.' }
+        ],
+        kpiIndicators: [
+            { metric: 'Auditoría de Facturas Portuarias FDA', target: '100% de facturas conciliadas', erpSource: 'Maestro de Costos Portuarios' },
+            { metric: 'Desviación PDA vs FDA Real', target: '< 2.5% de variación por escala', erpSource: 'Costos Portuarios vs Liquidaciones' },
+            { metric: 'Tiempo de Conciliación Portuaria', target: '< 72 horas post-zarpe', erpSource: 'Control de Liquidaciones' }
+        ],
+        competencies: ['Auditoría de Costos Portuarios (PDA/FDA)', 'Tarifarios de Terminales y Agencias Marítimas', 'Liquidación Financiera Naviera', 'Control de Costos Operativos']
     }
 ];
 
@@ -365,7 +423,7 @@ export const MofManual_V2: React.FC = () => {
                                 📋 Manual de Organización y Funciones (MOF)
                             </h1>
                             <p className="text-slate-600 text-sm sm:text-base max-w-3xl mt-1">
-                                Perfiles de puesto, matrices de responsabilidades, permisos de acceso y flujos del ERP para los 5 integrantes de <span className="text-slate-900 font-bold">Naviera Petral S.A.</span>
+                                Perfiles de puesto, matrices de responsabilidades, permisos de acceso y flujos del ERP para los 6 integrantes de <span className="text-slate-900 font-bold">Naviera Petral S.A.</span>
                             </p>
                         </div>
                     </div>
@@ -393,7 +451,7 @@ export const MofManual_V2: React.FC = () => {
             {/* Layout Principal: Menú Lateral de Puestos + Contenido del MOF */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
-                {/* Panel Izquierdo: Lista de los 5 Integrantes */}
+                {/* Panel Izquierdo: Lista de los 6 Integrantes */}
                 <div className="lg:col-span-4 space-y-4">
                     <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
                         
@@ -449,7 +507,7 @@ export const MofManual_V2: React.FC = () => {
 
                         {/* Footer informativo */}
                         <div className="mt-5 pt-4 border-t border-slate-200 text-[11px] text-slate-500 text-center font-medium">
-                            Naviera Petral S.A. • Estructura Oficial de 5 Integrantes
+                            Naviera Petral S.A. • Estructura Oficial de 6 Integrantes
                         </div>
                     </div>
                 </div>

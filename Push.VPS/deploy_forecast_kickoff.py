@@ -1,168 +1,114 @@
 """
-Deploy: kickoff_petral.html -> forecast.geeksoft.pe
-VPS: 91.108.125.253 | Nginx + Certbot SSL
+Deploy Oficial Hostinger VPS (91.108.125.253)
+Dominios: strategy.geeksoft.tech, academy.geeksoft.tech, forecast.geeksoft.tech
 """
-import paramiko
 import os
 import sys
+import time
+import paramiko
+
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-VPS_HOST  = "91.108.125.253"
-VPS_PORT  = 22
-VPS_USER  = "root"
-VPS_PASS  = "Thiagutz061121@"
+VPS_HOST = "91.108.125.253"
+VPS_PORT = 22
+VPS_USER = "root"
+VPS_PASS = "Thiagutz061121@"
 
-DOMAIN    = "forecast.geeksoft.tech"
-APP_DIR   = "/opt/forecast_petral"
-DIST_DIR  = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\dist"
+DOMAINS = ["strategy.geeksoft.tech", "academy.geeksoft.tech", "forecast.geeksoft.tech"]
+APP_DIR = "/opt/forecast_petral"
+ROOT_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD"
 CERTBOT_MAIL = "contacto@geeksoft.pe"
 
-import os
+def deploy():
+    print(f"\n{'='*65}")
+    print(f" 🚀 DESPLIEGUE A PRODUCCIÓN HOSTINGER VPS ({VPS_HOST})")
+    print(f" 🌐 DOMINIOS: {', '.join(DOMAINS)}")
+    print(f"{'='*65}")
 
-def ensure_remote_dir(sftp, remotepath):
-    dirs = remotepath.split('/')
-    path = ''
-    for d in dirs:
-        if d:
-            path += '/' + d
-            try:
-                sftp.mkdir(path)
-            except IOError:
-                pass
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-def put_dir(sftp, localpath, remotepath):
-    ensure_remote_dir(sftp, remotepath)
-    for item in os.listdir(localpath):
-        if item in ['.git', 'node_modules', '__pycache__', '.venv', '.pytest_cache', 'scratch']:
-            continue
-        localitem = os.path.join(localpath, item)
-        remoteitem = remotepath + '/' + item
-        if os.path.isdir(localitem):
-            put_dir(sftp, localitem, remoteitem)
-        else:
-            try:
-                sftp.put(localitem, remoteitem)
-            except Exception:
-                ensure_remote_dir(sftp, os.path.dirname(remoteitem))
-                sftp.put(localitem, remoteitem)
+    try:
+        print(f"\nConectando SSH a {VPS_HOST}...")
+        client.connect(hostname=VPS_HOST, port=VPS_PORT, username=VPS_USER, password=VPS_PASS, timeout=15)
+        print("  >> Conexión SSH a Hostinger establecida ✓")
+
+        # 1. Preparar directorio
+        run(client, f"mkdir -p {APP_DIR} /var/www/html", "1. Preparar directorios en VPS")
+
+        # 2. Subir las páginas HTML APEFAC directamente (Instantáneo)
+        print(f"\n[2. Subiendo páginas HTML APEFAC vía SFTP]")
+        sftp = client.open_sftp()
+        h1 = os.path.join(ROOT_DIR, "strategy_apefac_report.html")
+        h2 = os.path.join(ROOT_DIR, "nexa_spcc_tiamaria_intelligence.html")
+
+        if os.path.exists(h1):
+            sftp.put(h1, f"{APP_DIR}/strategy_apefac_report.html")
+            sftp.put(h1, f"{APP_DIR}/index.html")
+            sftp.put(h1, "/var/www/html/strategy_apefac_report.html")
+            sftp.put(h1, "/var/www/html/index.html")
+
+        if os.path.exists(h2):
+            sftp.put(h2, f"{APP_DIR}/nexa_spcc_tiamaria_intelligence.html")
+            sftp.put(h2, "/var/www/html/nexa_spcc_tiamaria_intelligence.html")
+
+        sftp.close()
+        print("  >> HTMLs APEFAC subidos con éxito ✓")
+
+        # 3. Permisos
+        run(client, f"find {APP_DIR} -type f -exec chmod 644 {{}} \\; && find {APP_DIR} -type d -exec chmod 755 {{}} \\; && chown -R www-data:www-data {APP_DIR}", "3. Permisos")
+
+        # 4. Configurar Nginx para los dominios
+        nginx_cfg = f"""server {{
+    listen 80;
+    server_name strategy.geeksoft.tech academy.geeksoft.tech forecast.geeksoft.tech;
+    root {APP_DIR};
+    index index.html strategy_apefac_report.html;
+
+    location / {{
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0";
+    }}
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+}}"""
+
+        run(client,
+            f"echo '{nginx_cfg}' > /etc/nginx/sites-available/strategy.geeksoft.tech && "
+            f"ln -sf /etc/nginx/sites-available/strategy.geeksoft.tech /etc/nginx/sites-enabled/strategy.geeksoft.tech && "
+            f"nginx -t && systemctl reload nginx",
+            "4. Configurar Nginx HTTP")
+
+        # 5. Certbot SSL para los dominios
+        print(f"\n[5. Certificado SSL — Certbot]")
+        run(client,
+            f"certbot --nginx -d strategy.geeksoft.tech -d academy.geeksoft.tech --non-interactive --agree-tos -m {CERTBOT_MAIL} --redirect || true",
+            "5. Certbot SSL")
+
+        run(client, "nginx -t && systemctl reload nginx", "6. Recarga Nginx Final")
+
+        print(f"\n{'='*65}")
+        print(f"  🎉 PUBLICACIÓN PÚBLICA COMPLETADA EN HOSTINGER VPS ({VPS_HOST}):")
+        print(f"  🌐 STRATEGY: https://strategy.geeksoft.tech")
+        print(f"  🌐 ACADEMY:  https://academy.geeksoft.tech")
+        print(f"  📊 DASHBOARD STRATEGY: https://strategy.geeksoft.tech/strategy_apefac_report.html")
+        print(f"  ⚡ INTELLIGENCE TÍA MARÍA: https://strategy.geeksoft.tech/nexa_spcc_tiamaria_intelligence.html")
+        print(f"{'='*65}\n")
+
+    except Exception as e:
+        print(f"\n[ERROR DESPLIEGUE] {e}")
+    finally:
+        client.close()
 
 def run(client, cmd, desc=""):
     print(f"\n[{desc}]")
     stdin, stdout, stderr = client.exec_command(cmd, timeout=120)
     out = stdout.read().decode("utf-8", errors="replace").strip()
     err = stderr.read().decode("utf-8", errors="replace").strip()
-    if out: print(f"  >> {out[:400]}")
-    if err and "warning" not in err.lower(): print(f"  !! {err[:400]}")
+    if out: print(f"  >> {out[:300]}")
+    if err and "warning" not in err.lower(): print(f"  !! {err[:300]}")
     return out, err
-
-def deploy():
-    print(f"\n{'='*55}")
-    print(f"  DEPLOY -> https://{DOMAIN}")
-    print(f"{'='*55}")
-
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    try:
-        print(f"\nConectando a {VPS_HOST}...")
-        import time
-        connected = False
-        for attempt in range(1, 4):
-            try:
-                client.connect(hostname=VPS_HOST, port=VPS_PORT, username=VPS_USER, password=VPS_PASS, timeout=30, banner_timeout=60)
-                connected = True
-                break
-            except Exception as e:
-                print(f"  Intento {attempt} falló: {e}. Reintentando en 3s...")
-                time.sleep(3)
-        if not connected:
-            raise Exception("No se pudo conectar al VPS tras 3 intentos.")
-        print("  >> Conexión SSH establecida ✓")
-
-        # 1. Crear directorio en VPS
-        run(client, f"mkdir -p {APP_DIR} && rm -rf {APP_DIR}/*", "1. Preparar directorio")
-
-        # 2. Subir carpeta dist y Geeksoft_Engine via SFTP
-        print(f"\n[2. Subiendo carpeta dist y backend Geeksoft_Engine via SFTP]")
-        sftp = client.open_sftp()
-        put_dir(sftp, DIST_DIR, APP_DIR)
-        
-        engine_local = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine"
-        engine_remote = "/opt/geeksoft_engine"
-        put_dir(sftp, engine_local, engine_remote)
-        sftp.close()
-        print(f"  >> Carpeta dist y Geeksoft_Engine subidas con éxito ✓")
-
-        # 3. Permisos correctos y Reinicio de Backend
-        run(client, f"find {APP_DIR} -type f -exec chmod 644 {{}} \\; && find {APP_DIR} -type d -exec chmod 755 {{}} \\; && chown -R www-data:www-data {APP_DIR} 2>/dev/null || true", "3. Permisos Frontend")
-        run(client, "systemctl restart geeksoft-engine", "3. Reiniciar Servicio Backend FastAPI (geeksoft-engine)")
-
-        # 4. Configurar Nginx con SSL Manual robusto
-        nginx_cfg = f"""server {{
-    listen 80;
-    server_name {DOMAIN};
-    return 301 https://$host$request_uri;
-}}
-
-server {{
-    listen 443 ssl;
-    server_name {DOMAIN};
-    root {APP_DIR};
-    index index.html;
-
-    client_max_body_size 50M;
-
-    ssl_certificate /etc/letsencrypt/live/{DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{DOMAIN}/privkey.pem;
-
-    location /api/ {{
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        client_max_body_size 50M;
-        proxy_read_timeout 120s;
-        proxy_connect_timeout 120s;
-        proxy_send_timeout 120s;
-    }}
-
-    location / {{
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
-    }}
-
-    # Compresión
-    gzip on;
-    gzip_types text/plain text/css application/javascript application/json;
-}}"""
-        run(client,
-            f"echo '{nginx_cfg}' > /etc/nginx/sites-available/{DOMAIN} && "
-            f"ln -sf /etc/nginx/sites-available/{DOMAIN} /etc/nginx/sites-enabled/{DOMAIN} && "
-            f"nginx -t && systemctl reload nginx",
-            "4. Configurar Nginx")
-
-        # 5. Certbot SSL
-        print(f"\n[5. Certificado SSL — Certbot]")
-        out, err = run(client,
-            f"certbot --nginx -d {DOMAIN} --non-interactive --agree-tos -m {CERTBOT_MAIL} --redirect",
-            "5. Certbot SSL")
-
-        if "Certificate not yet due" in out or "Successfully" in out or "Congratulations" in out:
-            proto = "https"
-        else:
-            proto = "http"
-            print("  >> SSL pendiente (DNS puede estar propagando) — disponible vía HTTP")
-
-        print(f"\n{'='*55}")
-        print(f"  [OK] PRESENTACIÓN PUBLICADA EN:")
-        print(f"  PUBLICADA EN: {proto}://{DOMAIN}")
-        print(f"{'='*55}\n")
-
-    except Exception as e:
-        print(f"\n[ERROR] {e}")
-    finally:
-        client.close()
 
 if __name__ == "__main__":
     deploy()

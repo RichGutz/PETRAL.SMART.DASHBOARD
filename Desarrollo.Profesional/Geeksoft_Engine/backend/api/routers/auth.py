@@ -157,7 +157,7 @@ def login_step_one(payload: LoginRequest):
         # 3. Generar código OTP de 6 dígitos y token temporal
         otp_code = f"{random.randint(100000, 999999)}"
         temp_token = str(uuid.uuid4())
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
 
         # 4. Guardar en tabla user_2fa_tokens con attempts=0 e is_used=FALSE explícitos
         cur.execute(
@@ -363,7 +363,7 @@ def resend_two_factor(payload: Resend2FARequest):
 
         user_id, email, full_name = row
         new_otp = f"{random.randint(100000, 999999)}"
-        new_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+        new_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
 
         # Actualizar con nuevo OTP
         cur.execute(

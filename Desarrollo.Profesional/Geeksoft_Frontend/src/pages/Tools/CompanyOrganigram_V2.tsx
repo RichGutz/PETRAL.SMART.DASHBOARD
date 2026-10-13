@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { 
-    Users, Building2, ChevronRight, ShieldCheck, Briefcase, 
-    Anchor, DollarSign, Cpu, FileText, Download, Search, 
+    ChevronRight, Cpu, FileText, Search,
     Layers, Award, CheckCircle2, ArrowRight, X, ExternalLink,
-    ZoomIn, ZoomOut, RotateCcw, LayoutGrid, GitFork, UserCheck,
-    Compass, Ship, Fuel, FileSpreadsheet, Eye, BookOpen
+    ZoomIn, ZoomOut, RotateCcw, LayoutGrid, GitFork,
+    Ship, FileSpreadsheet, Eye, BookOpen
 } from 'lucide-react';
 import { Tree, TreeNode } from 'react-organizational-chart';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +33,7 @@ export interface CompanyMember {
 export const COMPANY_MEMBERS: CompanyMember[] = [
     {
         id: 'fernando-gg',
-        name: 'Fernando',
+        name: 'Fernando Harten',
         title: 'Gerente General (GG)',
         shortTitle: 'Gerente General',
         area: 'DIRECCION',
@@ -73,13 +72,13 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
     },
     {
         id: 'iosef-comercial',
-        name: 'Iosef',
+        name: 'Iosef Zavala',
         title: 'Gerente Comercial (G Comercial)',
         shortTitle: 'Gerente Comercial',
         area: 'COMERCIAL',
         areaLabel: 'Gerencia Comercial & Fletamentos',
         assignedAsset: 'Contratos & Fletamentos Spot / COA',
-        reportsTo: 'Fernando (Gerente General)',
+        reportsTo: 'Fernando Harten (Gerente General)',
         badgeStyle: 'bg-indigo-100 text-indigo-800 border-indigo-300',
         borderCardStyle: 'border-indigo-300/80 hover:border-indigo-500 shadow-indigo-500/10',
         bgCardStyle: 'bg-gradient-to-b from-indigo-50/80 via-white to-white',
@@ -97,7 +96,8 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
             'Negociación de tarifas base ($/TM) y cláusulas de indexación búnker (Fórmula BAF).',
             'Estructuración y guardado de escenarios mensuales en la Matriz Financiera.',
             'Emisión y firma de cotizaciones formales para viajes spot y multipiernas.',
-            'Fijación de términos de demurrage/despacho (USD/día) y laytime permitido.'
+            'Fijación de términos de demurrage/despacho (USD/día) y laytime permitido.',
+            'Supervisión directa del Subgrupo de Operaciones Marítimas y Subgrupo de Liquidaciones & Costos.'
         ],
         kpis: [
             'Net Revenue Comercial mensual ($ USD)',
@@ -112,13 +112,13 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
     },
     {
         id: 'maria-elena-moquegua',
-        name: 'Maria Elena',
+        name: 'Maria Elena Castro',
         title: 'Operadora de Buque — M/N MOQUEGUA',
         shortTitle: 'Operadora M/N MOQUEGUA',
         area: 'OPERACIONES',
         areaLabel: 'Operaciones Marítimas',
         assignedAsset: '🚢 M/N MOQUEGUA (DWT 28,000 MT)',
-        reportsTo: 'Fernando (Gerente General)',
+        reportsTo: 'Iosef Zavala (Gerente Comercial)',
         badgeStyle: 'bg-emerald-100 text-emerald-800 border-emerald-300',
         borderCardStyle: 'border-emerald-300/80 hover:border-emerald-500 shadow-emerald-500/10',
         bgCardStyle: 'bg-gradient-to-b from-emerald-50/80 via-white to-white',
@@ -151,13 +151,13 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
     },
     {
         id: 'jorge-tablones',
-        name: 'Jorge',
+        name: 'Jorge Neyra',
         title: 'Operador de Buque — M/N TABLONES',
         shortTitle: 'Operador M/N TABLONES',
         area: 'OPERACIONES',
         areaLabel: 'Operaciones Marítimas',
         assignedAsset: '🚢 M/N TABLONES (DWT 25,000 MT)',
-        reportsTo: 'Fernando (Gerente General)',
+        reportsTo: 'Iosef Zavala (Gerente Comercial)',
         badgeStyle: 'bg-cyan-100 text-cyan-800 border-cyan-300',
         borderCardStyle: 'border-cyan-300/80 hover:border-cyan-500 shadow-cyan-500/10',
         bgCardStyle: 'bg-gradient-to-b from-cyan-50/80 via-white to-white',
@@ -190,13 +190,13 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
     },
     {
         id: 'sandra-liquidaciones',
-        name: 'Sandra',
+        name: 'Sandra Gálvez',
         title: 'Responsable de Liquidaciones & Finanzas de Viajes Reales',
         shortTitle: 'Liquidaciones Viajes Reales',
         area: 'FINANZAS_LIQUIDACIONES',
         areaLabel: 'Liquidaciones & Control Financiero',
         assignedAsset: 'Liquidaciones Post-Fixture (Flota Completa)',
-        reportsTo: 'Fernando (Gerente General)',
+        reportsTo: 'Iosef Zavala (Gerente Comercial)',
         badgeStyle: 'bg-rose-100 text-rose-800 border-rose-300',
         borderCardStyle: 'border-rose-300/80 hover:border-rose-500 shadow-rose-500/10',
         bgCardStyle: 'bg-gradient-to-b from-rose-50/80 via-white to-white',
@@ -226,6 +226,45 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
             'Cálculo Pericial de Demurrage / Despacho por Cliente',
             'Informe de Conciliación Forecast vs Real Mensual'
         ]
+    },
+    {
+        id: 'patricia-costos',
+        name: 'Patricia Rueda',
+        title: 'Especialista en Costos Portuarios & Liquidaciones',
+        shortTitle: 'Costos Portuarios & FDA',
+        area: 'FINANZAS_LIQUIDACIONES',
+        areaLabel: 'Liquidaciones & Costos Portuarios',
+        assignedAsset: 'Costos Portuarios (PDA / FDA Flota)',
+        reportsTo: 'Iosef Zavala (Gerente Comercial)',
+        badgeStyle: 'bg-pink-100 text-pink-800 border-pink-300',
+        borderCardStyle: 'border-pink-300/80 hover:border-pink-500 shadow-pink-500/10',
+        bgCardStyle: 'bg-gradient-to-b from-pink-50/80 via-white to-white',
+        avatarBg: 'bg-gradient-to-br from-pink-500 to-rose-600 text-white',
+        icon: '📊',
+        objective: 'Gestionar y auditar la estructura integral de costos portuarios (proformas PDA y desembolsos finales FDA), controlando tarifas de agenciamiento, practicaje y muellaje en soporte directo a las liquidaciones de viajes reales junto a Sandra Gálvez.',
+        erpTools: [
+            { name: 'Maestro de Costos Portuarios', route: '/port-costs', role: 'Editor', description: 'Auditoría exhaustiva de tarifas PDA/FDA y cuentas de desembolso.' },
+            { name: 'Catálogo de Puertos & Terminales', route: '/ports', role: 'Editor', description: 'Tarifarios oficiales y restricciones técnicas de puertos de escala.' },
+            { name: 'Maestro de Liquidaciones de Viajes', route: '/liquidations', role: 'Editor', description: 'Cierre de costos portuarios reales imputados a la liquidación final.' },
+            { name: 'Matriz Financiera Consolidada', route: '/dashboard', role: 'Visor', description: 'Monitoreo de costos portuarios vs presupuesto proyectado.' },
+            { name: 'Precios de Búnker & Fórmulas BAF', route: '/bunker-prices', role: 'Visor', description: 'Verificación de costos operativos y complementarios de recalada.' }
+        ],
+        responsibilities: [
+            'Recepción, cotejo y auditoría de cuentas de desembolso final (FDA) frente a proformas (PDA).',
+            'Actualización y mantenimiento del catálogo maestro de costos portuarios en puertos peruanos y chilenos.',
+            'Conciliación de facturas de remolcadores, prácticos, lanchas y derechos de muelle con agentes portuarios.',
+            'Trabajo conjunto con Sandra Gálvez para la integración de costos portuarios en las liquidaciones post-fixture.'
+        ],
+        kpis: [
+            '100% de Proformas Portuarias (PDA/FDA) auditadas y conciliadas',
+            'Desviación PDA proyectada vs FDA real menor al 2.5%',
+            'Tiempo de validación de costos portuarios (< 72 horas post-zarpe)'
+        ],
+        deliverables: [
+            'Cuadro de Auditoría Portuaria FDA vs PDA por Buque y Escala',
+            'Tarifario Maestro de Puertos y Terminales Actualizado',
+            'Informe de Variaciones Portuarias para Liquidación Final'
+        ]
     }
 ];
 
@@ -242,6 +281,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
     const mariaElena = COMPANY_MEMBERS.find(m => m.id === 'maria-elena-moquegua')!;
     const jorge = COMPANY_MEMBERS.find(m => m.id === 'jorge-tablones')!;
     const sandra = COMPANY_MEMBERS.find(m => m.id === 'sandra-liquidaciones')!;
+    const patricia = COMPANY_MEMBERS.find(m => m.id === 'patricia-costos')!;
 
     const filteredMembers = COMPANY_MEMBERS.filter(member => {
         const matchesArea = selectedArea === 'ALL' || member.area === selectedArea;
@@ -381,8 +421,8 @@ export const CompanyOrganigram_V2: React.FC = () => {
                             1
                         </div>
                         <div>
-                            <p className="text-[11px] text-amber-800 font-bold">Gerencia General</p>
-                            <p className="text-sm font-extrabold text-slate-900">Fernando (GG)</p>
+                            <p className="text-[11px] text-amber-800 font-bold">Nivel 1 • Dirección</p>
+                            <p className="text-sm font-extrabold text-slate-900">Fernando Harten (GG)</p>
                         </div>
                     </div>
 
@@ -391,8 +431,8 @@ export const CompanyOrganigram_V2: React.FC = () => {
                             1
                         </div>
                         <div>
-                            <p className="text-[11px] text-indigo-800 font-bold">Gerencia Comercial</p>
-                            <p className="text-sm font-extrabold text-slate-900">Iosef (G Comercial)</p>
+                            <p className="text-[11px] text-indigo-800 font-bold">Nivel 2 • Comercial</p>
+                            <p className="text-sm font-extrabold text-slate-900">Iosef Zavala (G Comercial)</p>
                         </div>
                     </div>
 
@@ -401,18 +441,18 @@ export const CompanyOrganigram_V2: React.FC = () => {
                             2
                         </div>
                         <div>
-                            <p className="text-[11px] text-emerald-800 font-bold">Operadores de Buque</p>
+                            <p className="text-[11px] text-emerald-800 font-bold">Nivel 3 • Operaciones</p>
                             <p className="text-sm font-extrabold text-slate-900">Maria Elena & Jorge</p>
                         </div>
                     </div>
 
                     <div className="bg-rose-50/50 border border-rose-200 rounded-2xl p-3.5 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black shadow-sm">
-                            1
+                            2
                         </div>
                         <div>
-                            <p className="text-[11px] text-rose-800 font-bold">Liquidaciones & Finanzas</p>
-                            <p className="text-sm font-extrabold text-slate-900">Sandra (Post-Fixture)</p>
+                            <p className="text-[11px] text-rose-800 font-bold">Nivel 3 • Liquidaciones & Costos</p>
+                            <p className="text-sm font-extrabold text-slate-900">Sandra & Patricia</p>
                         </div>
                     </div>
                 </div>
@@ -431,7 +471,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                         }`}
                     >
-                        Toda la Empresa (5)
+                        Toda la Empresa (6)
                     </button>
                     <button
                         onClick={() => setSelectedArea('DIRECCION')}
@@ -441,7 +481,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                         }`}
                     >
-                        👑 Fernando (GG)
+                        👑 Fernando Harten (GG)
                     </button>
                     <button
                         onClick={() => setSelectedArea('COMERCIAL')}
@@ -451,7 +491,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                         }`}
                     >
-                        💼 Iosef (Comercial)
+                        💼 Iosef Zavala (G Comercial)
                     </button>
                     <button
                         onClick={() => setSelectedArea('OPERACIONES')}
@@ -461,7 +501,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                         }`}
                     >
-                        🚢 Operaciones (Maria Elena & Jorge)
+                        🚢 Operaciones (2)
                     </button>
                     <button
                         onClick={() => setSelectedArea('FINANZAS_LIQUIDACIONES')}
@@ -471,7 +511,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                         }`}
                     >
-                        📑 Sandra (Liquidaciones)
+                        📑 Liquidaciones & Costos (2)
                     </button>
                 </div>
 
@@ -546,45 +586,84 @@ export const CompanyOrganigram_V2: React.FC = () => {
                             lineBorderRadius="14px"
                             label={
                                 <div className="inline-block mx-auto mb-4">
-                                    {renderMemberCard(fernando, true)}
+                                    <div className="text-[11px] font-black text-amber-800 bg-amber-100 border border-amber-300 px-3.5 py-1 rounded-full uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5 shadow-xs">
+                                        <span>👑</span> Nivel 1 — Dirección General
+                                    </div>
+                                    <div>
+                                        {renderMemberCard(fernando, true)}
+                                    </div>
                                 </div>
                             }
                         >
-                            {/* Rama 1: Iosef - Gerente Comercial */}
+                            {/* Nivel 2: Iosef Zavala - Gerente Comercial */}
                             <TreeNode
                                 label={
                                     <div className="inline-block px-3 py-2">
-                                        {renderMemberCard(iosef)}
+                                        <div className="text-[11px] font-black text-indigo-800 bg-indigo-100 border border-indigo-300 px-3.5 py-1 rounded-full uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5 shadow-xs">
+                                            <span>💼</span> Nivel 2 — Gerencia Comercial
+                                        </div>
+                                        <div>
+                                            {renderMemberCard(iosef)}
+                                        </div>
                                     </div>
                                 }
-                            />
+                            >
+                                {/* Nivel 3 - Sub-rama 1: Operaciones Marítimas */}
+                                <TreeNode
+                                    label={
+                                        <div className="inline-block px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl shadow-md border border-emerald-400 my-2">
+                                            <div className="flex items-center justify-center gap-2 text-xs font-black tracking-wide uppercase">
+                                                <Ship className="w-4 h-4 text-emerald-200" />
+                                                Nivel 3 — Subgrupo Operaciones Marítimas
+                                            </div>
+                                            <p className="text-[10px] text-emerald-100 font-medium mt-0.5">Gestión Náutica, Consumo Búnker & Control de Flota</p>
+                                        </div>
+                                    }
+                                >
+                                    <TreeNode
+                                        label={
+                                            <div className="inline-block px-3 py-2">
+                                                {renderMemberCard(mariaElena)}
+                                            </div>
+                                        }
+                                    />
+                                    <TreeNode
+                                        label={
+                                            <div className="inline-block px-3 py-2">
+                                                {renderMemberCard(jorge)}
+                                            </div>
+                                        }
+                                    />
+                                </TreeNode>
 
-                            {/* Rama 2: Maria Elena - Operadora Moquegua */}
-                            <TreeNode
-                                label={
-                                    <div className="inline-block px-3 py-2">
-                                        {renderMemberCard(mariaElena)}
-                                    </div>
-                                }
-                            />
-
-                            {/* Rama 3: Jorge - Operador Tablones */}
-                            <TreeNode
-                                label={
-                                    <div className="inline-block px-3 py-2">
-                                        {renderMemberCard(jorge)}
-                                    </div>
-                                }
-                            />
-
-                            {/* Rama 4: Sandra - Liquidaciones de Viajes Reales */}
-                            <TreeNode
-                                label={
-                                    <div className="inline-block px-3 py-2">
-                                        {renderMemberCard(sandra)}
-                                    </div>
-                                }
-                            />
+                                {/* Nivel 3 - Sub-rama 2: Liquidaciones & Costos Portuarios */}
+                                <TreeNode
+                                    label={
+                                        <div className="inline-block px-4 py-2.5 bg-gradient-to-r from-rose-600 to-pink-700 text-white rounded-2xl shadow-md border border-rose-400 my-2">
+                                            <div className="flex items-center justify-center gap-2 text-xs font-black tracking-wide uppercase">
+                                                <FileSpreadsheet className="w-4 h-4 text-rose-200" />
+                                                Nivel 3 — Subgrupo Liquidaciones & Costos Portuarios
+                                            </div>
+                                            <p className="text-[10px] text-rose-100 font-medium mt-0.5">Cierre Post-Fixture, Conciliación Real & Auditoría PDA/FDA</p>
+                                        </div>
+                                    }
+                                >
+                                    <TreeNode
+                                        label={
+                                            <div className="inline-block px-3 py-2">
+                                                {renderMemberCard(sandra)}
+                                            </div>
+                                        }
+                                    />
+                                    <TreeNode
+                                        label={
+                                            <div className="inline-block px-3 py-2">
+                                                {renderMemberCard(patricia)}
+                                            </div>
+                                        }
+                                    />
+                                </TreeNode>
+                            </TreeNode>
                         </Tree>
                     </div>
                 </div>
@@ -608,7 +687,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                             Matriz Ejecutiva de Asignación por Módulo ERP
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-600">
-                            Mapeo de los 5 integrantes de Naviera Petral frente a las pantallas y flujos operativos del ERP.
+                            Mapeo de los 6 integrantes de Naviera Petral frente a las pantallas y flujos operativos del ERP.
                         </p>
                     </div>
                 </div>
@@ -667,7 +746,7 @@ export const CompanyOrganigram_V2: React.FC = () => {
                                         </div>
                                     </td>
                                     <td className="p-3.5 text-slate-600 font-semibold">
-                                        {member.id === 'fernando-gg' ? 'Mensual / Anual' : member.id === 'iosef-comercial' ? 'Diaria / Spot' : member.id === 'sandra-liquidaciones' ? 'Por Viaje Real' : 'Diaria (Noon Reports)'}
+                                        {member.id === 'fernando-gg' ? 'Mensual / Anual' : member.id === 'iosef-comercial' ? 'Diaria / Spot' : member.id === 'sandra-liquidaciones' || member.id === 'patricia-costos' ? 'Por Viaje Real' : 'Diaria (Noon Reports)'}
                                     </td>
                                     <td className="p-3.5 text-right">
                                         <button

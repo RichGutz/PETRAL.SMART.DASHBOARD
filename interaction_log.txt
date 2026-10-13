@@ -1,4 +1,43 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-13 (Reestructuración Jerárquica del Organigrama a 3 Niveles & Inclusión de Patricia Rueda)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Reestructuración Jerárquica Canónica (3 Niveles):
+   - Nivel 1 (Dirección General): Fernando Harten (Gerente General).
+   - Nivel 2 (Gerencia Comercial): Iosef Zavala (Gerente Comercial), subordinado directamente a Fernando Harten.
+   - Nivel 3 (Subgrupos Operativo y de Liquidaciones): Bajo la supervisión de Iosef Zavala, estructurado en 2 subgrupos con Opción A:
+     • Subgrupo Operaciones Marítimas: Maria Elena Castro (M/N Moquegua) y Jorge Neyra (M/N Tablones).
+     • Subgrupo Liquidaciones & Costos Portuarios: Sandra Gálvez (Liquidaciones) y Patricia Rueda (Costos Portuarios & PDA/FDA).
+
+2. Modificación en Frontend:
+   - `CompanyOrganigram_V2.tsx`: Reconfiguración del árbol visual `<Tree>`, tarjetas agrupadoras estilizadas de nivel 3, métricas de cabecera a 6 integrantes y filtros por área actualizados.
+   - `MofManual_V2.tsx`: Actualización de líneas de mando (immediateBoss / subordinates), actualización del estándar a 6 integrantes y creación de la ficha canónica MOF para Patricia Rueda (`MOF-FIN-02`).
+
+3. Verificación Empírica:
+   - Compilación completa con `npx vite build`: 1110 módulos transformados, 0 errores (código de salida 0).
+
+================================================================================
+================================================================================
+REGISTRO DE SESIÓN: 2026-10-07 (Resolución Pericial Error al Guardar Clientes en PETRAL ONE)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Diagnóstico Forense de Falla (Benoit Blanc):
+   - Al intentar guardar un nuevo cliente (o editar existentes) desde `https://petral.one.geeksoft.tech/masters/clients`, saltaba la alerta del navegador `petral.one.geeksoft.tech dice: Error al guardar clientes.`
+   - Inspección en el contenedor `petral-backend` de producción (VPS Contabo `169.58.168.107`): El endpoint `POST /api/v1/forecast/masters/clients` respondía con HTTP 500.
+   - Causa raíz exacta: La consulta SQL en `forecast.py` usa `ON CONFLICT (client_id) DO UPDATE SET ...`, pero en PostgreSQL la tabla `clients` de la base de datos `petral_db` no tenía clave primaria ni índice único en `client_id`, arrojando `psycopg2.errors.InvalidColumnReference: there is no unique or exclusion constraint matching the ON CONFLICT specification`.
+
+2. Corrección y Migración de Base de Datos:
+   - Se aplicó la restricción `ALTER TABLE clients ADD PRIMARY KEY (client_id);` directamente en `petral_db`.
+   - Se guardó la migración oficial en `Desarrollo.Profesional/Geeksoft_Engine/supabase/migrations/20261007000001_add_clients_primary_key.sql`.
+
+3. Validación Empírica en Vivo:
+   - Se realizó la prueba de persistencia con el payload completo (incluyendo el nuevo cliente SIMA).
+   - Resultado: Guardado exitoso con `{"status": "success"}` y persistencia verificada en la base de datos.
+
+================================================================================
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-02 (Corrección de Autorización de Equipos en Device Vault - PETRAL ONE)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
@@ -820,7 +859,58 @@ REPOSITORIO INDEPENDIENTE DESTINO: C:\Users\rguti\petral.biai.geeksoft.tech (htt
 
 6. ESTADO FINAL DE CIERRE DE SESIÓN:
 --------------------------------------------------------------------------------
-- Repositorio listo, ordenado y sincronizado.
-- Harness agéntico `.agents/` configurado para operar de forma autónoma y precisa.
-- Sesión en PETRAL.SMART.DASHBOARD concluida; transición completa al nuevo repositorio.
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-13 (Auditoría Forense Benoit Blanc: Device Vault y 2FA)
+USUARIOS AFECTADOS: mcastro@petral.com.pe y jneyra@petral.com.pe
+BRANCH ACTIVO: BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
+TAG CREADO: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
+================================================================================
+
+1. PROTOCOLO BENOIT BLANC - HALLAZGOS PERICIALES & CAUSA RAÍZ:
+--------------------------------------------------------------------------------
+- SÍNTOMA REPORTADO:
+  1. Revocaciones automáticas de dispositivos sin que ningún administrador los haya revocado.
+  2. Códigos 2FA OTP tardan en llegar al correo y cuando ingresan ya están vencidos.
+
+- AUTOPSIA FORENSE (ESCENA DEL CRIMEN):
+  * Base de Datos Supabase (user_authorized_devices):
+    - Ningún admin revocó a mcastro ni a jneyra. Ambos mantenían registros APPROVED autorizados por izavala@petral.com.pe.
+  * Causa Raíz Falsas Revocaciones (deviceFingerprint.ts):
+    - El hash dependía de window.screen.width x height y userAgent exacto.
+    - Conexión a monitores externos/docking stations, cambio de escala DPI (100% <-> 125%) o updates silenciosos de Chrome mutaban el hash.
+    - Al no persistir token cliente en localStorage, el sistema creaba un nuevo registro PENDING y arrojaba HTTP 403 (aparentando revocación).
+  * Causa Raíz Demora y Vencimiento 2FA (auth.py & Resend):
+    - Correos @petral.com.pe (Microsoft 365 EOP) aplican greylisting e inspección de adjuntos/enlaces (3-6 min de retraso).
+    - El backend configuraba expiración de solo 5 min (timedelta(minutes=5)). Al llegar el correo, el código ya había expirado.
+
+2. ACCIONES Y CORRECCIONES QUIRÚRGICAS:
+--------------------------------------------------------------------------------
+- SEGURIDAD Y CONTROL GIT:
+  * Creado Branch: BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
+  * Creado Tag: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
+
+- FRONTEND (Geeksoft_Frontend):
+  * src/utils/deviceFingerprint.ts:
+    - Implementado token persistente 'petral_device_vault_token' en localStorage (UUID inmune a cambios de pantalla/zoom).
+    - Eliminadas dimensiones de resolución de pantalla del seed del hash.
+    - Estandarizado device_name a formato corporativo limpio.
+  * src/pages/Auth/Login.tsx:
+    - Temporizador de reenvío actualizado de 300s a 900s (15 min).
+
+- BACKEND (Geeksoft_Engine):
+  * backend/services/device_vault_service.py:
+    - Implementada regla de Auto-Renovación Heredada: si un usuario corporativo ya tiene un dispositivo APPROVED por admin, nuevos registros heredan aprobación ('AUTO_RENEWAL (prev_approved_by)'), evitando bloqueos espurios. Dispositivos explícitamente REVOKED permanecen bloqueados.
+  * backend/api/routers/auth.py:
+    - Expiración de OTP ampliada de 5 a 15 minutos (timedelta(minutes=15)) en login_step_one y resend_2fa.
+  * backend/services/send_demo_email.py:
+    - Inyectadas cabeceras de alta prioridad en Resend API (X-Priority: 1, Priority: Urgent, Importance: high).
+  * backend/services/email_template_2fa.py:
+    - Plantilla HTML/texto actualizada a 15 minutos de validez.
+
+3. VERIFICACIÓN EMPÍRICA (QUALITY GATE):
+--------------------------------------------------------------------------------
+- Frontend Build: 'npx vite build' exitoso (1110 módulos, 0 errores, 16.95s).
+- Backend Headless Test: validada herencia de aprobación y tiempo de vida de 15 min.
+- Base de datos saneada: eliminados registros temporales de prueba.
+================================================================================
+

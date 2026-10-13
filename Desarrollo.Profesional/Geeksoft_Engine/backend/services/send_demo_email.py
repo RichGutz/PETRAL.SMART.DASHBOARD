@@ -9,12 +9,12 @@ root_dir = Path(__file__).resolve().parent.parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-# Importar el generador de plantilla
+# Importar el generador de plantilla oficial PETRAL ONE
 from backend.services.email_template_2fa import generate_2fa_email_html
 
-def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str = "PETRAL ONE Security <petral@geeksoft.tech>"):
+def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str = "PETRAL ONE Security <petral.one@geeksoft.tech>"):
     """
-    Envía el correo con código OTP de 6 dígitos para autenticación 2FA.
+    Envía el correo con código OTP de 6 dígitos para autenticación 2FA en PETRAL ONE.
     """
     html_content = generate_2fa_email_html(user_name=user_name, otp_code=otp_code)
     
@@ -22,7 +22,13 @@ def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str
         "from": from_email,
         "to": [to_email],
         "subject": f"Código de Seguridad PETRAL ONE: {otp_code}",
-        "html": html_content
+        "html": html_content,
+        "headers": {
+            "X-Priority": "1",
+            "Priority": "Urgent",
+            "Importance": "high",
+            "X-MSMail-Priority": "High"
+        }
     }
     
     data = json.dumps(payload).encode("utf-8")
@@ -39,7 +45,7 @@ def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str
         headers={
             "Authorization": f"Bearer {resend_api_key}",
             "Content-Type": "application/json",
-            "User-Agent": "DELFOS-Auth/1.0"
+            "User-Agent": "PETRAL-Auth/1.0"
         }
     )
     
@@ -47,9 +53,8 @@ def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str
         with urllib.request.urlopen(req) as resp:
             status_code = resp.status
             body = resp.read().decode("utf-8")
-            print(f"[OK] Correo enviado exitosamente a {to_email}")
+            print(f"[OK] Correo 2FA PETRAL ONE enviado exitosamente a {to_email} desde {from_email}")
             print(f"Status: {status_code}")
-            print(f"Response: {body}")
             return True, body
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8")
@@ -59,9 +64,3 @@ def send_2fa_email(to_email: str, user_name: str, otp_code: str, from_email: str
         print(f"[ERROR] {e}")
         return False, str(e)
 
-if __name__ == "__main__":
-    recipient = "rich@kaizencapital.pe"
-    name = "Richard Gutiérrez"
-    code = "575075"
-    print(f"Despachando correo demo a {recipient} con código {code} desde petra@geeksoft.tech...")
-    success, res = send_2fa_email(recipient, name, code)

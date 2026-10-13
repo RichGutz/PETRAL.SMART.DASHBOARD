@@ -19,7 +19,7 @@ export const Login: React.FC = () => {
     const [maskedEmail, setMaskedEmail] = useState('');
     const [userName, setUserName] = useState('');
     const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
-    const [timeLeft, setTimeLeft] = useState(300); // 5 minutos en segundos
+    const [timeLeft, setTimeLeft] = useState(900); // 15 minutos en segundos
     const [resendCooldown, setResendCooldown] = useState(60); // 60s cooldown para reenvío
     const [resendSuccess, setResendSuccess] = useState('');
     
@@ -82,7 +82,7 @@ export const Login: React.FC = () => {
                 setMaskedEmail(response.masked_destination);
                 setUserName(response.user_name);
                 setStep('2FA_OTP');
-                setTimeLeft(300);
+                setTimeLeft(900);
                 setResendCooldown(60);
                 setOtpDigits(['', '', '', '', '', '']);
             }
@@ -187,7 +187,7 @@ export const Login: React.FC = () => {
             await resendTwoFactor(tempToken);
             setResendSuccess('¡Código reenviado con éxito a tu correo!');
             setResendCooldown(60);
-            setTimeLeft(300);
+            setTimeLeft(900);
             setTimeout(() => setResendSuccess(''), 4000);
         } catch (err: any) {
             setError('No se pudo reenviar el código. Intente de nuevo.');

@@ -70,6 +70,23 @@ class DeviceVaultService:
                     initial_status = "APPROVED"
                     initial_approved_by = "ADMIN_AUTO_APPROVE"
                     initial_approved_at = datetime.now(timezone.utc)
+                else:
+                    # Verificar si el usuario ya cuenta con aprobación previa válida de sus equipos en la organización
+                    # Previene bloqueos por falsas revocaciones a usuarios operativos formalmente autorizados
+                    cur.execute(
+                        """
+                        SELECT approved_by, approved_at 
+                        FROM user_authorized_devices 
+                        WHERE LOWER(user_email) = %s AND status = 'APPROVED'
+                        ORDER BY approved_at DESC LIMIT 1;
+                        """,
+                        (email_clean,)
+                    )
+                    prev_approval = cur.fetchone()
+                    if prev_approval and prev_approval[0]:
+                        initial_status = "APPROVED"
+                        initial_approved_by = f"AUTO_RENEWAL ({prev_approval[0]})"
+                        initial_approved_at = datetime.now(timezone.utc)
 
                 device_uuid = str(uuid.uuid4())
                 cur.execute(
