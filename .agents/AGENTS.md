@@ -1,19 +1,19 @@
 # Reglas de Despliegue para el Proyecto PETRAL
 
 <RULE[deployment_vps]>
-- **PROHIBICIÓN TOTAL RAILWAY**: NUNCA utilizar comandos de Railway (`git push railway main`). Este proyecto se despliega ÚNICAMENTE al VPS de Producción (`91.108.125.253`).
+- **PROHIBICIÓN TOTAL RAILWAY**: NUNCA utilizar comandos de Railway (`git push railway main`). Este proyecto se despliega ÚNICAMENTE al VPS Oficial de Producción Contabo (`169.58.168.107`).
 - **DISTINCIÓN LOCAL VS VPS**: Cuando el usuario pida "lanzar en local", NUNCA desplegar al VPS. Solo desplegar al VPS cuando el usuario lo ordene explícitamente ("pushea al VPS", "despliega al VPS", "sube a producción").
-- **PROTOCOLO DE DESPLIEGUE DIRECTO A PRODUCCIÓN (VPS)**:
+- **PROTOCOLO DE DESPLIEGUE DIRECTO A PRODUCCIÓN (VPS CONTABO)**:
   Ejecutar INMEDIATAMENTE esta secuencia exacta de 3 pasos sin perder tiempo investigando:
   1. **Merge a Main y Git Push**:
      `git checkout main; git merge <branch_actual>; git push origin main`
   2. **Compilar Frontend Bundle**:
      `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend`
      `npx vite build`
-  3. **Deploy Automatizado SFTP/SSH al VPS**:
+  3. **Deploy Automatizado SFTP/SSH a Contabo**:
      `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS`
-     `python deploy_forecast_kickoff.py`
-  - URL Oficial de Producción en Vivo: `https://forecast.geeksoft.tech`
+     `python deploy_petral_one_contabo.py`
+  - URL Oficial de Producción en Vivo: `https://petral.one.geeksoft.tech`
 </RULE[deployment_vps]>
 
 <RULE[markdown_pdf_conversion]>

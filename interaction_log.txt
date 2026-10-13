@@ -1,4 +1,27 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-13 (Doble Vía de Acceso: Contraseña Directa, Reseteo Administrativo y Autoservicio de Claves)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Doble Vía de Acceso en Pantalla de Login:
+   - Rediseño de `Login.tsx`: Implementación del modo de ingreso inmediato mediante Correo Corporativo + Contraseña con selector de visibilidad (Eye/EyeOff).
+   - Acceso alternativo 2FA: Enlace para usuarios que olvidaron su clave o prefieren código temporal de 6 dígitos por correo (con copia CC a rgutil@gmail.com).
+
+2. Backend FastAPI (`auth.py`):
+   - Endpoint `POST /api/v1/auth/login-password`: Valida credenciales contra `app_users` usando `crypt(%s, password_hash) = password_hash`, verifica dispositivo en `DeviceVaultService`, carga permisos y registra auditoría.
+   - Endpoint `POST /api/v1/auth/change-password`: Permite autoservicio de cambio de contraseña validando la contraseña actual del usuario.
+   - Endpoint `POST /api/v1/users/{user_id}/reset-password`: Permite al Administrador asignar o resetear la clave de cualquier colaborador.
+
+3. Frontend (`UsersPermissions.tsx` & `MasterTemplate_V2.tsx`):
+   - Modal administrativo con generador automático de contraseñas seguras y botón en la grilla de usuarios.
+   - Modal de autoservicio en el header (ícono de llave) vinculado al nuevo endpoint.
+
+4. Verificación y Despliegue VPS:
+   - Compilación exitosa con Vite (`npx vite build`): 1113 módulos transformados, 0 errores.
+   - Despliegue automatizado a Producción en Vivo (`https://forecast.geeksoft.tech`).
+
+================================================================================
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-13 (Reestructuración Jerárquica del Organigrama a 3 Niveles & Inclusión de Patricia Rueda)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:

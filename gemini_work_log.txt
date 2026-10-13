@@ -1,4 +1,26 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-13 (Doble Vía de Acceso: Contraseña Directa, Reseteo Administrativo y Autoservicio de Claves)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Requerimiento Comercial y Operativo:
+  • Implementar doble vía de autenticación en PETRAL SMART DASHBOARD:
+    1. Acceso Directo por Contraseña (sin depender de demoras de entrega de correos).
+    2. Acceso por Código Temporal (2FA OTP de 6 dígitos) con copia CC a rgutil@gmail.com.
+    3. Autoservicio de cambio de contraseña para cada usuario desde el ícono de llave en la cabecera.
+    4. Control Administrativo de reseteo de claves desde el módulo de Gestión de Usuarios (/users).
+- Implementación Backend (`auth.py`):
+  • `POST /api/v1/auth/login-password`: Verificación nativa PostgreSQL pgcrypto (`crypt(password, password_hash) = password_hash`).
+  • `POST /api/v1/auth/change-password`: Modificación de clave validando contraseña anterior.
+  • `POST /api/v1/users/{user_id}/reset-password`: Reseteo administrativo de contraseña.
+- Implementación Frontend:
+  • `Login.tsx`: Tarjeta con doble modalidad (Contraseña directa y 2FA OTP).
+  • `UsersPermissions.tsx`: Botón `[ 🔑 Resetear Contraseña ]` y modal administrativo con generador seguro.
+  • `MasterTemplate_V2.tsx`: Integración completa de autoservicio de contraseña.
+- QC Gate & Verificación Empírica:
+  • Compilación Vite: 1113 módulos transformados, 0 errores, código de salida 0.
+  • Despliegue en VPS Producción: `https://forecast.geeksoft.tech`.
+================================================================================
+================================================================================
 GEMINI WORK LOG: 2026-10-13 (Reestructuración Jerárquica del Organigrama a 3 Niveles & Inclusión de Patricia Rueda)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
