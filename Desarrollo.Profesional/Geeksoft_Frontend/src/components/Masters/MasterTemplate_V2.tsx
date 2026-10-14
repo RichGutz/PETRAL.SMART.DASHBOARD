@@ -122,9 +122,9 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
     return (
-        <div className="h-screen max-h-screen w-screen max-w-full bg-slate-50 font-sans flex flex-col antialiased overflow-hidden">
+        <div className="h-screen max-h-screen w-screen max-w-full bg-slate-50 font-sans flex flex-col antialiased overflow-hidden print:h-auto print:max-h-none print:w-full print:overflow-visible print:block print:bg-white print:p-0">
             {/* Header Superior Principal */}
-            <header className="bg-white border-b border-slate-200 shrink-0 shadow-sm px-6 py-2.5 z-50">
+            <header className="bg-white border-b border-slate-200 shrink-0 shadow-sm px-6 py-2.5 z-50 print:hidden">
                 <div className="flex items-center justify-between max-w-full mx-auto w-full">
                     
                     {/* Logos y Título de App */}
@@ -287,7 +287,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
             {isSidebarCollapsed && (
                 <button
                     onClick={toggleSidebar}
-                    className="fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-white hover:bg-slate-100 text-slate-700 py-4 px-2 rounded-r-lg shadow-md flex flex-col items-center gap-2 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer border border-l-0 border-slate-300 transition-all hover:pr-3 group select-none pointer-events-auto"
+                    className="fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-white hover:bg-slate-100 text-slate-700 py-4 px-2 rounded-r-lg shadow-md flex flex-col items-center gap-2 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer border border-l-0 border-slate-300 transition-all hover:pr-3 group select-none pointer-events-auto print:hidden"
                     title="Expandir Menú Lateral de Datos Maestros"
                 >
                     <PanelLeftOpen size={16} className="text-teal-600 group-hover:scale-110 transition-transform pointer-events-none" />
@@ -296,10 +296,10 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
             )}
 
             {/* Layout Principal con Sidebar Lateral de Maestros */}
-            <div className="flex-1 flex max-w-full w-full mx-auto p-3 gap-3 min-h-0 overflow-hidden">
+            <div className="flex-1 flex max-w-full w-full mx-auto p-3 gap-3 min-h-0 overflow-hidden print:block print:p-0 print:m-0 print:h-auto print:overflow-visible print:max-w-none">
                 
                 {/* Sidebar Izquierdo Colapsable */}
-                <aside className={`${isSidebarCollapsed ? 'w-0 opacity-0 overflow-hidden p-0 m-0 border-0 pointer-events-none' : 'w-64 opacity-100'} shrink-0 flex flex-col gap-3 hidden md:flex transition-all duration-300 h-full overflow-y-auto pr-1`}>
+                <aside className={`${isSidebarCollapsed ? 'w-0 opacity-0 overflow-hidden p-0 m-0 border-0 pointer-events-none' : 'w-64 opacity-100'} shrink-0 flex flex-col gap-3 hidden md:flex transition-all duration-300 h-full overflow-y-auto pr-1 print:hidden`}>
 
                     {/* CINTA / RIBBON SUPERIOR DEL SIDEBAR DE MAESTROS */}
                     <button
@@ -692,14 +692,14 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
                 {/* Contenido Principal */}
-                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-w-0 min-h-0 overflow-auto master-template-content">
+                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-w-0 min-h-0 overflow-auto master-template-content print:block print:border-none print:shadow-none print:p-0 print:m-0 print:h-auto print:overflow-visible print:w-full print:rounded-none">
                     {children}
                 </main>
 
             </div>
 
             {/* Footer Corporativo */}
-            <footer className="shrink-0 bg-white border-t border-slate-200 py-2 px-6 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+            <footer className="shrink-0 bg-white border-t border-slate-200 py-2 px-6 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase print:hidden">
                 © {new Date().getFullYear()} NAVIERA PETRAL · GEEKSOFT TECHNOLOGY PARTNER
             </footer>
 

@@ -216,9 +216,9 @@ export const DocsAsCodeBookReader_V2: React.FC<DocsAsCodeBookReaderProps> = ({
             </div>
 
             {/* ── HOJA A4 PRINCIPAL DE LECTURA EDITORIAL (CONGELADA A 880px) ── */}
-            <div className="w-full flex justify-center py-6 px-3 sm:px-6">
+            <div className="w-full flex justify-center py-6 px-3 sm:px-6 print:p-0 print:m-0 print:block">
                 <main 
-                    className={`a4-sheet w-full max-w-[880px] min-h-[1050px] rounded-xl p-6 sm:p-12 md:p-14 border transition-all duration-300 relative ${currentTheme.sheet}`}
+                    className={`a4-sheet w-full max-w-[880px] min-h-[1050px] rounded-xl p-6 sm:p-12 md:p-14 border transition-all duration-300 relative ${currentTheme.sheet} print:p-0 print:m-0 print:border-none print:shadow-none print:max-w-full print:w-full print:rounded-none`}
                     style={{ fontSize: `${fontSize}px` }}
                 >
                     {/* Membrete Oficial A4 */}
@@ -259,7 +259,7 @@ export const DocsAsCodeBookReader_V2: React.FC<DocsAsCodeBookReaderProps> = ({
                     {/* Secciones Técnicas Detalladas */}
                     <div className="space-y-8 font-serif leading-relaxed text-justify">
                         {chapter.sections.map((sec) => (
-                            <section key={sec.number} className="space-y-3.5 avoid-page-break">
+                            <section key={sec.number} className="space-y-3.5">
                                 
                                 {/* Título de la Subsección */}
                                 <h3 className="text-base sm:text-lg font-bold font-sans tracking-tight border-b pb-1.5 flex items-center gap-2">
@@ -400,19 +400,26 @@ export const DocsAsCodeBookReader_V2: React.FC<DocsAsCodeBookReaderProps> = ({
                 </main>
             </div>
 
-            {/* Inyección de Reglas CSS @media print */}
+            {/* Inyección de Reglas CSS @media print Estilo Dr. Cost */}
             <style>{`
                 @media print {
-                    header, nav, aside, .no-print, button, input {
-                        display: none !important;
+                    @page {
+                        size: A4 portrait;
+                        margin: 12mm 15mm 12mm 15mm;
                     }
-                    body {
+                    html, body, #root, #root > div, #root > div > div, main {
+                        height: auto !important;
+                        min-height: 0 !important;
+                        max-height: none !important;
+                        overflow: visible !important;
+                        position: static !important;
+                        display: block !important;
+                        width: 100% !important;
                         background: #ffffff !important;
-                        color: #000000 !important;
-                        font-size: 10pt !important;
-                        line-height: 1.4 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
+                        color: #0f172a !important;
+                    }
+                    header, nav, aside, footer, .no-print, button, input {
+                        display: none !important;
                     }
                     .a4-sheet {
                         max-width: 100% !important;
@@ -422,14 +429,35 @@ export const DocsAsCodeBookReader_V2: React.FC<DocsAsCodeBookReaderProps> = ({
                         border: none !important;
                         padding: 0 !important;
                         margin: 0 !important;
+                        background: #ffffff !important;
+                        color: #0f172a !important;
+                        display: block !important;
+                        position: static !important;
                     }
-                    .avoid-page-break {
+                    .a4-sheet * {
+                        color: #0f172a !important;
+                        text-shadow: none !important;
+                    }
+                    .avoid-page-break, blockquote, .formula-box {
                         page-break-inside: avoid !important;
                         break-inside: avoid !important;
                     }
-                    h1, h2, h3, h4 {
+                    table {
+                        page-break-inside: auto !important;
+                        break-inside: auto !important;
+                    }
+                    tr {
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                    }
+                    thead {
+                        display: table-header-group !important;
+                    }
+                    h1, h2, h3, h4, h5 {
                         page-break-after: avoid !important;
                         break-after: avoid !important;
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
                     }
                 }
             `}</style>

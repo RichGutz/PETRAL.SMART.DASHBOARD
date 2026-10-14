@@ -107,7 +107,7 @@ export const SystemDocumentation_V2: React.FC = () => {
     };
 
     return (
-        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
+        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300 print:block print:gap-0 print:p-0 print:m-0 print:w-full">
             
             {/* ── ENCABEZADO PRINCIPAL DE LA VISTA ── */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 print:hidden">
@@ -138,7 +138,7 @@ export const SystemDocumentation_V2: React.FC = () => {
             </div>
 
             {/* ── CONTENEDOR PRINCIPAL: SIDEBAR 320px + VISOR DE LIBRO EDITORIAL ── */}
-            <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0">
+            <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0 print:block print:w-full print:p-0 print:m-0">
 
                 {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (320px CONGELADOS EXACTOS) */}
                 <aside className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 space-y-4 print:hidden">
@@ -255,7 +255,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </aside>
 
                 {/* ── ÁREA PRINCIPAL: VISOR DE LIBRO EDITORIAL CON REGLAS DE IMPRESIÓN A4 ── */}
-                <div className="flex-1 min-w-0 w-full">
+                <div className="flex-1 min-w-0 w-full print:block print:w-full print:p-0 print:m-0">
                     <DocsAsCodeBookReader_V2
                         chapter={currentChapter}
                         onPrevChapter={handlePrevChapter}

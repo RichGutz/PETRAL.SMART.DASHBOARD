@@ -33,7 +33,7 @@ export const ToolsLayout_V2: React.FC = () => {
     return (
         <MasterTemplate title="Herramientas" subtitle="Análisis y Proyección" activeTab={activeTab}>
             
-            <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 h-full">
+            <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 print:p-0 h-full print:h-auto print:block print:overflow-visible print:w-full">
                 {/* 1. Builder Bar (Shared across interactive modeling tools) */}
                 {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'company-organigram' && activeTab !== 'mof-manual' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && (
                     <div className="print:hidden">
@@ -75,7 +75,7 @@ export const ToolsLayout_V2: React.FC = () => {
 
                 {/* 2. Sincronización Canónica de Rutas con React Router Outlet */}
                 <ErrorBoundary fallbackTitle="Error al cargar la herramienta interactiva">
-                    <div className="flex-1 flex flex-col min-h-0 relative w-full h-full">
+                    <div className="flex-1 flex flex-col min-h-0 relative w-full h-full print:h-auto print:block print:overflow-visible print:p-0 print:m-0">
                         <Outlet />
                     </div>
                 </ErrorBoundary>

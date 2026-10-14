@@ -1,4 +1,24 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-14 (Resolución Pericial Error "Gran Sábana" en Impresión A4 - Docs as Code & Manual MOF)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Requerimiento Comercial y Operativo:
+  • Resolver la falla de impresión donde `Docs as Code` y el `Manual MOF` no se compaginaban en hojas discretas A4, renderizándose como una "gran sábana" continua o aplastada.
+  • Replicar la solución canónica comprobada del Tratado de Costos de Dr. Cost (`SW.Dr.Cost.REACT`).
+- Diagnóstico Forense (Benoit Blanc):
+  • Trampa de Overflow en los ancestros (`MasterTemplate_V2`, `ToolsLayout_V2`): Contenedores con `h-screen`, `max-h-screen`, `w-screen`, `overflow-hidden` y `overflow-auto` impedían a Chromium fragmentar la salida en páginas A4.
+  • Carencia de Reglas Globales `@media print` en `Geeksoft_Frontend/src/index.css`.
+  • Bloqueo artificial por asignación de `avoid-page-break` a etiquetas `<section>` y tablas enteras de >1000px de altura.
+- Implementación y Cirugía de Código:
+  • `index.css`: Integración del motor maestro de impresión Dr. Cost con `@page { size: A4 portrait; margin: 12mm 15mm; }`, desahogo universal de todos los ancestros (`height: auto !important; overflow: visible !important; display: block !important; position: static !important;`), ocultamiento estricto de UI/asides/navs/headers/footers, y protección atómica de `tr`, `thead`, `blockquote`, `.avoid-page-break`, `h1-h5`.
+  • `MasterTemplate_V2.tsx` & `ToolsLayout_V2.tsx`: Agregadas clases utilitarias `print:` para ocultar chrome y desahogar el layout.
+  • `SystemDocumentation_V2.tsx` & `MofManual_V2.tsx`: Desahogo de contenedores flex y congelamiento de asides en print.
+  • `DocsAsCodeBookReader_V2.tsx` & `MofRoleBookReader_V2.tsx`: Paginación natural párrafo a párrafo, blindaje de cajas de fórmulas/tablas y estilo de impresión blanco nítido.
+- QC Gate & Verificación Empírica (JEV):
+  • Compilación Vite en terminal: `npx vite build` completado exitosamente en 10.57s (Exit Code 0, 0 errores).
+  • Documentación pericial completa asentada en `Desarrollo.Profesional/Obsidian.Mudanza.Contabo/31. Mejoras.Docs.As.Code.Dr.Cost.Style.md`.
+================================================================================
+================================================================================
 GEMINI WORK LOG: 2026-10-13 (Doble Vía de Acceso: Contraseña Directa, Reseteo Administrativo y Autoservicio de Claves)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
@@ -873,4 +893,10 @@ OBJETIVO: Aplicar el mismo estilo editorial de Dr. Cost (hoja A4, temas tri-moda
   * src/components/MofManual/MofRoleBookReader_V2.tsx: Lector editorial A4 con temas (Blanco, Sepia, Noche), zoom tipográfico y @media print.
   * src/pages/Tools/MofManual_V2.tsx: Orquestador desacoplado con sidebar congelado de 320px.
 - JEV LOCAL GATE: npx vite build completado exitosamente en 9.98s (0 errores, Exit Code 0).
+- DESPLIEGUE A PRODUCCIÓN CONTABO (169.58.168.107):
+  * Git Commit dcd432b y Push a origin/main completados.
+  * Bundle Vite generado y empaquetado en frontend_dist.tar.gz (1782.52 KB).
+  * SFTP y Docker cp ejecutados a petral-frontend y petral-backend.
+  * Contenedores reiniciados con éxito.
+  * Verificación en vivo: HTTP/2 200 OK en https://petral.one.geeksoft.tech/mof-manual
 ================================================================================

@@ -299,3 +299,168 @@ input[type="number"] {
   color: #d97706;
   border: 1px solid #fde68a;
 }
+
+/* ========================================================================= */
+/* ESTILOS DE IMPRESIÓN PROFESIONAL A4 (MOTOR EDITORIAL DR. COST)            */
+/* ========================================================================= */
+@media screen {
+  .drcost-print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm 12mm 15mm;
+  }
+
+  html, 
+  body, 
+  #root, 
+  #root > div, 
+  #root > div > div, 
+  main,
+  .master-template-content,
+  div[class*="overflow-"],
+  div[class*="h-screen"],
+  div[class*="max-h-screen"],
+  div[class*="h-full"],
+  div[class*="min-h-"],
+  div[class*="max-h-"],
+  div[class*="w-screen"],
+  div[class*="flex"] {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    float: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Ocultar absolutamente toda la UI circundante, barras de herramientas y menús */
+  aside, 
+  header, 
+  nav, 
+  footer,
+  .apefac-sidebar, 
+  .no-print, 
+  .drcost-screen-only,
+  button, 
+  input, 
+  textarea, 
+  select {
+    display: none !important;
+  }
+
+  main, .master-template-content {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    position: static !important;
+  }
+
+  /* Hoja A4 Editorial: Ocupa el ancho completo imprimible y fluye de forma paginada */
+  .a4-sheet {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    display: block !important;
+    overflow: visible !important;
+    position: static !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Forzar modo papel blanco nítido para impresión */
+  .a4-sheet,
+  .a4-sheet * {
+    color: #0f172a !important;
+    text-shadow: none !important;
+  }
+
+  .a4-sheet blockquote,
+  .a4-sheet [class*="summaryBox"],
+  .a4-sheet [class*="formulaBox"] {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .a4-sheet code,
+  .a4-sheet [class*="formulaCode"] {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  /* Tablas: Prohibición de particiones en filas y encabezados repetidos */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  td {
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+  }
+
+  /* Cajas y Bloques Clave: Mantener íntegros en una sola hoja */
+  .avoid-page-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Títulos: Evitar que queden huérfanos al pie de una página */
+  h1, h2, h3, h4, h5 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}

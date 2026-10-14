@@ -1,4 +1,23 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-14 (Resolución Pericial Error "Gran Sábana" en Impresión A4 - Docs as Code & Manual MOF)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Corrección Forense de la Compaginación A4 (Estilo Dr. Cost):
+   - Problema: Al intentar imprimir desde Docs as Code o el Manual MOF, el navegador generaba una "gran sábana" continua sin compaginar hojas A4 discretas.
+   - Causa raíz: Múltiples ancestros con clases `h-screen`, `max-h-screen`, `w-screen`, `overflow-hidden` y `overflow-auto` (`MasterTemplate_V2`, `ToolsLayout_V2`), además de ausencia de `@media print` en `src/index.css` y exceso de `avoid-page-break` en etiquetas `<section>`.
+   - Solución: Replicación del motor maestro de impresión de Dr. Cost (`SW.Dr.Cost.REACT`):
+     • Inyección de reglas maestras `@page { size: A4 portrait; margin: 12mm 15mm; }` en `src/index.css`.
+     • Desahogo universal de todos los contenedores a `height: auto !important; overflow: visible !important; display: block !important; position: static !important;`.
+     • Supresión total de headers, barras de herramientas, sidebars, ribbons flotantes y pie de página institucional en impresión.
+     • Paginación natural párrafo a párrafo en `DocsAsCodeBookReader_V2.tsx` y `MofRoleBookReader_V2.tsx`, blindando fórmulas, tablas y cédulas con `break-inside: avoid`.
+     • Forzado de modo papel blanco nítido con texto `#0f172a` y bordes grises suaves para evitar color bleed o consumo excesivo de toner.
+
+2. Verificación Empírica Local (Puerta JEV):
+   - `npx vite build`: Ejecutado en `Desarrollo.Profesional/Geeksoft_Frontend`, finalizando con éxito en 10.57s y Exit Code 0.
+   - Documentación pericial: Asentada bajo el protocolo Benoit Blanc en `Desarrollo.Profesional/Obsidian.Mudanza.Contabo/31. Mejoras.Docs.As.Code.Dr.Cost.Style.md`.
+================================================================================
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-13 (Doble Vía de Acceso: Contraseña Directa, Reseteo Administrativo y Autoservicio de Claves)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
@@ -980,6 +999,12 @@ MODULARIZACIÓN 100%:
 - src/components/MofManual/MofRoleBookReader_V2.tsx: Lector editorial A4 (Blanco, Sepia, Noche), zoom tipográfico y @media print.
 - src/pages/Tools/MofManual_V2.tsx: Orquestador ultra-ligero y robusto.
 VERIFICACIÓN EMPÍRICA (JEV LOCAL): npx vite build completado exitosamente en 9.98s (0 errores, Exit Code 0).
+DESPLIEGUE A PRODUCCIÓN CONTABO (169.58.168.107):
+- Git Commit dcd432b y Push a origin/main completados.
+- Bundle Vite de Frontend compilado en 11.49s.
+- Deploy automatizado SFTP/SSH ejecutado vía Push.VPS/deploy_petral_one_contabo.py (1782.52 KB).
+- Contenedores petral-backend y petral-frontend reiniciados.
+- Verificación en vivo: HTTP/2 200 OK en https://petral.one.geeksoft.tech/
 ================================================================================
 
 
