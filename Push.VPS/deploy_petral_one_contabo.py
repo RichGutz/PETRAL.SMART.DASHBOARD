@@ -61,9 +61,8 @@ def deploy():
 
     # 3. Subir auth.py
     print(f"\n[2. Subiendo auth.py al backend de Contabo...]")
-    remote_auth_stack = "/opt/petral_stack/backend/api/routers/auth.py"
     sftp.put(LOCAL_AUTH_PY, "/tmp/auth.py")
-    run(client, f"cp /tmp/auth.py {remote_auth_stack} && docker cp /tmp/auth.py petral-backend:/app/backend/api/routers/auth.py", "Copiar auth.py a host y a petral-backend")
+    run(client, f"mkdir -p /opt/petral_stack/backend/api/routers && cp /tmp/auth.py {remote_auth_stack} ; docker cp /tmp/auth.py petral-backend:/app/backend/api/routers/auth.py", "Copiar auth.py a host y a petral-backend")
 
     # 4. Subir tar.gz de frontend
     print(f"\n[3. Subiendo bundle frontend dist a Contabo...]")

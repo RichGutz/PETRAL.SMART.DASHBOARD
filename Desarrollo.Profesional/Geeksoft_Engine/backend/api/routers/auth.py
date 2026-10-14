@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from typing import Optional, Dict, List, Any
 import random
 import uuid
+import time
+import threading
 from datetime import datetime, timedelta, timezone
 from backend.database import get_db_connection
 from backend.services.send_demo_email import send_2fa_email
@@ -10,6 +12,12 @@ from backend.services.device_vault_service import DeviceVaultService
 from backend.services.audit_service import AuditService
 
 router = APIRouter(tags=["auth"])
+
+# --- Rate Limiting In-Memory Cache para Brute-Force Protection ---
+FAILED_LOGIN_LIMIT = 5
+FAILED_LOGIN_WINDOW_SECONDS = 300  # 5 minutos
+_failed_logins_lock = threading.Lock()
+_failed_logins_cache: Dict[str, List[float]] = {}
 
 # --- Modelos de Pydantic ---
 class LoginRequest(BaseModel):
@@ -191,10 +199,11 @@ def login_step_one(payload: LoginRequest):
 
 
 @router.post("/auth/login-password", response_model=LoginResponse)
-def login_with_password(payload: LoginRequest):
+def login_with_password(payload: LoginRequest, request: Request):
     """
     Inicio de sesión directo con correo y contraseña (Vía 1 de Opción 3).
-    Verifica credenciales mediante pgcrypto crypt, valida Device Vault y emite sesión completa.
+    Verifica credenciales mediante pgcrypto crypt, valida Device Vault, aplica Rate Limiting
+    y emite sesión completa.
     """
     email_clean = payload.email.strip().lower()
     password = (payload.password or "").strip()
@@ -204,6 +213,22 @@ def login_with_password(payload: LoginRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Debe ingresar su contraseña para acceder."
         )
+    
+    # 1. Control de Fuerza Bruta (Rate Limiting: 5 intentos / 5 minutos por IP y Cuenta)
+    forwarded = request.headers.get("x-forwarded-for")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    rate_key = f"{client_ip}:{email_clean}"
+    now = time.time()
+
+    with _failed_logins_lock:
+        history = [t for t in _failed_logins_cache.get(rate_key, []) if now - t < FAILED_LOGIN_WINDOW_SECONDS]
+        _failed_logins_cache[rate_key] = history
+        if len(history) >= FAILED_LOGIN_LIMIT:
+            remaining_wait = int(FAILED_LOGIN_WINDOW_SECONDS - (now - history[0]))
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Demasiados intentos fallidos ({len(history)}/{FAILED_LOGIN_LIMIT}). Acceso bloqueado temporalmente por 5 minutos por seguridad. Reintente en {max(1, remaining_wait)}s o ingrese con 2FA."
+            )
     
     conn = get_db_connection()
     cur = conn.cursor()
@@ -227,10 +252,32 @@ def login_with_password(payload: LoginRequest):
         user_id, email, full_name, role, password_hash, is_valid_pwd = row
         
         if not is_valid_pwd:
+            with _failed_logins_lock:
+                history = _failed_logins_cache.get(rate_key, [])
+                history.append(now)
+                _failed_logins_cache[rate_key] = history
+                attempts_left = max(0, FAILED_LOGIN_LIMIT - len(history))
+            
+            try:
+                AuditService.log_event(
+                    user_email=email_clean,
+                    action="LOGIN_PASSWORD_FAILED",
+                    entity_name="Intento Fallido de Contraseña",
+                    entity_id=f"FAIL-{email_clean}",
+                    metadata={"ip": client_ip, "failed_attempts": len(history), "attempts_left": attempts_left}
+                )
+            except Exception:
+                pass
+            
+            error_msg = f"Contraseña incorrecta. Le quedan {attempts_left} intento(s) antes del bloqueo temporal." if attempts_left > 0 else "Contraseña incorrecta. Límite de 5 intentos alcanzado; acceso bloqueado temporalmente por 5 minutos."
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Contraseña incorrecta. Verifique sus datos o use la opción de ingresar con código temporal (2FA)."
+                detail=error_msg
             )
+        
+        # Limpiar historial de intentos fallidos al ingresar exitosamente
+        with _failed_logins_lock:
+            _failed_logins_cache.pop(rate_key, None)
         
         # Validar Bóveda de Dispositivos (Device Vault)
         device_fp = payload.device_fingerprint or "DEV-UNKNOWN"

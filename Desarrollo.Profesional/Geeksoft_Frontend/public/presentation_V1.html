@@ -1583,7 +1583,7 @@ document.addEventListener('keydown', e => {
 
 async function fetchBunkerPrices() {
     const url = 'https://hjjxooxcpvlvbaxgifbn.supabase.co/rest/v1/bunker_prices?select=*';
-    const apikey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqanhvb3hjcHZsdmJheGdpZmJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI1MDk0NCwiZXhwIjoyMDk3ODI2OTQ0fQ.i8KkZtLSDEqaNo15NH3easZV6vhHIbqoYD7ps4pkOMc';
+    const apikey = '';
     try {
         const response = await fetch(url, {
             headers: {
@@ -1616,7 +1616,7 @@ fetchBunkerPrices();
 </script>
 <script>
     const supaUrl = "https://hjjxooxcpvlvbaxgifbn.supabase.co/rest/v1/vessels?select=*";
-    const supaKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqanhvb3hjcHZsdmJheGdpZmJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI1MDk0NCwiZXhwIjoyMDk3ODI2OTQ0fQ.i8KkZtLSDEqaNo15NH3easZV6vhHIbqoYD7ps4pkOMc";
+    const supaKey = "";
 
     async function fetchVessels() {
         try {
