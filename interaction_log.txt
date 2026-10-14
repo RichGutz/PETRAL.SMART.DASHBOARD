@@ -965,6 +965,21 @@ MODULARIZACIÓN 100% IMPLEMENTADA:
 - src/components/DocsAsCode/DocsAsCodeBookReader_V2.tsx: Lector editorial A4 (Blanco, Sepia, Noche), zoom tipográfico y @media print.
 - src/pages/Tools/SystemDocumentation_V2.tsx: Orquestador ultra-ligero y robusto.
 VERIFICACIÓN EMPÍRICA (JEV LOCAL): npx vite build completado exitosamente en 22.22s (0 errores, Exit Code 0).
+DESPLIEGUE A PRODUCCIÓN CONTABO (169.58.168.107):
+- Git Commit def99b3 y Push a origin/main completados.
+- Bundle de Frontend compilado en 12.92s.
+- Deploy automatizado SFTP/SSH ejecutado vía Push.VPS/deploy_petral_one_contabo.py.
+- Contenedores petral-backend y petral-frontend reiniciados.
+- Verificación en vivo: HTTP/2 200 OK en https://petral.one.geeksoft.tech/
+================================================================================
+REGISTRO DE SESIÓN: 2026-10-14 (Elevación Editorial del Manual MOF Estilo Dr. Cost)
+REQUERIMIENTO: Aplicar el mismo estilo editorial de Dr. Cost (hoja A4, temas tri-modales, zoom, cédula de validación y print A4) al Manual MOF.
+MODULARIZACIÓN 100%:
+- src/data/mofManualData_V2.ts: 6 roles canónicos con matrices de responsabilidad, entregables ERP, permisos y KPIs.
+- src/components/MofManual/MofValidationCard_V2.tsx: Cédula de homologación con persistencia en localStorage.
+- src/components/MofManual/MofRoleBookReader_V2.tsx: Lector editorial A4 (Blanco, Sepia, Noche), zoom tipográfico y @media print.
+- src/pages/Tools/MofManual_V2.tsx: Orquestador ultra-ligero y robusto.
+VERIFICACIÓN EMPÍRICA (JEV LOCAL): npx vite build completado exitosamente en 9.98s (0 errores, Exit Code 0).
 ================================================================================
 
 

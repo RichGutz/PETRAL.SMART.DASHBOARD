@@ -858,4 +858,19 @@ MÉTODO: BEN / LEG / CLONE / DIFF / JEV con Guardrails Deterministas ABIDE.
 - DIFF: Matriz pericial de brechas y especificaciones completas para los 19 módulos navieros de PETRAL.
 - MODULARIZACIÓN 100%: Desacople total en src/data/docsAsCodeData_V2.ts, DocsValidationCard_V2.tsx, DocsAsCodeSyncModal_V2.tsx y DocsAsCodeBookReader_V2.tsx.
 - JEV LOCAL GATE: npx vite build completado exitosamente en 22.22s (0 errores, Exit Code 0).
+- DESPLIEGUE A PRODUCCIÓN CONTABO (169.58.168.107):
+  * Git Commit def99b3 y Push a origin/main completados.
+  * Bundle Vite generado y empaquetado en frontend_dist.tar.gz (1779.37 KB).
+  * SFTP y Docker cp ejecutados a petral-frontend y petral-backend.
+  * Contenedores reiniciados con éxito.
+  * Verificación en vivo: HTTP/2 200 OK y endpoint probe OK en https://petral.one.geeksoft.tech/
+================================================================================
+REGISTRO DE SESIÓN: 2026-10-14 (Elevación Editorial del Manual MOF Estilo Dr. Cost)
+OBJETIVO: Aplicar el mismo estilo editorial de Dr. Cost (hoja A4, temas tri-modales, zoom, cédula de validación y print A4) al Manual MOF.
+- MODULARIZACIÓN 100%:
+  * src/data/mofManualData_V2.ts: 6 puestos oficiales (Fernando Harten, Iosef Zavala, Maria Elena Castro, Jorge Neyra, Sandra Gálvez, Patricia Rueda).
+  * src/components/MofManual/MofValidationCard_V2.tsx: Cédula de homologación persistente en localStorage (petral_mof_validations_v2).
+  * src/components/MofManual/MofRoleBookReader_V2.tsx: Lector editorial A4 con temas (Blanco, Sepia, Noche), zoom tipográfico y @media print.
+  * src/pages/Tools/MofManual_V2.tsx: Orquestador desacoplado con sidebar congelado de 320px.
+- JEV LOCAL GATE: npx vite build completado exitosamente en 9.98s (0 errores, Exit Code 0).
 ================================================================================
