@@ -848,5 +848,14 @@ TAG CREADO: TAG.BENOIT.FIX.DEVICE.VAULT.2FA.OCT13
 - Front: token persistente en localStorage, exclusión de resolución en hash, temporizador 15m.
 - Back: auto-aprobación heredada para cuentas previamente aprobadas por admin; expiración 15 minutos en auth.py; cabeceras de alta prioridad en Resend API.
 - Despliegue VPS (91.108.125.253): Merge a main, npx vite build (0 errores), deploy_forecast_kickoff.py OK.
-- Verificación en vivo: Frontend HTTPS 200 OK y Backend FastAPI HTTPS 200 OK en https://forecast.geeksoft.tech.
+================================================================================
+REGISTRO DE SESIÓN: 2026-10-14 (Auditoría Forense Benoit Blanc: Docs as Code Estilo Dr. Cost)
+OBJETIVO: Transcripción del audio formateo.docs.as.code.dr.cost.style.ogg_whisper.txt.
+EXPEDIENTE GENERADO: C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Mudanza.Contabo\31. Mejoras.Docs.As.Code.Dr.Cost.Style.md
+MÉTODO: BEN / LEG / CLONE / DIFF / JEV con Guardrails Deterministas ABIDE.
+- LEG: Análisis forense de SystemDocumentation_V2.tsx (1338 LOC, pobreza verbal y visual).
+- CLONE: Extracción canónica de TratadoCostosView.tsx, libro.html y motor de impresión de Dr. Cost (SW.Dr.Cost.REACT).
+- DIFF: Matriz pericial de brechas y especificaciones completas para los 19 módulos navieros de PETRAL.
+- MODULARIZACIÓN 100%: Desacople total en src/data/docsAsCodeData_V2.ts, DocsValidationCard_V2.tsx, DocsAsCodeSyncModal_V2.tsx y DocsAsCodeBookReader_V2.tsx.
+- JEV LOCAL GATE: npx vite build completado exitosamente en 22.22s (0 errores, Exit Code 0).
 ================================================================================
