@@ -304,19 +304,124 @@
                 page-break-after: always !important;
             }
         }
+
+        /* Bloqueo estricto de impresión */
+        @media print {
+            body, html, * {
+                display: none !important;
+                visibility: hidden !important;
+            }
+        }
+
+        /* Fullscreen Slide Deck Presentation Mode */
+        body.presentation-mode {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #090d16 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+
+        body.presentation-mode .presentation-bar {
+            display: none !important;
+        }
+
+        body.presentation-mode .slide-deck {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100vw !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            gap: 0 !important;
+        }
+
+        body.presentation-mode .slide-page {
+            display: none !important;
+            width: 95vw !important;
+            max-width: 1440px !important;
+            height: 94vh !important;
+            max-height: 94vh !important;
+            margin: auto !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+            border-radius: 16px !important;
+            overflow-y: auto !important;
+            animation: fadeInSlide 0.25s ease-out;
+        }
+
+        body.presentation-mode .slide-page.active-slide {
+            display: flex !important;
+        }
+
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.99);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* HUD Indicator en Fullscreen */
+        .slide-hud {
+            display: none;
+        }
+
+        body.presentation-mode .slide-hud {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: fixed;
+            bottom: 18px;
+            right: 24px;
+            background: rgba(15, 23, 42, 0.92);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 9999;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+
+        .slide-hud button {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            transition: background 0.15s;
+        }
+
+        .slide-hud button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation Bar for Interactive Viewing -->
+    <!-- Top Navigation Bar for Interactive Viewing (Sin botón de imprimir/guardar) -->
     <div class="presentation-bar">
         <div class="title">
             <span class="badge">Ecosistema PETRAL</span>
             <span>Trilogía de Inteligencia Naviera: ONE • TWO • THREE</span>
         </div>
         <div class="controls">
-            <button class="btn-control" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">Inicio</button>
-            <button class="btn-control primary" onclick="window.print()">Imprimir / Guardar PDF (A4)</button>
+            <button class="btn-control" onclick="window.prevSlide()">◀ Anterior</button>
+            <span id="slideCounter" style="font-size: 12px; font-weight: bold; color: #38bdf8; padding: 0 8px; user-select: none;">Slide 1 / 6</span>
+            <button class="btn-control primary" onclick="window.nextSlide()">Siguiente (Enter) ▶</button>
+            <button class="btn-control" onclick="window.toggleFullscreen()">⛶ Pantalla Completa (F11)</button>
         </div>
     </div>
 
@@ -783,7 +888,160 @@
             </div>
         </div>
 
+    <!-- HUD Flotante en Modo Pantalla Completa -->
+    <div id="slideHud" class="slide-hud">
+        <button onclick="window.prevSlide()" title="Anterior (Flecha Izquierda / Backspace)">◀</button>
+        <span id="hudSlideText">Diapositiva 1 / 6</span>
+        <button onclick="window.nextSlide()" title="Siguiente (Enter / Flecha Derecha)">▶</button>
+        <span style="opacity: 0.4;">|</span>
+        <span style="font-size: 11px; opacity: 0.85; font-family: monospace;">[Enter] Siguiente</span>
+        <span style="opacity: 0.4;">|</span>
+        <button onclick="window.toggleFullscreen()" title="Salir de Pantalla Completa (F11 / Esc)" style="background: rgba(239, 68, 68, 0.4);">✕ Salir</button>
     </div>
 
+    <script>
+        (function() {
+            // ── BLOQUEO ESTRICTO DE IMPRESIÓN Y GUARDADO ──
+            window.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true);
+
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+
+            // ── MOTOR DE DIAPOSITIVAS INTERACTIVAS (SLIDE DECK ENGINE) ──
+            var slides = document.querySelectorAll('.slide-deck .slide-page');
+            var totalSlides = slides.length;
+            var currentIndex = 0;
+            var isPresentationMode = false;
+
+            function updateSlides() {
+                slides.forEach(function(slide, idx) {
+                    if (isPresentationMode) {
+                        if (idx === currentIndex) {
+                            slide.classList.add('active-slide');
+                        } else {
+                            slide.classList.remove('active-slide');
+                        }
+                    } else {
+                        slide.classList.remove('active-slide');
+                    }
+                });
+
+                var counterEl = document.getElementById('slideCounter');
+                if (counterEl) {
+                    counterEl.textContent = 'Slide ' + (currentIndex + 1) + ' / ' + totalSlides;
+                }
+                var hudEl = document.getElementById('hudSlideText');
+                if (hudEl) {
+                    hudEl.textContent = 'Diapositiva ' + (currentIndex + 1) + ' / ' + totalSlides;
+                }
+            }
+
+            function nextSlide() {
+                if (currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                } else {
+                    currentIndex = 0; // Ciclar al inicio al completar
+                }
+                updateSlides();
+                if (!isPresentationMode && slides[currentIndex]) {
+                    slides[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            function prevSlide() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                } else {
+                    currentIndex = totalSlides - 1;
+                }
+                updateSlides();
+                if (!isPresentationMode && slides[currentIndex]) {
+                    slides[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            function setPresentationMode(enabled) {
+                isPresentationMode = enabled;
+                if (enabled) {
+                    document.body.classList.add('presentation-mode');
+                } else {
+                    document.body.classList.remove('presentation-mode');
+                }
+                updateSlides();
+            }
+
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    var el = document.documentElement;
+                    var req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+                    if (req) {
+                        req.call(el).then(function() {
+                            setPresentationMode(true);
+                        }).catch(function() {
+                            setPresentationMode(!isPresentationMode);
+                        });
+                    } else {
+                        setPresentationMode(!isPresentationMode);
+                    }
+                } else {
+                    var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+                    if (exit) {
+                        exit.call(document).then(function() {
+                            setPresentationMode(false);
+                        }).catch(function() {
+                            setPresentationMode(false);
+                        });
+                    } else {
+                        setPresentationMode(false);
+                    }
+                }
+            }
+
+            document.addEventListener('fullscreenchange', function() {
+                setPresentationMode(!!document.fullscreenElement);
+            });
+            document.addEventListener('webkitfullscreenchange', function() {
+                setPresentationMode(!!document.fullscreenElement);
+            });
+
+            // ── TECLADO: ENTER SALTA DE SLIDE EN SLIDE, FLECHAS Y F11 ──
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+                    e.preventDefault();
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+                    e.preventDefault();
+                    prevSlide();
+                } else if (e.key === 'F11') {
+                    e.preventDefault();
+                    toggleFullscreen();
+                }
+            });
+
+            // ── COMUNICACIÓN POSTMESSAGE DESDE REACT CONTAINER (SOTAPETRALONE_V2) ──
+            window.addEventListener('message', function(event) {
+                if (!event.data) return;
+                if (event.data.action === 'NEXT_SLIDE') nextSlide();
+                if (event.data.action === 'PREV_SLIDE') prevSlide();
+                if (event.data.action === 'ENTER_FULLSCREEN') setPresentationMode(true);
+                if (event.data.action === 'EXIT_FULLSCREEN') setPresentationMode(false);
+                if (event.data.action === 'TOGGLE_FULLSCREEN') toggleFullscreen();
+            });
+
+            window.nextSlide = nextSlide;
+            window.prevSlide = prevSlide;
+            window.toggleFullscreen = toggleFullscreen;
+            window.setPresentationMode = setPresentationMode;
+
+            updateSlides();
+        })();
+    </script>
 </body>
 </html>
