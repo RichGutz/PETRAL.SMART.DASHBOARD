@@ -89,11 +89,11 @@ export const MOF_ROLES_V2: MofRole_V2[] = [
             },
             {
                 num: '1.3',
-                activity: 'Evaluación de Acuerdos Marco y Fletamento de Naves',
-                erpModule: 'Maestro de Contratos',
+                activity: 'Evaluación de Acuerdos Marco y Cierres Comerciales de Fletamento',
+                erpModule: 'Maestro de Cierres',
                 erpRoute: '/contracts',
                 frequency: 'A Demanda',
-                deliverable: 'Aprobación de Addendas y Contratos COA de Transporte (SPCC, NEXA, Shougang).'
+                deliverable: 'Aprobación de Addendas y Cierres COA de Transporte (SPCC, NEXA, Shougang).'
             },
             {
                 num: '1.4',
@@ -196,9 +196,9 @@ export const MOF_ROLES_V2: MofRole_V2[] = [
                 keyActions: 'Modificación de tarifas en caliente, guardado de proyecciones y exportación.' 
             },
             { 
-                moduleName: 'Maestro de Contratos & Clientes', 
+                moduleName: 'Maestro de Cierres & Clientes', 
                 accessLevel: 'Control Total (Editor)', 
-                keyActions: 'Alta y edición de contratos COA y tarifas base por ruta comercial.' 
+                keyActions: 'Alta y edición de cierres comerciales COA y tarifas base por ruta comercial.' 
             }
         ],
         kpiIndicators: [

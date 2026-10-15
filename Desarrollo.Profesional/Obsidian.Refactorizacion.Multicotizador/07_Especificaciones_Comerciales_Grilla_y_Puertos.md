@@ -963,6 +963,64 @@ A partir del requerimiento comercial de auditoría total y visualización para A
 
 ---
 
+### 🕵️‍♂️ 5.42. Cuadragésima Segunda Vuelta (Serie 61: Auditoría Pericial de Capacidad de Bodega en Capítulo Maestro de Flota vs DWCC Canónico)
+
+A partir de la instrucción pericial del usuario (15.10.2026), se auditó y homologó la especificación de Capacidad de Bodega dentro del Capítulo 1 (*Maestro de Flota*) del lector normativo *Docs as Code* (`docsAsCodeData_V2.ts`):
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **61.1** | **Tabla 1.1 (`docsAsCodeData_V2.ts`): B/T Moquegua** | Figuraba con Capacidad de Bodega en `6,800 MT Ácido`, DWT en `7,200 MT` y LOA `115.50 m`. | Homologado al Maestro de Flota oficial (`public.vessels`): **DWCC = 13,500 MT**, **DWT = 14,298 MT**, **GRT = 8,259 TRB**, **LOA = 134.00 m**, **Calado = 8.81 m**. | **Dispersión Legacy vs Maestro Real:** Los valores en la documentación viva contenían remanentes preliminares que no reflejaban el DWCC formal del catálogo. | ✅ RESUELTO |
+| **61.2** | **Tabla 1.1 (`docsAsCodeData_V2.ts`): B/T Tablones** | Figuraba con Capacidad de Bodega en `7,650 MT Ácido`, DWT en `8,100 MT` y LOA `120.20 m`. | Homologado al Maestro de Flota oficial: **DWCC = 14,500 MT**, **DWT = 16,533 MT**, **GRT = 11,365 TRB**, **LOA = 158.80 m**, **Calado = 10.20 m**. | **Alineación de Capacidad Comercial:** El DWCC de 14,500 MT define el límite contractual de bodega del buque en cabotaje. | ✅ RESUELTO |
+| **61.3** | **Tabla 1.1 (`docsAsCodeData_V2.ts`): Concon Trader** | Figuraba con Capacidad de Bodega en `10,500 MT`, DWT en `11,200 MT` y LOA `138.00 m`. | Homologado al Maestro de Flota oficial: **DWCC = 19,000 MT**, **DWT = 19,823 MT**, **GRT = 11,773 TRB**, **LOA = 146.00 m**, **Calado = 9.72 m**. | **Precisión de Granelero/Multipropósito:** Se restablecieron las especificaciones de arquitectura naval formal. | ✅ RESUELTO |
+| **61.4** | **Tabla 1.1 (`docsAsCodeData_V2.ts`): Huemul** | Figuraba con Capacidad de Bodega en `6,100 MT Ácido`, DWT en `6,500 MT` y LOA `110.80 m`. | Homologado al Maestro de Flota oficial: **DWCC = 21,000 MT**, **DWT = 22,062 MT**, **GRT = 13,666 TRB**, **LOA = 161.00 m**, **Calado = 9.95 m**. | **Actualización Tanquero Regional:** Ajustado al arqueo y peso muerto máximo homologado. | ✅ RESUELTO |
+| **61.5** | **Integración de Flota Spot: Bow Condor** | La tabla no incluía al tanquero de la serie Odfjell / Spot operando en cabotaje. | Incorporada fila de **Bow Condor**: **DWCC = 15,000 MT**, **DWT = 16,121 MT**, **GRT = 9,232 TRB**, **LOA = 133.00 m**, **Calado = 9.24 m**. | **Completitud del Ecosistema de Naves:** Todas las naves activas del Maestro de Flota están ahora 100% reflejadas en Docs as Code. | ✅ RESUELTO |
+| **61.6** | **Glosario Paramétrico (`bulletPoints`)** | La sección técnica omitía la definición formal de la sigla comercial DWCC. | Incorporado el concepto clave: **DWCC (Deadweight Cargo Capacity)** como la capacidad neta efectiva de bodega para asignación de viajes y contratos. | **Rigor de Documentación Viva:** Cero ambigüedad conceptual entre DWT bruto y DWCC neto de carga. | ✅ RESUELTO |
+
+#### 📊 Resumen Canónico del Maestro de Flota Homologado:
+* **B/T Moquegua:** DWT 14,298 MT | **DWCC 13,500 MT** | GRT 8,259 TRB | LOA 134.00 m | Calado 8.81 m
+* **B/T Tablones:** DWT 16,533 MT | **DWCC 14,500 MT** | GRT 11,365 TRB | LOA 158.80 m | Calado 10.20 m
+* **Concon Trader:** DWT 19,823 MT | **DWCC 19,000 MT** | GRT 11,773 TRB | LOA 146.00 m | Calado 9.72 m
+* **Huemul:** DWT 22,062 MT | **DWCC 21,000 MT** | GRT 13,666 TRB | LOA 161.00 m | Calado 9.95 m
+* **Bow Condor:** DWT 16,121 MT | **DWCC 15,000 MT** | GRT 9,232 TRB | LOA 133.00 m | Calado 9.24 m
+
+---
+
+### 🕵️‍♂️ 5.43. Cuadragésima Tercera Vuelta (Serie 62: Auditoría Pericial de Factores Meteorológicos Ballast y Laden en Capítulo Maestro de Distancias)
+
+A partir de la instrucción pericial del usuario (15.10.2026), se auditó e integró la modelación de los factores climáticos (`weather_factor_ballast` y `weather_factor_laden`) dentro del Capítulo 3 (*Maestro de Distancias*) del lector normativo *Docs as Code* (`docsAsCodeData_V2.ts`):
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **62.1** | **Ecuación de Tiempo de Mar (`formulaBox`)** | La fórmula legacy presentaba un cálculo simplista puramente geodésico: `Días_Mar = Distancia_NM / (Velocidad × 24h)`, omitiendo la fricción meteorológica. | Homologada la **Ecuación Canónica con Fricción Ambiental**: `Días_Mar = [Distancia_NM × (1 + Weather_Factor)] / (Velocidad_Nudos × 24.0h)`, desacoplando `W.F Laden` de `W.F Ballast`. | **Omitir el Margen Ambiental Distorsiona el Búnker:** La corriente de Humboldt y el viento imponen un incremento real de navegación que el motor captura deterministamente. | ✅ RESUELTO |
+| **62.2** | **Desacople Hidrodinámico: Laden vs Ballast** | El texto explicativo no justificaba por qué existen dos factores meteorológicos distintos en el catálogo. | Se documentó la base física: en condición **LADEN** el buque viaja a calado máximo (mayor resistencia de ola e inercia), mientras que en **BALLAST** el francobordo expuesto genera mayor deriva por viento lateral. | **Rigor de Ingeniería Naval:** Claridad conceptual para los operadores y analistas de fletes. | ✅ RESUELTO |
+| **62.3** | **Tabla 3.1: Matriz Distancial y Tiempos de Tránsito** | La tabla solo mostraba la distancia pura en NM y tiempos teóricos sin factor climático. | Incorporadas columnas dedicadas para **`W.F Laden (%)`** y **`W.F Ballast (%)`**, calculando los tiempos de tránsito reales con el 3.0% reglamentario. | **Convergencia con la Grilla Live:** La documentación ahora concuerda 100% con los cálculos del Multicotizador. | ✅ RESUELTO |
+| **62.4** | **Glosario de Parámetros (`bulletPoints`)** | Omitía los términos formales `Weather Factor Laden` y `Weather Factor Ballast`. | Añadidos ambos conceptos al glosario técnico con sus rangos de calibración operativa (3.0% a 5.0%). | **Documentación Viva As-Built:** Cero lagunas terminológicas en el libro del sistema. | ✅ RESUELTO |
+
+#### 📊 Resumen Canónico de la Matriz Distancial Homologada:
+* **Ecuación:** $\text{Días\_Mar} = \frac{\text{Distancia\_NM} \times (1 + \text{Weather\_Factor})}{\text{Velocidad\_Nudos} \times 24.0\text{ h}}$
+* **Asignación en Grilla:** Automática por acumulador de bodega (`Carga > 0` ➔ `W.F Laden` | `Carga = 0` ➔ `W.F Ballast`).
+* **Calibración Estándar:** 3.0% (`0.03`) configurable por tramo en la tabla `distances`.
+
+---
+
+### 🕵️‍♂️ 5.44. Cuadragésima Cuarta Vuelta (Serie 63: Auditoría Pericial y Homologación Transversal del Maestro de Cierres vs Legacy Contratos Marco)
+
+A partir de la instrucción pericial del usuario (15.10.2026), se auditó y erradicó la nomenclatura obsoleta *"Maestro de Contratos Marco"*, homologando en todo el ecosistema documental el estándar oficial **`Maestro de Cierres`** (`/contracts`):
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **63.1** | **Capítulo 5 Docs as Code (`docsAsCodeData_V2.ts`)** | Titulado como *"Maestro de Contratos Marco (COA)"*, desconectado del nombre real del módulo en el menú lateral. | Renombrado a **`Maestro de Cierres`**, reestructurado con ciclo de vida contractual (**Borrador ➔ Aprobado ➔ Vigente**), tabla de atributos y formalización FIOST. | **Desincronización por Evolución de Producto:** El sistema evolucionó a "Cierres Comerciales" para abarcar contratos COA y contratos de volumen en firme. | ✅ RESUELTO |
+| **63.2** | **Manual MOF (`mofManualData_V2.ts`)** | Actividad 1.3 de Dirección General y permisos comerciales referenciaban *"Maestro de Contratos"*. | Actualizado formalmente a **`Maestro de Cierres`** y **`Maestro de Cierres & Clientes`** para la custodia de acuerdos de fletamento. | **Alineación con Gobernanza:** El MOF ahora exige explícitamente auditar y aprobar cierres comerciales. | ✅ RESUELTO |
+| **63.3** | **Organigrama Interactivo (`CompanyOrganigram_V2.tsx`)** | La herramienta ERP de la Gerencia Comercial indicaba *"Maestro de Contratos"*. | Homologado a **`Maestro de Cierres`** con ruta `/contracts` y rol de Editor para acuerdos COA en firme. | **Coherencia Interfaz-Rol:** 100% de consistencia entre organigrama y menú lateral. | ✅ RESUELTO |
+| **63.4** | **Tabla de Gobernanza 5.1 (`docsAsCodeData_V2.ts`)** | Omitía la especificación de estados y roles de los cierres comerciales. | Incorporada **Tabla 5.1** con definición de estados (`BORRADOR`, `ENVIADO`, `APROBADO`, `CERRADO`), fletes base y laytime. | **Rigor Normativo:** Documentada la regla donde solo cierres aprobados bloquean el Voyage Ledger. | ✅ RESUELTO |
+
+#### 📊 Resumen Canónico del Maestro de Cierres (`/contracts`):
+* **Identidad:** Repositorio oficial de Cierres Comerciales (COA y contratos en firme promovidos desde el Multicotizador).
+* **Ciclo de Estados:** `BORRADOR` (edición por analista) ➔ `APROBADO / VIGENTE` (ratificado por Dirección General).
+* **Condiciones Legales:** Términos FIOST, flete base por MT inmutable, búnker base indexado y laytime/demurrage pactado.
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Autopsia Pericial Benoit Blanc:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)

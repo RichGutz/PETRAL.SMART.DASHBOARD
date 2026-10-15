@@ -68,16 +68,18 @@ export const DOCS_AS_CODE_CHAPTERS: DocChapter_V2[] = [
                     { label: 'LOA (Length Overall)', text: 'Eslora total de la embarcación en metros. Determina la compatibilidad física con el amarradero y el cálculo de derechos de muellaje por metro/hora.' },
                     { label: 'GRT / TRB (Gross Register Tonnage)', text: 'Arqueo bruto que mide el volumen cerrado total. Base tarifaria oficial de practicaje, remolcaje portuario, faros y boyas.' },
                     { label: 'DWT (Deadweight Tonnage)', text: 'Tonelaje de peso muerto máximo que el buque puede transportar de manera segura, sumando carga útil, combustible, agua dulce y pertrechos.' },
+                    { label: 'DWCC (Deadweight Cargo Capacity)', text: 'Capacidad neta de carga en bodega que el buque puede transportar efectivamente descontando búnker, agua y consumibles. Es la métrica canónica para contratos comerciales y asignación de viajes.' },
                     { label: 'Draft (Calado de Verano / Tropical)', text: 'Profundidad máxima sumergida en metros. Crucial para prevenir varaduras y verificar el calado máximo permitido del muelle de atraque en bajamar.' }
                 ],
                 tableData: {
-                    caption: 'Tabla 1.1 — Flota de Naves Homologadas en PETRAL SHIPPING.SOFT',
-                    headers: ['Embarcación', 'Tipo / Casco', 'LOA (m)', 'GRT (TRB)', 'DWT (MT)', 'Calado Máx (m)', 'Capacidad Bodega (MT)'],
+                    caption: 'Tabla 1.1 — Flota de Naves Homologadas en PETRAL SHIPPING.SOFT (Maestro de Flota)',
+                    headers: ['Embarcación', 'Tipo / Casco', 'LOA (m)', 'GRT (TRB)', 'DWT (MT)', 'Calado Máx (m)', 'Capacidad Bodega / DWCC (MT)'],
                     rows: [
-                        ['B/T Moquegua', 'Tanquero Quimiquero (IMO II)', '115.50', '4,850', '7,200', '7.20', '6,800 MT Ácido'],
-                        ['B/T Tablones', 'Tanquero Quimiquero (IMO II)', '120.20', '5,210', '8,100', '7.60', '7,650 MT Ácido'],
-                        ['Concon Trader', 'Multi-Purpose / Granelero', '138.00', '7,450', '11,200', '8.40', '10,500 MT'],
-                        ['Huemul', 'Tanquero Quimiquero Regional', '110.80', '4,320', '6,500', '6.90', '6,100 MT Ácido']
+                        ['B/T Moquegua', 'Tanquero Quimiquero (IMO II)', '134.00', '8,259', '14,298', '8.81', '13,500 MT'],
+                        ['B/T Tablones', 'Tanquero Quimiquero (IMO II)', '158.80', '11,365', '16,533', '10.20', '14,500 MT'],
+                        ['Concon Trader', 'Multi-Purpose / Granelero', '146.00', '11,773', '19,823', '9.72', '19,000 MT'],
+                        ['Huemul', 'Tanquero Quimiquero Regional', '161.00', '13,666', '22,062', '9.95', '21,000 MT'],
+                        ['Bow Condor', 'Tanquero Quimiquero (Fletado / Spot)', '133.00', '9,232', '16,121', '9.24', '15,000 MT']
                     ]
                 }
             },
@@ -162,38 +164,53 @@ export const DOCS_AS_CODE_CHAPTERS: DocChapter_V2[] = [
         categoryGroup: 'MAESTROS FÍSICOS',
         chapterNum: 3,
         title: 'Maestro de Distancias',
-        subtitle: 'Matriz distancial en millas náuticas (NM) entre origen y destino',
+        subtitle: 'Matriz distancial en millas náuticas (NM), factores meteorológicos (Weather Factors Ballast y Laden) y tiempos de tránsito',
         iconName: 'Database',
         badge: 'Maestro Físico',
-        keywords: ['distancias', 'rutas', 'millas', 'nm', 'navegacion', 'lastre', 'cargado', 'velocidad', 'tiempo mar'],
-        executiveSummary: 'Registra la matriz de distancias náuticas oficiales en millas marinas (NM) entre todos los pares origen-destino de la costa sudamericana y calcula el tiempo de tránsito en mar abierto.',
+        keywords: ['distancias', 'rutas', 'millas', 'nm', 'navegacion', 'lastre', 'cargado', 'velocidad', 'tiempo mar', 'weather factor', 'ballast', 'laden'],
+        executiveSummary: 'Registra la matriz de distancias náuticas oficiales en millas marinas (NM) entre los puertos del Pacífico Sur y modela la fricción ambiental mediante factores climáticos desacoplados (Weather Factor Ballast y Weather Factor Laden) para proyectar con exactitud micrométrica los días de mar y el consumo de búnker.',
         sections: [
             {
                 number: '3.1',
-                title: 'Matriz Distancial Canónica y Tiempos de Mar',
+                title: 'Matriz Distancial Canónica y Fricción Meteorológica',
                 prose: [
-                    'El Maestro de Distancias garantiza que no existan discrepancias en el cálculo de los días de mar entre el equipo comercial y el área de operaciones. Cada trayecto entre dos puertos está auditado conforme a derroteros oficiales de navegación hidrográfica (DHN Perú y SHOA Chile).',
-                    'El tiempo de navegación en mar abierto se calcula dividiendo la distancia en millas náuticas entre la velocidad de servicio del buque expresada en nudos (millas/hora) multiplicada por las 24 horas del día.'
+                    'El Maestro de Distancias garantiza la verdad única en el cálculo de los días de mar entre el equipo comercial y el área de operaciones. Cada trayecto entre dos puertos está auditado conforme a derroteros oficiales de navegación hidrográfica (DHN Perú y SHOA Chile).',
+                    'En navegación real, la distancia efectiva siempre supera a la geodésica debido a corrientes marinas (corriente de Humboldt), oleaje de fondo y viento. Para capturar este fenómeno determinista, el sistema aplica factores climáticos diferenciados según el buque navegue cargado (LADEN) o en lastre (BALLAST).'
+                ],
+                bulletPoints: [
+                    { label: 'Distancia Náutica Oficial (NM)', text: 'Millas náuticas directas de derrotero hidrográfico entre cartas náuticas oficiales (1 NM = 1,852 metros).' },
+                    { label: 'Weather Factor Laden (W.F Laden)', text: 'Factor de contingencia meteorológica (típicamente 3.0% a 5.0%) aplicado en tramos con carga a bordo. Modela la mayor resistencia hidrodinámica por inercia y calado máximo de verano/tropical.' },
+                    { label: 'Weather Factor Ballast (W.F Ballast)', text: 'Factor de contingencia meteorológica (típicamente 3.0% a 4.0%) aplicado en tramos en lastre (sin carga). Modela el abatimiento por viento lateral sobre el francobordo elevado de la nave vacía.' },
+                    { label: 'Velocidad de Servicio (Knots)', text: 'Velocidad contractual del buque en nudos (millas náuticas por hora) según la curva de consumo optimizado del propulsor.' }
                 ],
                 formulaBox: {
-                    title: 'FÓRMULA CANÓNICA DE TIEMPO DE NAVEGACIÓN EN MAR (DÍAS)',
-                    formula: 'Días_Mar = Distancia_NM / (Velocidad_Nudos × 24.0 horas)',
-                    explanation: 'Determina con precisión decimal los días de navegación activa en mar abierto para cada pierna del viaje.',
+                    title: 'FÓRMULA CANÓNICA DE TIEMPO DE MAR CON FACTOR CLIMÁTICO (DÍAS)',
+                    formula: 'Días_Mar = [ Distancia_NM × (1 + Weather_Factor) ] / (Velocidad_Nudos × 24.0 horas)',
+                    explanation: 'Aplica el Weather Factor correspondiente al estado operativo del tramo: Weather_Factor_Laden si la carga a bordo > 0 MT, o Weather_Factor_Ballast si la nave viaja en lastre (0 MT). La distancia resultante simula el recorrido hidrodinámico real del buque.',
                     variables: [
-                        { sym: 'Distancia_NM', desc: 'Distancia en Millas Náuticas (1 NM = 1,852 metros).' },
-                        { sym: 'Velocidad_Nudos', desc: 'Velocidad de avance del buque (Nudos = NM/hora). Ej: 11.5 nudos.' },
-                        { sym: '24.0 horas', desc: 'Constante de conversión a días solares continuos.' }
+                        { sym: 'Distancia_NM', desc: 'Distancia oficial de derrotero entre origen y destino en Millas Náuticas.' },
+                        { sym: 'Weather_Factor', desc: 'Factor meteorológico decimal: W.F Laden (ej. 0.03 para 3%) o W.F Ballast (ej. 0.03).' },
+                        { sym: 'Velocidad_Nudos', desc: 'Velocidad de avance en nudos (Knots = NM/hora). Ej: 11.0 kn.' },
+                        { sym: '24.0 horas', desc: 'Constante canónica de horas continuas por día de navegación.' }
                     ]
-                },
+                }
+            },
+            {
+                number: '3.2',
+                title: 'Matriz de Navegación Pacífico Sur y Factores Climáticos',
+                prose: [
+                    'En la arquitectura de PETRAL ONE, cada par origen-destino indexa en la base de datos (public.distances) tanto la distancia pura como los dos factores de fricción climática desacoplados.',
+                    'Al construir la cotización en el Multicotizador, el acumulador de bodega determina automáticamente qué factor se asigna tramo a tramo, erradicando desvíos presupuestarios entre el pronóstico comercial y la liquidación real del viaje.'
+                ],
                 tableData: {
-                    caption: 'Tabla 3.1 — Matriz de Distancias Frecuentes en el Eje Pacífico Sur (NM)',
-                    headers: ['Origen', 'Destino', 'Distancia (NM)', 'Tiempo a 11.0 nudos (días)', 'Tiempo a 12.0 nudos (días)'],
+                    caption: 'Tabla 3.1 — Matriz de Distancias y Factores Climáticos en el Eje Pacífico Sur',
+                    headers: ['Origen', 'Destino', 'Distancia (NM)', 'W.F Laden (%)', 'W.F Ballast (%)', 'Tiempo Laden (11.0 kn)', 'Tiempo Ballast (11.0 kn)'],
                     rows: [
-                        ['Ilo (SPCC)', 'Callao (APM)', '420 NM', '1.59 días', '1.46 días'],
-                        ['Ilo (SPCC)', 'Matarani (Tisur)', '72 NM', '0.27 días', '0.25 días'],
-                        ['Callao (APM)', 'Matarani (Tisur)', '475 NM', '1.80 días', '1.65 días'],
-                        ['Ilo (SPCC)', 'Mejillones (Chile)', '295 NM', '1.12 días', '1.02 días'],
-                        ['Callao (APM)', 'Mejillones (Chile)', '715 NM', '2.71 días', '2.48 días']
+                        ['Ilo (SPCC)', 'Callao (APM)', '420 NM', '3.0%', '3.0%', '1.64 días', '1.64 días'],
+                        ['Ilo (SPCC)', 'Matarani (Tisur)', '72 NM', '3.0%', '3.0%', '0.28 días', '0.28 días'],
+                        ['Callao (APM)', 'Matarani (Tisur)', '475 NM', '3.0%', '3.0%', '1.85 días', '1.85 días'],
+                        ['Ilo (SPCC)', 'Mejillones (Chile)', '295 NM', '3.0%', '3.0%', '1.15 días', '1.15 días'],
+                        ['Callao (APM)', 'Mejillones (Chile)', '715 NM', '3.0%', '3.0%', '2.79 días', '2.79 días']
                     ]
                 }
             }
@@ -230,28 +247,52 @@ export const DOCS_AS_CODE_CHAPTERS: DocChapter_V2[] = [
         sectionType: 'MAESTROS',
         categoryGroup: 'MAESTROS COMERCIALES',
         chapterNum: 5,
-        title: 'Maestro de Contratos Marco (COA)',
-        subtitle: 'Contratos Marco COA, cláusulas de flete, laytime y démorage',
+        title: 'Maestro de Cierres',
+        subtitle: 'Gestión de Cierres Comerciales (COA y Contratos en Firme), estados Borrador/Aprobado, cláusulas de flete, laytime y démorage',
         iconName: 'FileText',
         badge: 'Maestro Comercial',
-        keywords: ['contratos', 'coa', 'laytime', 'demurrage', 'despatch', 'fiost', 'flete', 'penalidades', 'volumen anual'],
-        executiveSummary: 'Modela los Contratos de Fletamento por Volumen (Contract of Affreightment - COA), estipulando compromisos anuales de carga, ventanas de embarque (laycan), tarifas de estadía (demurrage) y cláusulas de flete.',
+        keywords: ['cierres', 'contratos', 'coa', 'borrador', 'aprobado', 'flete', 'laytime', 'demurrage', 'despatch', 'fiost', 'volumen anual', 'spcc', 'nexa'],
+        executiveSummary: 'Centraliza el repositorio oficial de Cierres Comerciales y Contratos de Fletamento (COA y acuerdos en firme) generados en el Multicotizador. Controla el ciclo de vida del negocio (Borrador ➔ Enviado ➔ Aprobado ➔ Vigente), pactando los volúmenes anuales comprometidos, fletes base acordados por ruta, ventanas de embarque (laycan), condiciones FIOST y tarifas de sobreestadía (démorage).',
         sections: [
             {
                 number: '5.1',
-                title: 'Arquitectura Contractual de Contratos COA',
+                title: 'Arquitectura del Cierre Comercial y Ciclo de Vida del Negocio',
                 prose: [
-                    'Un contrato COA formaliza el compromiso de Naviera Petral de transportar un volumen masivo convenido a lo largo de un período anual (ej. 180,000 MT/año para SPCC o NEXA) distribuido en ventanas periódicas de embarque.',
-                    'El contrato define los términos FIOST (Free In and Out Stowed and Trimmed), liberando al armador de los costos de estiba y desestiba mecánica de la carga en tierra, y fija la tarifa de flete base por tonelada métrica.'
+                    'El Maestro de Cierres constituye el repositorio contractual definitivo de PETRAL ONE. Todo acuerdo comercial originado en el Multicotizador entra al Maestro de Cierres en estado BORRADOR (Draft). Mediante el flujo de control de gobernanza, el cierre es revisado por la Gerencia Comercial y la Dirección General para su validación formal y transición a estado APROBADO / VIGENTE.',
+                    'Cada cierre formaliza el compromiso de transporte para contratos de volumen anual (ej. 180,000 MT/año para SPCC o NEXA) o asignaciones de cabotaje específico. El registro asienta de forma inmutable el flete base pactado por tonelada métrica bajo términos FIOST (Free In and Out Stowed and Trimmed), liberando al armador de los costos de manipulación en tierra y estableciendo el presupuesto base inviolable del viaje.'
+                ],
+                bulletPoints: [
+                    { label: 'Estado BORRADOR (Draft)', text: 'Cierre comercial generado preliminarmente desde el Multicotizador. Permite edición y ajustes finos por el analista antes de elevarse a aprobación gerencial.' },
+                    { label: 'Estado APROBADO / VIGENTE', text: 'Cierre comercial ratificado por Dirección General. Bloquea las condiciones tarifarias y sirve como base obligatoria para el cálculo del Voyage Ledger.' },
+                    { label: 'Condición FIOST', text: 'Free In and Out Stowed and Trimmed: estipula que los costos y riesgos de carga, estiba y descarga en muelle corren por cuenta exclusiva del fletador.' },
+                    { label: 'Compromiso de Volumen (COA)', text: 'Tonelaje anual o mensual garantizado en el contrato marco, distribuido en ventanas operativas periódicas (laycan).' }
+                ]
+            },
+            {
+                number: '5.2',
+                title: 'Liquidación Canónica de Demurrage, Despatch y Tiempos de Plancha (Laytime)',
+                prose: [
+                    'El Cierre Comercial estipula las horas de permanencia permitidas en muelle (Laytime) para operaciones de bombeo y conexionado de ácido sulfúrico. Todo exceso generado por demoras atribuibles al cliente activa la liquidación pericial de Demurrage conforme a la tarifa diaria convenida.'
                 ],
                 formulaBox: {
                     title: 'FÓRMULA CANÓNICA DE LIQUIDACIÓN DE DEMURRAGE / DESPATCH',
                     formula: 'Demurrage_Total = Max(0, Tiempo_Real_Puerto - Laytime_Permitido) × Tarifa_Demurrage_Día',
-                    explanation: 'Si el buque permanece en muelle o fondeadero por causas atribuibles al fletador más allá del tiempo pactado (Laytime), se activa la penalidad diaria en USD.',
+                    explanation: 'Si el buque permanece en muelle o fondeadero por causas atribuibles al fletador más allá del tiempo pactado (Laytime), se activa la penalidad diaria en USD a favor del armador.',
                     variables: [
                         { sym: 'Tiempo_Real_Puerto', desc: 'Días y horas exactas desde la entrega de la Carta de Alistamiento (NOR) válida hasta el zarpe.' },
                         { sym: 'Laytime_Permitido', desc: 'Tiempo de plancha contractual asignado para carga/descarga.' },
                         { sym: 'Tarifa_Demurrage_Día', desc: 'Penalidad fija contractual pactada (ej. 8,500 USD/día pro-rata).' }
+                    ]
+                },
+                tableData: {
+                    caption: 'Tabla 5.1 — Atributos Clave y Estados del Maestro de Cierres (ContractsMaster)',
+                    headers: ['Campo / Parámetro', 'Tipo de Dato', 'Valores / Opciones', 'Rol en la Gobernanza del Sistema'],
+                    rows: [
+                        ['ID Cierre / Contrato', 'Alfanumérico', 'COA-SPCC-2026, COA-NEXA-2026...', 'Identificador unívoco del acuerdo comercial en firme.'],
+                        ['Cliente Fletador', 'Catálogo FK', 'SPCC, NEXA, SHOUGANG, YURA...', 'Vincula el cierre con el padrón maestro de clientes.'],
+                        ['Estado del Cierre', 'Enumerado', 'BORRADOR, ENVIADO, APROBADO, CERRADO', 'Control de avance: solo contratos Aprobados fijan presupuesto base.'],
+                        ['Flete Base Acordado', 'Moneda (USD/MT)', 'Tarifa fija contractual por tramo', 'Determina el ingreso por flete en la Matriz Financiera.'],
+                        ['Laytime & Démorage', 'Horas / USD/día', 'Horas permitidas + Tarifa diaria', 'Regla legal para el cálculo y cobro de sobreestadías.']
                     ]
                 }
             }

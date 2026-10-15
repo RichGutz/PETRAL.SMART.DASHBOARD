@@ -88,7 +88,7 @@ export const COMPANY_MEMBERS: CompanyMember[] = [
         erpTools: [
             { name: 'Multicotizador Spot & Multipiernas', route: '/multicotizador', role: 'Editor', description: 'Cotización con Motor BAF, demoras y distancias náuticas.' },
             { name: 'Matriz Financiera / Forecast', route: '/dashboard', role: 'Editor', description: 'Construcción y guardado de escenarios de forecast comercial.' },
-            { name: 'Maestro de Contratos', route: '/contracts', role: 'Editor', description: 'Registro de contratos marco COA y tarifas pactadas con clientes.' },
+            { name: 'Maestro de Cierres', route: '/contracts', role: 'Editor', description: 'Registro y gestión de cierres comerciales, contratos COA en firme y tarifas pactadas con clientes.' },
             { name: 'Maestro de Clientes', route: '/clients', role: 'Editor', description: 'Gestión comercial de clientes clave (SPCC, NEXA, etc.).' },
             { name: 'Precios de Búnker & Fórmulas BAF', route: '/bunker-prices', role: 'Editor', description: 'Calibración de precios de mercado IFO/MDO y bandas de compensación.' }
         ],
