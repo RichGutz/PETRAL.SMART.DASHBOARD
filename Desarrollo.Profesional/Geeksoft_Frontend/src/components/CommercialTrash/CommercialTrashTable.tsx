@@ -80,19 +80,19 @@ export const CommercialTrashTable: React.FC<CommercialTrashTableProps> = ({
     }
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden w-full flex-1">
+            <div className="overflow-x-auto w-full">
                 <table className="w-full text-left border-collapse text-xs">
                     <thead className="bg-slate-50/80 text-slate-600 font-bold border-b border-slate-200 select-none">
                         <tr>
-                            <th className="py-2.5 px-3.5 w-28">Tipo</th>
-                            <th className="py-2.5 px-3.5">Documento Comercial</th>
-                            <th className="py-2.5 px-3.5 w-24">Cliente</th>
-                            <th className="py-2.5 px-3.5 w-28">Buque</th>
-                            <th className="py-2.5 px-3.5 w-36">Eliminado Por</th>
-                            <th className="py-2.5 px-3.5 w-32">Fecha Baja</th>
-                            <th className="py-2.5 px-3.5 w-24 text-center">Estado</th>
-                            <th className="py-2.5 px-3.5 w-44 text-right">Acciones</th>
+                            <th className="py-3 px-4 w-28">Tipo</th>
+                            <th className="py-3 px-4">Documento Comercial</th>
+                            <th className="py-3 px-4 w-28">Cliente</th>
+                            <th className="py-3 px-4 w-32">Buque</th>
+                            <th className="py-3 px-4 w-44">Eliminado Por</th>
+                            <th className="py-3 px-4 w-36">Fecha Baja</th>
+                            <th className="py-3 px-4 w-28 text-center">Estado</th>
+                            <th className="py-3 px-4 w-48 text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-normal">
@@ -107,9 +107,9 @@ export const CommercialTrashTable: React.FC<CommercialTrashTableProps> = ({
                                     }`}
                                 >
                                     {/* Tipo */}
-                                    <td className="py-2.5 px-3.5">
+                                    <td className="py-3 px-4">
                                         <span
-                                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${getBadgeStyle(
+                                            className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${getBadgeStyle(
                                                 item.entity_type
                                             )}`}
                                         >
@@ -118,11 +118,11 @@ export const CommercialTrashTable: React.FC<CommercialTrashTableProps> = ({
                                     </td>
 
                                     {/* Documento Comercial */}
-                                    <td className="py-2.5 px-3.5">
+                                    <td className="py-3 px-4">
                                         <div className="flex flex-col">
                                             <span
                                                 onClick={() => onViewSnapshot(item)}
-                                                className="font-bold text-slate-800 hover:text-blue-600 cursor-pointer truncate max-w-md transition-colors"
+                                                className="font-bold text-slate-800 hover:text-blue-600 cursor-pointer truncate max-w-xl 2xl:max-w-4xl transition-colors"
                                                 title={item.document_name}
                                             >
                                                 {item.document_name}

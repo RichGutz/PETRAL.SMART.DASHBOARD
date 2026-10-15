@@ -26,7 +26,7 @@ export const CommercialTrashFilters: React.FC<CommercialTrashFiltersProps> = ({
     ];
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs space-y-3 w-full">
             {/* Fila 1: Pestañas de Tipo de Entidad */}
             <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5">
                 {tabs.map(tab => {

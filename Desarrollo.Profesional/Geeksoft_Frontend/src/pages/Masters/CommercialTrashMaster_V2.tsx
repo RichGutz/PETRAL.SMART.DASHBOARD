@@ -138,7 +138,7 @@ export const CommercialTrashMaster_V2: React.FC = () => {
             subtitle="Custodia segura, recuperación forense y reversión de documentos eliminados (Cierres, Cotizaciones, Presupuestos y Matrices)"
             activeTab="commercial-trash"
         >
-            <div className="space-y-4 max-w-7xl mx-auto pb-10">
+            <div className="w-full space-y-4 pb-8 flex flex-col flex-1 min-w-0">
                 {/* Banner de Notificación / Toast */}
                 {toastMessage && (
                     <div
