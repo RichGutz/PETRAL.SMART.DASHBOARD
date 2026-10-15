@@ -19,6 +19,7 @@ CONTABO_PASS = "VivaLaVida2026$"
 ROOT_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD"
 DIST_DIR = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Frontend", "dist")
 LOCAL_AUTH_PY = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Engine", "backend", "api", "routers", "auth.py")
+LOCAL_DATABASE_PY = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Engine", "backend", "database.py")
 TAR_PATH = os.path.join(ROOT_DIR, "scratch", "frontend_dist.tar.gz")
 
 def make_tarfile(output_filename, source_dir):
@@ -59,11 +60,15 @@ def deploy():
 
     sftp = client.open_sftp()
 
-    # 3. Subir auth.py
-    print(f"\n[2. Subiendo auth.py al backend de Contabo...]")
+    # 3. Subir backend files (auth.py y database.py)
+    print(f"\n[2. Subiendo backend files al backend de Contabo...]")
     remote_auth_stack = "/opt/petral_stack/backend/api/routers/auth.py"
     sftp.put(LOCAL_AUTH_PY, "/tmp/auth.py")
     run(client, f"mkdir -p /opt/petral_stack/backend/api/routers && cp /tmp/auth.py {remote_auth_stack} ; docker cp /tmp/auth.py petral-backend:/app/backend/api/routers/auth.py", "Copiar auth.py a host y a petral-backend")
+
+    remote_db_stack = "/opt/petral_stack/backend/database.py"
+    sftp.put(LOCAL_DATABASE_PY, "/tmp/database.py")
+    run(client, f"mkdir -p /opt/petral_stack/backend && cp /tmp/database.py {remote_db_stack} ; docker cp /tmp/database.py petral-backend:/app/backend/database.py", "Copiar database.py a host y a petral-backend")
 
     # 4. Subir tar.gz de frontend
     print(f"\n[3. Subiendo bundle frontend dist a Contabo...]")
