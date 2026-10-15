@@ -313,7 +313,7 @@
             }
         }
 
-        /* Fullscreen Slide Deck Presentation Mode */
+        /* Fullscreen Slide Deck Presentation Mode con Auto-Escalador */
         body.presentation-mode {
             margin: 0 !important;
             padding: 0 !important;
@@ -330,41 +330,47 @@
         body.presentation-mode .slide-deck {
             margin: 0 !important;
             padding: 0 !important;
-            max-width: 100vw !important;
             width: 100vw !important;
             height: 100vh !important;
+            max-width: 100vw !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             overflow: hidden !important;
+            position: relative !important;
             gap: 0 !important;
         }
 
         body.presentation-mode .slide-page {
             display: none !important;
-            width: 95vw !important;
-            max-width: 1440px !important;
-            height: 94vh !important;
-            max-height: 94vh !important;
-            margin: auto !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
-            border-radius: 16px !important;
+            width: 1180px !important;
+            min-width: 1180px !important;
+            max-width: 1180px !important;
+            min-height: 720px !important;
+            height: auto !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85) !important;
+            border-radius: 14px !important;
+            transform-origin: center center !important;
+            transition: opacity 0.2s ease-out, transform 0.15s ease-out !important;
             overflow-y: auto !important;
-            animation: fadeInSlide 0.25s ease-out;
         }
 
         body.presentation-mode .slide-page.active-slide {
             display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            animation: fadeInSlide 0.25s ease-out;
         }
 
         @keyframes fadeInSlide {
             from {
                 opacity: 0;
-                transform: translateY(8px) scale(0.99);
             }
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
             }
         }
 
@@ -920,6 +926,37 @@
             var currentIndex = 0;
             var isPresentationMode = false;
 
+            // ── ESCALADOR PROPORCIONAL INTELIGENTE PARA FULLSCREEN F11 ──
+            function applyDynamicScale() {
+                if (!isPresentationMode) {
+                    slides.forEach(function(s) {
+                        s.style.transform = '';
+                        s.style.top = '';
+                        s.style.left = '';
+                    });
+                    return;
+                }
+
+                var windowWidth = window.innerWidth || document.documentElement.clientWidth;
+                var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+
+                // Dimensiones de diseño canónico de la lámina
+                var baseWidth = 1180;
+                var baseHeight = 730;
+
+                // Aprovechamiento de hasta 96% del ancho y 94% del alto del monitor
+                var scaleX = (windowWidth * 0.96) / baseWidth;
+                var scaleY = (windowHeight * 0.94) / baseHeight;
+                var scaleFactor = Math.min(scaleX, scaleY);
+
+                // Mínimo de seguridad para pantallas muy chicas
+                scaleFactor = Math.max(0.65, scaleFactor);
+
+                slides.forEach(function(s) {
+                    s.style.transform = 'translate(-50%, -50%) scale(' + scaleFactor + ')';
+                });
+            }
+
             function updateSlides() {
                 slides.forEach(function(slide, idx) {
                     if (isPresentationMode) {
@@ -941,6 +978,7 @@
                 if (hudEl) {
                     hudEl.textContent = 'Diapositiva ' + (currentIndex + 1) + ' / ' + totalSlides;
                 }
+                applyDynamicScale();
             }
 
             function nextSlide() {
@@ -975,6 +1013,9 @@
                     document.body.classList.remove('presentation-mode');
                 }
                 updateSlides();
+                applyDynamicScale();
+                setTimeout(applyDynamicScale, 50);
+                setTimeout(applyDynamicScale, 200);
             }
 
             function toggleFullscreen() {
@@ -1010,6 +1051,7 @@
             document.addEventListener('webkitfullscreenchange', function() {
                 setPresentationMode(!!document.fullscreenElement);
             });
+            window.addEventListener('resize', applyDynamicScale);
 
             // ── TECLADO: ENTER SALTA DE SLIDE EN SLIDE, FLECHAS Y F11 ──
             window.addEventListener('keydown', function(e) {
@@ -1039,8 +1081,10 @@
             window.prevSlide = prevSlide;
             window.toggleFullscreen = toggleFullscreen;
             window.setPresentationMode = setPresentationMode;
+            window.applyDynamicScale = applyDynamicScale;
 
             updateSlides();
+            setTimeout(applyDynamicScale, 100);
         })();
     </script>
 </body>

@@ -258,7 +258,12 @@ export const SotaPetralOne_V2: React.FC = () => {
                     ref={iframeRef}
                     src="/sota_petral_one.html"
                     title="SOTA PETRAL ONE — Presentación Ejecutiva"
-                    className="w-full h-full border-0 block bg-white origin-top"
+                    onLoad={() => {
+                        if (isFullscreen) {
+                            sendIframeAction('ENTER_FULLSCREEN');
+                        }
+                    }}
+                    className={`w-full h-full border-0 block ${isFullscreen ? 'bg-[#090d16]' : 'bg-white'} origin-top`}
                     style={{
                         transform: (!isFullscreen && zoomLevel !== 100) ? `scale(${zoomLevel / 100})` : undefined,
                         transformOrigin: 'top center',
