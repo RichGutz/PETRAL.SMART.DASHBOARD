@@ -1,9 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
-    Search, 
     Ship, 
     ChevronRight, 
-    Building2, 
     GitFork, 
     BookOpen
 } from 'lucide-react';
@@ -16,20 +14,7 @@ import { MofRoleBookReader_V2 } from '../../components/MofManual/MofRoleBookRead
 export const MofManual_V2: React.FC = () => {
     const navigate = useNavigate();
     const [selectedRoleId, setSelectedRoleId] = useState<string>('mof-fernando');
-    const [searchTerm, setSearchTerm] = useState<string>('');
-
-    // Filtro predictivo de puestos
-    const filteredRoles = useMemo(() => {
-        if (!searchTerm.trim()) return MOF_ROLES_V2;
-        const lower = searchTerm.toLowerCase().trim();
-        return MOF_ROLES_V2.filter(r => 
-            r.personName.toLowerCase().includes(lower) ||
-            r.title.toLowerCase().includes(lower) ||
-            r.code.toLowerCase().includes(lower) ||
-            r.department.toLowerCase().includes(lower) ||
-            r.shortTitle.toLowerCase().includes(lower)
-        );
-    }, [searchTerm]);
+    const filteredRoles = MOF_ROLES_V2;
 
     // Índice activo y navegación entre puestos
     const activeIndex = MOF_ROLES_V2.findIndex(r => r.id === selectedRoleId);
@@ -50,10 +35,10 @@ export const MofManual_V2: React.FC = () => {
     };
 
     return (
-        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300 print:block print:gap-0 print:p-0 print:m-0 print:w-full">
+        <div className="w-full h-full flex flex-col min-h-0 overflow-hidden animate-in fade-in duration-300 print:block print:gap-0 print:p-0 print:m-0 print:w-full">
             
-            {/* ── ENCABEZADO CORPORATIVO PRINCIPAL ── */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 print:hidden">
+            {/* ── ENCABEZADO CORPORATIVO PRINCIPAL (STICKY / FIXED) ── */}
+            <div className="shrink-0 bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-4 print:hidden">
                 <div className="flex items-center gap-4">
                     <img src={logoPetral} alt="Naviera Petral" className="h-10 w-auto object-contain" />
                     <div className="h-8 border-l border-slate-200 hidden md:block"></div>
@@ -84,27 +69,15 @@ export const MofManual_V2: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── CONTENEDOR PRINCIPAL: SIDEBAR 320px + VISOR DE LIBRO A4 ── */}
-            <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0 print:block print:w-full print:p-0 print:m-0">
+            {/* ── CONTENEDOR PRINCIPAL: SIDEBAR 320px + VISOR DE LIBRO A4 (CONFINADO) ── */}
+            <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 items-start w-full overflow-hidden print:block print:w-full print:p-0 print:m-0">
 
-                {/* PANEL LATERAL IZQUIERDO: PADRÓN DE LOS 6 PUESTOS (320px CONGELADOS) */}
-                <aside className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 space-y-4 print:hidden">
+                {/* PANEL LATERAL IZQUIERDO: PADRÓN DE LOS 6 PUESTOS (320px CONGELADOS, SIN BUSCADOR) */}
+                <aside className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 h-full overflow-y-auto space-y-4 pr-1 print:hidden">
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 overflow-hidden">
                         
-                        {/* Buscador de Puestos */}
-                        <div className="relative mb-3.5">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Buscar por nombre, código o cargo..."
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                            />
-                        </div>
-
-                        {/* Listado de Puestos */}
-                        <div className="space-y-1.5 max-h-[500px] overflow-y-auto scrollbar-thin">
+                        {/* Listado Directo de Puestos (Sin buscador) */}
+                        <div className="space-y-1.5 max-h-[540px] overflow-y-auto scrollbar-thin">
                             {filteredRoles.map((role) => {
                                 const isSelected = selectedRoleId === role.id;
                                 return (
@@ -163,8 +136,8 @@ export const MofManual_V2: React.FC = () => {
                     </div>
                 </aside>
 
-                {/* PANEL PRINCIPAL DERECHO: VISOR DE LIBRO EDITORIAL A4 */}
-                <div className="flex-1 min-w-0 w-full print:block print:w-full print:p-0 print:m-0">
+                {/* PANEL PRINCIPAL DERECHO: VISOR DE LIBRO EDITORIAL A4 (SCROLL CONFINADO) */}
+                <div className="flex-1 min-w-0 w-full h-full overflow-y-auto rounded-xl print:block print:w-full print:p-0 print:m-0">
                     <MofRoleBookReader_V2
                         role={currentRole}
                         onPrevRole={handlePrevRole}

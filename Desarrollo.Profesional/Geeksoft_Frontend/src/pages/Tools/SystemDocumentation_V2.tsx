@@ -32,9 +32,25 @@ export const SystemDocumentation_V2: React.FC = () => {
     const [activeChapterId, setActiveChapterId] = useState<string>('c1');
     const [searchQuery, setSearchQuery] = useState<string>('');
 
-    // Estados de colapso de las dos burbujas principales
-    const [isMaestrosOpen, setIsMaestrosOpen] = useState<boolean>(true);
-    const [isHerramientasOpen, setIsHerramientasOpen] = useState<boolean>(true);
+    // Estados de colapso de las dos burbujas principales (inician colapsadas; apertura mutuamente excluyente)
+    const [isMaestrosOpen, setIsMaestrosOpen] = useState<boolean>(false);
+    const [isHerramientasOpen, setIsHerramientasOpen] = useState<boolean>(false);
+
+    const toggleMaestros = () => {
+        setIsMaestrosOpen(prev => {
+            const next = !prev;
+            if (next) setIsHerramientasOpen(false);
+            return next;
+        });
+    };
+
+    const toggleHerramientas = () => {
+        setIsHerramientasOpen(prev => {
+            const next = !prev;
+            if (next) setIsMaestrosOpen(false);
+            return next;
+        });
+    };
 
     // Estado del Modal de Sincronización As-Built
     const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
@@ -107,10 +123,10 @@ export const SystemDocumentation_V2: React.FC = () => {
     };
 
     return (
-        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300 print:block print:gap-0 print:p-0 print:m-0 print:w-full">
+        <div className="w-full h-full flex flex-col min-h-0 overflow-hidden animate-in fade-in duration-300 print:block print:gap-0 print:p-0 print:m-0 print:w-full">
             
-            {/* ── ENCABEZADO PRINCIPAL DE LA VISTA ── */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 print:hidden">
+            {/* ── ENCABEZADO PRINCIPAL DE LA VISTA (STICKY / FIXED RIBBON) ── */}
+            <div className="shrink-0 bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-4 print:hidden">
                 <div className="flex items-center gap-4">
                     <img src={logoPetral} alt="Naviera Petral" className="h-10 w-auto object-contain" />
                     <div className="h-8 border-l border-slate-200 hidden md:block"></div>
@@ -137,16 +153,16 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── CONTENEDOR PRINCIPAL: SIDEBAR 320px + VISOR DE LIBRO EDITORIAL ── */}
-            <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0 print:block print:w-full print:p-0 print:m-0">
+            {/* ── CONTENEDOR PRINCIPAL: SIDEBAR 320px + VISOR DE LIBRO EDITORIAL (CONFINADO) ── */}
+            <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-6 items-start w-full overflow-hidden print:block print:w-full print:p-0 print:m-0">
 
                 {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (320px CONGELADOS EXACTOS) */}
-                <aside className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 space-y-4 print:hidden">
+                <aside className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 h-full overflow-y-auto space-y-4 pr-1 print:hidden">
 
                     {/* ── BURBUJA 1: DATOS MAESTROS (11 MÓDULOS) ── */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all w-full">
                         <button
-                            onClick={() => setIsMaestrosOpen(!isMaestrosOpen)}
+                            onClick={toggleMaestros}
                             className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200 text-left hover:bg-slate-100 transition-colors cursor-pointer"
                         >
                             <div className="flex items-center gap-2 min-w-0">
@@ -211,7 +227,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                     {/* ── BURBUJA 2: HERRAMIENTAS & MOTORES (8 MÓDULOS) ── */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all w-full">
                         <button
-                            onClick={() => setIsHerramientasOpen(!isHerramientasOpen)}
+                            onClick={toggleHerramientas}
                             className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200 text-left hover:bg-slate-100 transition-colors cursor-pointer"
                         >
                             <div className="flex items-center gap-2 min-w-0">
@@ -254,8 +270,8 @@ export const SystemDocumentation_V2: React.FC = () => {
 
                 </aside>
 
-                {/* ── ÁREA PRINCIPAL: VISOR DE LIBRO EDITORIAL CON REGLAS DE IMPRESIÓN A4 ── */}
-                <div className="flex-1 min-w-0 w-full print:block print:w-full print:p-0 print:m-0">
+                {/* ── ÁREA PRINCIPAL: VISOR DE LIBRO EDITORIAL CON REGLAS DE IMPRESIÓN A4 (SCROLL CONFINADO) ── */}
+                <div className="flex-1 min-w-0 w-full h-full overflow-y-auto rounded-xl print:block print:w-full print:p-0 print:m-0">
                     <DocsAsCodeBookReader_V2
                         chapter={currentChapter}
                         onPrevChapter={handlePrevChapter}

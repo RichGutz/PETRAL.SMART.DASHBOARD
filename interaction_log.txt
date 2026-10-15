@@ -1142,3 +1142,21 @@ ACCION REALIZADA:
    - Deploy SFTP/SSH exitoso a 169.58.168.107.
    - Producción activa y verificada (HTTP 200 OK): https://petral.one.geeksoft.tech
 ================================================================================
+REGISTRO DE SESION: 2026-10-15 (Refactor Estetico: Docs as Code, MOF y Flujograma)
+SOLICITUD:
+1. Docs as Code: scroll vertical confinado a la hoja del manual; ribbon superior fijo.
+2. Docs as Code: acordeones laterales inician colapsados y apertura excluyente.
+3. Flujograma: ribbon de pestañas en 1 sola fila sin iconos ni scroll horizontal.
+4. MOF: scroll vertical confinado a la hoja del puesto y eliminacion del buscador lateral.
+ACCION REALIZADA:
+1. SAFE POINT GIT:
+   - Tag Anotado: PRE.REFACTOR.ESTETICO.DOCS.MOF.FLOWCHART
+   - Nueva Rama: feature/estetica-docs-mof-flowchart
+2. CIRUGIA MODULAR:
+   - MasterTemplate_V2.tsx: overflow-hidden en main para vistas de documentacion.
+   - SystemDocumentation_V2.tsx: ribbon fijo, scroll interno, acordeones mutuamente excluyentes (default false).
+   - SystemFlowchartViewer_V2.tsx: 9 pestañas en 1 sola fila con grid-cols-9, sin iconos ni badges.
+   - MofManual_V2.tsx: buscador removido, header fijo y scroll confinado a la hoja del puesto.
+3. VERIFICACION LOCAL:
+   - npx vite build: Exito limpio en 10.58s (0 errores, Exit code 0).
+================================================================================

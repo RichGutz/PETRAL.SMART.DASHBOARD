@@ -692,7 +692,9 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
                 {/* Contenido Principal */}
-                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-w-0 min-h-0 overflow-auto master-template-content print:block print:border-none print:shadow-none print:p-0 print:m-0 print:h-auto print:overflow-visible print:w-full print:rounded-none">
+                <main className={`flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-w-0 min-h-0 ${
+                    ['system-documentation', 'mof-manual'].includes(activeTab) ? 'overflow-hidden' : 'overflow-auto'
+                } master-template-content print:block print:border-none print:shadow-none print:p-0 print:m-0 print:h-auto print:overflow-visible print:w-full print:rounded-none`}>
                     {children}
                 </main>
 

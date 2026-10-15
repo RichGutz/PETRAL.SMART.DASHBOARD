@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 interface FlowchartTab {
     id: string;
     label: string;
+    shortLabel?: string;
     icon: React.ReactNode;
     svgFile: string;
     pdfFile: string;
@@ -17,6 +18,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'arquitectura',
         label: 'Arquitectura General',
+        shortLabel: 'Arquitectura',
         icon: <Layers size={15} />,
         svgFile: '/FLUJOGRAMA_ARQUITECTURA_GENERAL_PETRAL_V1.svg',
         pdfFile: '/FLUJOGRAMA_ARQUITECTURA_GENERAL_PETRAL_V1.pdf',
@@ -27,6 +29,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'multicotizador',
         label: 'Multicotizador',
+        shortLabel: 'Multicotizador',
         icon: <ShoppingCart size={15} />,
         svgFile: '/FLOWCHART_MULTICOTIZADOR.svg',
         pdfFile: '/FLOWCHART_MULTICOTIZADOR.pdf',
@@ -37,6 +40,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'motor-baf',
         label: 'Motor BAF',
+        shortLabel: 'Motor BAF',
         icon: <Zap size={15} />,
         svgFile: '/FLOWCHART_MOTOR_BAF.svg',
         pdfFile: '/FLOWCHART_MOTOR_BAF.svg',
@@ -47,6 +51,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'motor-pxq',
         label: 'Motor P×Q',
+        shortLabel: 'Motor P×Q',
         icon: <Cpu size={15} />,
         svgFile: '/FLOWCHART_MOTOR_PXQ.svg',
         pdfFile: '/FLOWCHART_MOTOR_PXQ.pdf',
@@ -57,6 +62,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'voyage-ledger',
         label: 'Voyage Ledger',
+        shortLabel: 'Voyage Ledger',
         icon: <BookOpen size={15} />,
         svgFile: '/FLOWCHART_VOYAGE_LEDGER.svg',
         pdfFile: '/FLOWCHART_VOYAGE_LEDGER.pdf',
@@ -64,10 +70,10 @@ const TABS: FlowchartTab[] = [
         badge: 'P&L Viaje',
         color: 'teal',
     },
-
     {
         id: 'matriz-financiera',
         label: 'Matriz Financiera',
+        shortLabel: 'Matriz Financiera',
         icon: <BarChart2 size={15} />,
         svgFile: '/FLOWCHART_MATRIZ_FINANCIERA.svg',
         pdfFile: '/FLOWCHART_MATRIZ_FINANCIERA.pdf',
@@ -78,6 +84,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'analisis-grafico',
         label: 'Análisis Gráfico',
+        shortLabel: 'Análisis Gráfico',
         icon: <TrendingUp size={15} />,
         svgFile: '/FLOWCHART_ANALISIS_GRAFICO.svg',
         pdfFile: '/FLOWCHART_ANALISIS_GRAFICO.pdf',
@@ -88,6 +95,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'spaghetti-map',
         label: 'Spaghetti Map V2',
+        shortLabel: 'Spaghetti Map',
         icon: <Globe size={15} />,
         svgFile: '/FLOWCHART_SPAGHETTI_MAP.svg',
         pdfFile: '/FLOWCHART_SPAGHETTI_MAP.pdf',
@@ -98,6 +106,7 @@ const TABS: FlowchartTab[] = [
     {
         id: 'auditoria-dual',
         label: 'Liquidador de Gastos Portuarios',
+        shortLabel: 'Liquidador P×Q',
         icon: <Search size={15} />,
         svgFile: '/FLOWCHART_AUDITORIA_DUAL.svg',
         pdfFile: '/FLOWCHART_AUDITORIA_DUAL.pdf',
@@ -105,7 +114,6 @@ const TABS: FlowchartTab[] = [
         badge: 'Liquidador P×Q',
         color: 'slate',
     },
-
 ];
 
 
@@ -147,28 +155,22 @@ export const SystemFlowchartViewer_V2: React.FC = () => {
 
             {/* ── TAB BAR ── */}
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                {/* Tabs */}
-                <div className="flex items-center gap-1 p-2 bg-slate-50 border-b border-slate-200 overflow-x-auto">
+                {/* Tabs en 1 sola fila continua (sin scroll horizontal, sin iconos) */}
+                <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5 p-1.5 bg-slate-100/90 border-b border-slate-200 w-full">
                     {TABS.map(tab => {
                         const isActive = activeTab === tab.id;
-                        const c = COLOR_MAP[tab.color] || COLOR_MAP.blue;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => { setActiveTab(tab.id); setZoomLevel(100); }}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-xs whitespace-nowrap transition-all border ${
-                                    isActive ? c.active : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100 border-transparent'
+                                className={`w-full py-2 px-1 text-center font-bold text-[11px] xl:text-xs rounded-lg transition-all border flex items-center justify-center cursor-pointer select-none truncate ${
+                                    isActive 
+                                        ? 'bg-white text-blue-700 border-blue-200 shadow-xs font-black' 
+                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 border-transparent'
                                 }`}
+                                title={tab.label}
                             >
-                                {tab.icon}
-                                <span>{tab.label}</span>
-                                {tab.badge && (
-                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
-                                        isActive ? c.badge : 'bg-slate-100 text-slate-400 border-slate-200'
-                                    }`}>
-                                        {tab.badge}
-                                    </span>
-                                )}
+                                <span className="truncate">{tab.shortLabel || tab.label}</span>
                             </button>
                         );
                     })}

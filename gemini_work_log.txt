@@ -1038,3 +1038,22 @@ VERIFICACION EMPIRICA:
 - deploy_petral_one_contabo.py: SFTP upload a Contabo, despliegue en /opt/petral_stack, reinicio de contenedores petral-backend y petral-frontend.
 - Verificacion HTTP Status: 200 OK en https://petral.one.geeksoft.tech/dashboard con UI actualizada a PETRAL ONE.
 ================================================================================
+REGISTRO DE SESION: 2026-10-15 (Refactor Estetico: Docs as Code, MOF y Flujograma)
+TAG CREADO: PRE.REFACTOR.ESTETICO.DOCS.MOF.FLOWCHART
+BRANCH ACTIVO: feature/estetica-docs-mof-flowchart
+MODIFICACIONES APLICADAS:
+1. MasterTemplate_V2.tsx: main container con overflow-hidden condicional para system-documentation y mof-manual, eliminando el scroll global y confinandolo a los lectores.
+2. SystemDocumentation_V2.tsx: 
+   - Ribbon superior "MANUAL INTEGRAL DEL SISTEMA" fijo (shrink-0 mb-4).
+   - Scroll vertical confinado al viewport de la hoja editorial de lectura.
+   - Acordeones laterales (Datos Maestros y Herramientas) inician colapsados (false) y con apertura mutuamente excluyente.
+3. SystemFlowchartViewer_V2.tsx: 
+   - Ribbon de pestañas de flujogramas en 1 sola fila continua (grid de 9 columnas).
+   - Eliminados iconos superfluos y badges saturados; eliminado overflow-x-auto.
+   - Textos compactos con shortLabel elegante.
+4. MofManual_V2.tsx: 
+   - Eliminada la caja de búsqueda del panel lateral (6 puestos homologados limpios).
+   - Header corporativo fijo y scroll vertical confinado exclusivamente a la hoja del rol.
+VERIFICACION EMPIRICA:
+- npx vite build: Exito rotundo en 10.58s (0 errores, Exit code 0).
+================================================================================
