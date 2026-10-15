@@ -1184,3 +1184,29 @@ ACCION REALIZADA:
    - npx vite build: Exito total en 9.50s (1125 módulos transformados, 0 errores, Exit code 0).
    - Git Commit: fdf351d en rama feature/zoom-and-sota-petral-one.
 ================================================================================
+REGISTRO DE SESION: 2026-10-15 (Blindaje SOTA PETRAL ONE: Bloqueo Print/Save & Slide Deck F11 + Enter)
+SOLICITUD:
+1. En SOTA PETRAL ONE, quitar la capacidad de imprimir y guardar.
+2. Que F11 convierta cada slide en una pantalla completa y salte de slide en slide al apretar Enter.
+ACCION REALIZADA:
+1. SAFE POINT GIT:
+   - Tag Anotado: PRE.SOTA.SLIDE.DECK.F11
+   - Nueva Rama: feature/sota-slide-deck-f11
+2. CIRUGIA MODULAR:
+   - sota_petral_one.html y PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html:
+     * Eliminado botón de imprimir/guardar PDF de la cabecera.
+     * Incorporado slide deck presentation engine con detección de pantalla completa (100vw x 100vh).
+     * Solo el slide activo se muestra a tamaño completo; los demás se ocultan para evitar desbordes de scroll.
+     * Soporte de salto con tecla Enter (o Flecha Derecha / Espacio), y retroceso con Flecha Izquierda / Backspace.
+     * Bloqueo estricto de Ctrl+P, Ctrl+S y clic derecho.
+     * Inyección de CSS @media print display:none.
+     * HUD flotante interactivo con indicador 'Diapositiva X / 6' y botón Salir.
+   - SotaPetralOne_V2.tsx:
+     * Removidos botones de impresión y abrir pestaña externa.
+     * Header se oculta en pantalla completa para que la diapositiva tome el 100% de la pantalla.
+     * Intercepción de Enter y flechas con envío postMessage al iframe.
+     * Botón flotante superior para salir de pantalla completa (F11 / Esc).
+3. VERIFICACION EMPIRICA:
+   - npx vite build: Exito limpio en 9.67s (0 errores, Exit code 0).
+   - Git Commit: 0aae21b en rama feature/sota-slide-deck-f11.
+================================================================================
