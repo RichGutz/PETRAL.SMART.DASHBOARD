@@ -21,6 +21,7 @@ import { SystemFlowchartViewer_V2 } from './pages/Tools/SystemFlowchartViewer_V2
 import { SystemDocumentation_V2 } from './pages/Tools/SystemDocumentation_V2';
 import { CompanyOrganigram_V2 } from './pages/Tools/CompanyOrganigram_V2';
 import { MofManual_V2 } from './pages/Tools/MofManual_V2';
+import { SotaPetralOne_V2 } from './pages/Tools/SotaPetralOne_V2';
 
 
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
@@ -129,6 +130,7 @@ function App_V2() {
                   <Route path="/system-documentation" element={<SystemDocumentation_V2 />} />
                   <Route path="/company-organigram" element={<CompanyOrganigram_V2 />} />
                   <Route path="/mof-manual" element={<MofManual_V2 />} />
+                  <Route path="/sota-petral-one" element={<SotaPetralOne_V2 />} />
               </Route>
 
               {/* Panel de Gestión de Seguridad y Administración (Sólo ADMIN) */}

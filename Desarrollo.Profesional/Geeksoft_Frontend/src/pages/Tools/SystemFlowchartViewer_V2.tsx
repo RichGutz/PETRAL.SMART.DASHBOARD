@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, ZoomIn, ZoomOut, RotateCcw, Layers, ShoppingCart, BarChart2, BookOpen, Search, TrendingUp, Globe, Cpu, Zap } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
@@ -133,6 +133,29 @@ const COLOR_MAP: Record<string, { active: string; badge: string; icon: string }>
 export const SystemFlowchartViewer_V2: React.FC = () => {
     const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [activeTab, setActiveTab] = useState<string>('arquitectura');
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Zoom interactivo con Ctrl + Scroll del mouse (intercepta preventDefault sin pasividad)
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    setZoomLevel(prev => Math.min(prev + 10, 250));
+                } else {
+                    setZoomLevel(prev => Math.max(prev - 10, 40));
+                }
+            }
+        };
+
+        el.addEventListener('wheel', handleWheel, { passive: false });
+        return () => {
+            el.removeEventListener('wheel', handleWheel);
+        };
+    }, []);
 
     const currentTab = TABS.find(t => t.id === activeTab) ?? TABS[0];
     const colors = COLOR_MAP[currentTab.color] || COLOR_MAP.blue;
@@ -221,8 +244,12 @@ export const SystemFlowchartViewer_V2: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── FLOWCHART VIEWER ── */}
-            <div className="bg-slate-100 border border-slate-200 rounded-xl shadow-inner p-6 overflow-x-auto overflow-y-auto max-h-[85vh] flex flex-col items-center justify-start">
+            {/* ── FLOWCHART VIEWER (SOPORTA CTRL + SCROLL ZOOM) ── */}
+            <div 
+                ref={containerRef}
+                title="Tip: Usa Ctrl + Scroll del mouse para acercar o alejar el diagrama"
+                className="bg-slate-100 border border-slate-200 rounded-xl shadow-inner p-6 overflow-x-auto overflow-y-auto max-h-[85vh] flex flex-col items-center justify-start select-none"
+            >
                 <div
                     className="transition-all duration-200 ease-out flex flex-col items-center min-w-[1600px]"
                     style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}

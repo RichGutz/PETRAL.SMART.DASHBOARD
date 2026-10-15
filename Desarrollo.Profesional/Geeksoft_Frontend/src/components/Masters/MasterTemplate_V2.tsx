@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck, BookOpen, GitGraph, Building2, FileText } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Laptop, ShieldCheck, BookOpen, GitGraph, Building2, FileText, Presentation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
@@ -65,7 +65,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
         mercado: ['bunker', 'sources-sinks'],
-        documentacion: ['system-documentation', 'system-flowchart', 'company-organigram', 'mof-manual'],
+        documentacion: ['system-documentation', 'system-flowchart', 'company-organigram', 'mof-manual', 'sota-petral-one'],
         admin: ['users', 'device-vault', 'audit-ledger', 'settings']
     };
 
@@ -633,6 +633,12 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                 >
                                     <FileText size={14} /> Manual MOF (Puestos &amp; ERP)
                                 </button>
+                                <button 
+                                    onClick={() => navigate('/sota-petral-one')}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'sota-petral-one' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                >
+                                    <Presentation size={14} /> SOTA PETRAL ONE
+                                </button>
                             </nav>
                         )}
                     </div>
@@ -693,7 +699,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
                 {/* Contenido Principal */}
                 <main className={`flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-w-0 min-h-0 ${
-                    ['system-documentation', 'mof-manual'].includes(activeTab) ? 'overflow-hidden' : 'overflow-auto'
+                    ['system-documentation', 'mof-manual', 'sota-petral-one'].includes(activeTab) ? 'overflow-hidden' : 'overflow-auto'
                 } master-template-content print:block print:border-none print:shadow-none print:p-0 print:m-0 print:h-auto print:overflow-visible print:w-full print:rounded-none`}>
                     {children}
                 </main>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     Printer, 
     ZoomIn, 
     ZoomOut, 
+    RotateCcw,
     ChevronLeft, 
     ChevronRight, 
     Building2, 
@@ -47,7 +48,31 @@ export const MofRoleBookReader_V2: React.FC<MofRoleBookReaderProps> = ({
 }) => {
     const navigate = useNavigate();
     const [fontSize, setFontSize] = useState<number>(15);
+    const [zoomLevel, setZoomLevel] = useState<number>(100);
     const [paperTheme, setPaperTheme] = useState<'white' | 'sepia' | 'dark'>('white');
+    const readerContainerRef = useRef<HTMLDivElement>(null);
+
+    // Zoom interactivo con Ctrl + Scroll del mouse (intercepta preventDefault sin pasividad)
+    useEffect(() => {
+        const el = readerContainerRef.current;
+        if (!el) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    setZoomLevel(prev => Math.min(prev + 10, 200));
+                } else {
+                    setZoomLevel(prev => Math.max(prev - 10, 60));
+                }
+            }
+        };
+
+        el.addEventListener('wheel', handleWheel, { passive: false });
+        return () => {
+            el.removeEventListener('wheel', handleWheel);
+        };
+    }, []);
 
     const handlePrint = () => {
         window.print();
@@ -112,8 +137,36 @@ export const MofRoleBookReader_V2: React.FC<MofRoleBookReaderProps> = ({
                 {/* Controles de Lectura & Navegación */}
                 <div className="flex items-center gap-2.5 shrink-0">
                     
-                    {/* Zoom de Fuente */}
+                    {/* Zoom de Hoja A4 */}
                     <div className="flex items-center rounded-lg p-0.5 border border-slate-300 dark:border-slate-700 bg-black/5 dark:bg-white/5">
+                        <button
+                            onClick={() => setZoomLevel(prev => Math.max(60, prev - 10))}
+                            title="Reducir escala (Ctrl + Scroll Abajo)"
+                            className="p-1 hover:text-blue-600 rounded cursor-pointer transition-colors"
+                        >
+                            <ZoomOut size={13} />
+                        </button>
+                        <span className="text-[11px] font-mono font-bold px-1 min-w-[38px] text-center select-none">
+                            {zoomLevel}%
+                        </span>
+                        <button
+                            onClick={() => setZoomLevel(prev => Math.min(200, prev + 10))}
+                            title="Aumentar escala (Ctrl + Scroll Arriba)"
+                            className="p-1 hover:text-blue-600 rounded cursor-pointer transition-colors"
+                        >
+                            <ZoomIn size={13} />
+                        </button>
+                        <button
+                            onClick={() => setZoomLevel(100)}
+                            title="Restablecer escala al 100%"
+                            className="p-1 hover:text-blue-600 rounded cursor-pointer transition-colors"
+                        >
+                            <RotateCcw size={11} />
+                        </button>
+                    </div>
+
+                    {/* Tamaño de Letra */}
+                    <div className="hidden sm:flex items-center rounded-lg p-0.5 border border-slate-300 dark:border-slate-700 bg-black/5 dark:bg-white/5">
                         <button
                             onClick={() => setFontSize(Math.max(13, fontSize - 1))}
                             title="Reducir tamaño de letra"
@@ -193,11 +246,19 @@ export const MofRoleBookReader_V2: React.FC<MofRoleBookReaderProps> = ({
                 </div>
             </div>
 
-            {/* ── HOJA A4 PRINCIPAL DEL PERFIL MOF (CONGELADA A 880px) ── */}
-            <div className="w-full flex justify-center py-6 px-3 sm:px-6 print:p-0 print:m-0 print:block">
+            {/* ── HOJA A4 PRINCIPAL DEL PERFIL MOF (SOPORTA CTRL + SCROLL ZOOM) ── */}
+            <div 
+                ref={readerContainerRef}
+                title="Tip: Usa Ctrl + Scroll del mouse para acercar o alejar el manual MOF"
+                className="w-full flex justify-center py-6 px-3 sm:px-6 print:p-0 print:m-0 print:block overflow-x-auto select-none"
+            >
                 <main 
-                    className={`a4-sheet w-full max-w-[880px] min-h-[1050px] rounded-xl p-6 sm:p-12 md:p-14 border transition-all duration-300 relative ${currentTheme.sheet} print:p-0 print:m-0 print:border-none print:shadow-none print:max-w-full print:w-full print:rounded-none`}
-                    style={{ fontSize: `${fontSize}px` }}
+                    className={`a4-sheet w-full max-w-[880px] min-h-[1050px] rounded-xl p-6 sm:p-12 md:p-14 border transition-all duration-200 relative ${currentTheme.sheet} print:p-0 print:m-0 print:border-none print:shadow-none print:max-w-full print:w-full print:rounded-none`}
+                    style={{ 
+                        fontSize: `${fontSize}px`,
+                        transform: `scale(${zoomLevel / 100})`,
+                        transformOrigin: 'top center'
+                    }}
                 >
                     {/* Membrete Oficial A4 */}
                     <div className="border-b-2 border-slate-300 dark:border-slate-700 pb-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

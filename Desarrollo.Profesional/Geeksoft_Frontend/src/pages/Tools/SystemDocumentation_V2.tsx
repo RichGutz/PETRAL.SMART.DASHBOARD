@@ -20,8 +20,10 @@ import {
     Map, 
     FileCode, 
     ShieldCheck, 
-    BookOpen
+    BookOpen,
+    Presentation
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import logoPetral from '../../assets/Logo.Petral.png';
 import { DOCS_AS_CODE_CHAPTERS } from '../../data/docsAsCodeData_V2';
 import type { DocChapter_V2 } from '../../data/docsAsCodeData_V2';
@@ -29,6 +31,7 @@ import { DocsAsCodeBookReader_V2 } from '../../components/DocsAsCode/DocsAsCodeB
 import { DocsAsCodeSyncModal_V2 } from '../../components/DocsAsCode/DocsAsCodeSyncModal_V2';
 
 export const SystemDocumentation_V2: React.FC = () => {
+    const navigate = useNavigate();
     const [activeChapterId, setActiveChapterId] = useState<string>('c1');
     const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -138,8 +141,16 @@ export const SystemDocumentation_V2: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Buscador Contextual */}
-                <div className="flex items-center gap-3 w-full md:w-auto">
+                {/* Buscador Contextual y Enlace SOTA */}
+                <div className="flex items-center gap-2.5 w-full md:w-auto">
+                    <button
+                        onClick={() => navigate('/sota-petral-one')}
+                        className="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                        title="Ver Presentación Ejecutiva SOTA PETRAL ONE"
+                    >
+                        <Presentation size={14} />
+                        <span className="hidden sm:inline">SOTA PETRAL ONE</span>
+                    </button>
                     <div className="relative flex-1 md:w-72">
                         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input

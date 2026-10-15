@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     ChevronRight, Cpu, FileText, Search,
     Layers, Award, CheckCircle2, ArrowRight, X, ExternalLink,
     ZoomIn, ZoomOut, RotateCcw, LayoutGrid, GitFork,
-    Ship, FileSpreadsheet, Eye, BookOpen
+    Ship, FileSpreadsheet, Eye, BookOpen, Presentation
 } from 'lucide-react';
 import { Tree, TreeNode } from 'react-organizational-chart';
 import { useNavigate } from 'react-router-dom';
@@ -275,6 +275,29 @@ export const CompanyOrganigram_V2: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [zoomLevel, setZoomLevel] = useState<number>(1);
     const [viewMode, setViewMode] = useState<'TREE' | 'GRID'>('TREE');
+    const treeContainerRef = useRef<HTMLDivElement>(null);
+
+    // Zoom interactivo con Ctrl + Scroll del mouse (intercepta preventDefault sin pasividad)
+    useEffect(() => {
+        const el = treeContainerRef.current;
+        if (!el) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    setZoomLevel(prev => Math.min(1.8, Math.round((prev + 0.1) * 10) / 10));
+                } else {
+                    setZoomLevel(prev => Math.max(0.4, Math.round((prev - 0.1) * 10) / 10));
+                }
+            }
+        };
+
+        el.addEventListener('wheel', handleWheel, { passive: false });
+        return () => {
+            el.removeEventListener('wheel', handleWheel);
+        };
+    }, [viewMode]);
 
     const fernando = COMPANY_MEMBERS.find(m => m.id === 'fernando-gg')!;
     const iosef = COMPANY_MEMBERS.find(m => m.id === 'iosef-comercial')!;
@@ -405,11 +428,18 @@ export const CompanyOrganigram_V2: React.FC = () => {
                             Ver Manual MOF Oficial
                         </button>
                         <button
-                            onClick={() => navigate('/docs')}
-                            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm"
+                            onClick={() => navigate('/system-documentation')}
+                            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-sm cursor-pointer"
                         >
                             <BookOpen className="w-4 h-4 text-slate-500" />
                             Docs as Code
+                        </button>
+                        <button
+                            onClick={() => navigate('/sota-petral-one')}
+                            className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm cursor-pointer"
+                        >
+                            <Presentation className="w-4 h-4 text-white" />
+                            SOTA PETRAL ONE
                         </button>
                     </div>
                 </div>
@@ -573,9 +603,13 @@ export const CompanyOrganigram_V2: React.FC = () => {
                 </div>
             </div>
 
-            {/* CONTENEDOR PRINCIPAL DEL ORG CHART LUMINOSO */}
+            {/* CONTENEDOR PRINCIPAL DEL ORG CHART LUMINOSO (SOPORTA CTRL + SCROLL ZOOM) */}
             {viewMode === 'TREE' ? (
-                <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm overflow-x-auto min-h-[620px] flex justify-center items-start">
+                <div 
+                    ref={treeContainerRef}
+                    title="Tip: Usa Ctrl + Scroll del mouse para acercar o alejar el organigrama"
+                    className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm overflow-x-auto min-h-[620px] flex justify-center items-start select-none"
+                >
                     <div 
                         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
                         className="transition-transform duration-200 ease-out py-4"

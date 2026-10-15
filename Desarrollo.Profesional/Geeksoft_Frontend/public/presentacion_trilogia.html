@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trilogía PETRAL: ONE, TWO & THREE — Presentación Ejecutiva</title>
+    <style>
+        @page {
+            size: A4 landscape !important;
+            margin: 18mm 15mm 16mm 15mm !important;
+        }
+
+        :root {
+            --primary-navy: #0f2c59;
+            --primary-blue: #0284c7;
+            --accent-purple: #7e22ce;
+            --accent-green: #15803d;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #cbd5e1;
+            --bg-canvas: #f1f5f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Screen Presentation Bar */
+        .presentation-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+        }
+
+        .presentation-bar .title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .presentation-bar .badge {
+            background: rgba(2, 132, 199, 0.2);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .presentation-bar .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-control {
+            background: #1e293b;
+            color: #ffffff;
+            border: 1px solid #334155;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-control:hover {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .btn-control.primary {
+            background: #0284c7;
+            border-color: #38bdf8;
+        }
+        .btn-control.primary:hover {
+            background: #0369a1;
+        }
+
+        /* Slide Container (A4 Landscape Layout) */
+        .slide-deck {
+            max-width: 1200px;
+            margin: 64px auto 40px auto;
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .slide-page {
+            background: #ffffff;
+            width: 100%;
+            min-height: 720px;
+            padding: 40px 48px;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+        }
+
+        /* Slide Header */
+        .slide-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .slide-header .header-info {
+            max-width: 75%;
+        }
+
+        .slide-header .tagline {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+
+        .tagline.blue { color: #0284c7; }
+        .tagline.green { color: #15803d; }
+        .tagline.purple { color: #7e22ce; }
+        .tagline.navy { color: #0f2c59; }
+
+        .slide-header h2 {
+            font-size: 22px;
+            color: var(--primary-navy);
+            line-height: 1.25;
+            margin-bottom: 4px;
+        }
+
+        .slide-header .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .slide-header .logo-container img {
+            height: 52px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        /* Slide Content */
+        .slide-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        /* Tables matching COTIZACION_MODULAR_PETRAL_V9.md */
+        .tabla-comparativa {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            font-size: 12.5px;
+        }
+
+        .tabla-comparativa th {
+            padding: 10px 14px;
+            border: 1px solid var(--primary-navy);
+            background-color: var(--primary-navy);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .tabla-comparativa td {
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            line-height: 1.45;
+            vertical-align: top;
+        }
+
+        .tabla-comparativa tr:nth-child(odd) {
+            background-color: rgba(15, 44, 89, 0.03);
+        }
+
+        .tabla-comparativa tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+
+        /* Status Badges */
+        .badge-active {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+            text-transform: uppercase;
+        }
+
+        .badge-next {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #7dd3fc;
+            text-transform: uppercase;
+        }
+
+        .badge-future {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            background-color: #f3e8ff;
+            color: #7e22ce;
+            border: 1px solid #d8b4fe;
+            text-transform: uppercase;
+        }
+
+        /* Callout Box */
+        .card-callout {
+            background: #f8fafc;
+            border-left: 4px solid var(--primary-navy);
+            padding: 12px 18px;
+            border-radius: 0 6px 6px 0;
+            margin-top: 12px;
+            font-size: 12.5px;
+            color: #334155;
+            line-height: 1.45;
+        }
+
+        .card-callout.highlight {
+            background: #eff6ff;
+            border-left-color: #0284c7;
+        }
+
+        /* Slide Footer */
+        .slide-footer {
+            border-top: 1px solid var(--border-light);
+            padding-top: 12px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Print Media Styles */
+        @media print {
+            .presentation-bar {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+            }
+            .slide-deck {
+                margin: 0 !important;
+                padding: 0 !important;
+                gap: 0 !important;
+                max-width: 100% !important;
+            }
+            .slide-page {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                min-height: auto !important;
+                height: 100vh !important;
+                page-break-after: always !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar for Interactive Viewing -->
+    <div class="presentation-bar">
+        <div class="title">
+            <span class="badge">Ecosistema PETRAL</span>
+            <span>Trilogía de Inteligencia Naviera: ONE • TWO • THREE</span>
+        </div>
+        <div class="controls">
+            <button class="btn-control" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">Inicio</button>
+            <button class="btn-control primary" onclick="window.print()">Imprimir / Guardar PDF (A4)</button>
+        </div>
+    </div>
+
+    <div class="slide-deck">
+
+        <!-- ========================================== -->
+        <!-- SLIDE 1: PORTADA & VISIÓN DE LA TRILOGÍA  -->
+        <!-- ========================================== -->
+        <div class="slide-page">
+            <div>
+                <div class="slide-header">
+                    <div class="header-info">
+                        <div class="tagline blue">Roadmap Estratégico Corporativo</div>
+                        <h2>Ecosistema Digital PETRAL: Del Forecast a la Optimización de Red</h2>
+                        <div class="subtitle">Arquitectura en 3 fases para transformar la rentabilidad operativa y comercial de Naviera Petral</div>
+                    </div>
+                    <div class="logo-container">
+                        <img src="LOGO.PETRAL.ONE.jpg" alt="PETRAL ONE">
+                    </div>
+                </div>
+
+                <div class="slide-body">
+                    <table class="tabla-comparativa">
+                        <colgroup>
+                            <col style="width: 14%;">
+                            <col style="width: 26%;">
+                            <col style="width: 28%;">
+                            <col style="width: 20%;">
+                            <col style="width: 12%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Fase / Sistema</th>
+                                <th>Rol Clave & Pregunta Central</th>
+                                <th>Capacidades Matemáticas & Datos</th>
+                                <th>Valor de Negocio Directo</th>
+                                <th style="text-align: center;">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong style="color: #0f2c59; font-size: 13.5px;">PETRAL ONE</strong><br>
+                                    <span style="font-size: 11px; color: #64748b;">Forecasting & Budget</span>
+                                </td>
+                                <td>
+                                    <strong>¿Cuánto debe costar y rendir el viaje?</strong><br>
+                                    Estimación anticipada, instantánea y rigurosa de cotizaciones SPOT y contratos de volumen (COA).
+                                </td>
+                                <td>
+                                    • Matrices tarifarias P × Q portuarias oficiales.<br>
+                                    • Modelado teórico de bunker (MDO/IFO) en mar y puerto.<br>
+                                    • Presupuesto base inmutable (*Voyage Ledger*).<br>
+                                    • <strong>Gobernanza:</strong> Organigrama y MOF integrado (6 puestos clave).
+                                </td>
+                                <td style="color: #0f2c59; font-weight: 600;">
+                                    Velocidad comercial extrema, cero errores de cálculo tarifario y presupuesto de viaje blindado.
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <span class="badge-active">En Producción</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong style="color: #0284c7; font-size: 13.5px;">PETRAL TWO</strong><br>
+                                    <span style="font-size: 11px; color: #64748b;">Actuals & Audit Forense</span>
+                                </td>
+                                <td>
+                                    <strong>¿Cuánto costó realmente y dónde están los desvíos?</strong><br>
+                                    Liquidación real con ajuste BAF por bunker consumido, auditoría de facturas y control de maniobras.
+                                </td>
+                                <td>
+                                    • <strong>Cálculo BAF Automatizado:</strong> Reajuste de flete por costo de stock en tanques + spot bunker.<br>
+                                    • <strong>Monitoreo de Consumo Real</strong> del buque.<br>
+                                    • <strong>Cuaderno Digital de Hechos (Puente):</strong> Timing real de maniobras de carga/descarga vs. liquidaciones.<br>
+                                    • Auditoría digital de facturas PDF de agencias y terminales.
+                                </td>
+                                <td style="color: #0284c7; font-weight: 600;">
+                                    Recuperación íntegra de flete por BAF, fin de demoras ficticias y conciliación de cuentas de escala.
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <span class="badge-next">Siguiente Fase</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong style="color: #7e22ce; font-size: 13.5px;">PETRAL THREE</strong><br>
+                                    <span style="font-size: 11px; color: #64748b;">Optimization & Fleet AI</span>
+                                </td>
+                                <td>
+                                    <strong>¿Qué decisiones óptimas pudieron maximizar el año?</strong><br>
+                                    Análisis retrospectivo y prescriptivo de la flota completa (~30 viajes/año de B/M Moquegua y B/M Tablones).
+                                </td>
+                                <td>
+                                    • Modelo multivariado de transporte marítimo + tierra.<br>
+                                    • Acople con acopio en silos, fajas y camiones mineros.<br>
+                                    • Simulación de escenarios *what-if* contrafactuales.
+                                </td>
+                                <td style="color: #7e22ce; font-weight: 600;">
+                                    Maximización del margen global anual de la flota y reducción drástica de tiempos muertos en fondeo.
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <span class="badge-future">Visión Futura</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card-callout">
+                        <strong>Mensaje Clave para la Capacitación:</strong> PETRAL ONE modela el presupuesto teórico inicial con disciplina estricta. PETRAL TWO entra al liquidar el viaje, donde el costo real del bunker en tanques define el BAF contractual y el cuaderno de hechos del puente audita cada minuto cobrado en puerto. Dominar PETRAL ONE hoy es la base indispensable para toda la cadena.
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-footer">
+                <span>NAVIERA PETRAL S.A. &bull; Sistema de Gestión y Forecast de Viajes Marítimos</span>
+                <span>Slide 1 / 6 &bull; Visión Estratégica</span>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 2: PETRAL ONE (PARTE A - FORECAST)   -->
+        <!-- ========================================== -->
+        <div class="slide-page">
+            <div>
+                <div class="slide-header">
+                    <div class="header-info">
+                        <div class="tagline green">Fase 1 • En Vivo en Producción</div>
+                        <h2>PETRAL ONE: El Arte del Forecasting Determinista</h2>
+                        <div class="subtitle">Resolviendo la lentitud, la dispersión tarifaria y el cálculo del presupuesto base previo a la zarpada</div>
+                    </div>
+                    <div class="logo-container">
+                        <img src="LOGO.PETRAL.ONE.jpg" alt="PETRAL ONE">
+                    </div>
+                </div>
+
+                <div class="slide-body">
+                    <table class="tabla-comparativa">
+                        <colgroup>
+                            <col style="width: 25%;">
+                            <col style="width: 38%;">
+                            <col style="width: 37%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Dimensión del Problema</th>
+                                <th>La Realidad Previa (El Dolor en Excel)</th>
+                                <th>La Solución Operativa en PETRAL ONE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Dispersión Tarifaria Portuaria</td>
+                                <td style="color: #475569;">Múltiples versiones de archivos Excel circulando por correo, con tarifas desactualizadas de remolcaje, práctico, amarre y uso de muelle en puertos del Pacífico.</td>
+                                <td style="color: #334155;"><strong>Matriz P × Q Determinista Centralizada:</strong> Tarifas oficiales auditadas para Callao, Ilo, Matarani, Pisco y San Nicolás, calculadas automáticamente según TRB, eslora y calado.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Consumo Teórico de Bunker</td>
+                                <td style="color: #475569;">Estimaciones empíricas de combustible en Excel sin diferenciar con rigor el consumo por milla navegada a velocidad económica vs. el consumo de generadores auxiliares en puerto.</td>
+                                <td style="color: #334155;"><strong>Modelado Determinista de Consumo Base:</strong> Curvas de consumo específicas por buque para navegación y estadía portuaria; homologación canónica unificada (<strong>MGO ≡ MDO</strong>) para fijar el costo base del viaje.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Agilidad Comercial ante Clientes</td>
+                                <td style="color: #475569;">Cotizar un viaje SPOT o evaluar un cambio de tonelaje tomaba horas de recálculo manual, retrasando las respuestas comerciales a mineras y fletadores.</td>
+                                <td style="color: #334155;"><strong>Multicotizador SPOT Instantáneo:</strong> Simulación en tiempo real de márgenes de contribución, TCE (*Time Charter Equivalent*) y flete base requerido por tonelada métrica en segundos.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Trazabilidad Financiera</td>
+                                <td style="color: #475569;">Inexistencia de un presupuesto formal congelado antes del inicio de viaje; imposibilidad de auditar contra qué números se autorizó zarpar.</td>
+                                <td style="color: #334155;"><strong>Voyage Ledger Oficial:</strong> Generación del *Budget* oficial inmutable con desglose de ingresos proyectados, costos portuarios P × Q, combustible base y margen operativo.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card-callout">
+                        <strong>Lógica de Negocio Determinista:</strong> En la fase de forecasting, el objetivo de PETRAL ONE es calcular el <strong>presupuesto base seguro</strong>. El ajuste BAF no opera aquí, pues el BAF es un mecanismo de compensación post-viaje que indexa el flete en función del costo real del combustible consumido.
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-footer">
+                <span>NAVIERA PETRAL S.A. &bull; Sistema de Gestión y Forecast de Viajes Marítimos</span>
+                <span>Slide 2 / 6 &bull; PETRAL ONE (Forecasting)</span>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 3: PETRAL ONE (PARTE B - MOF)        -->
+        <!-- ========================================== -->
+        <div class="slide-page">
+            <div>
+                <div class="slide-header">
+                    <div class="header-info">
+                        <div class="tagline green">Fase 1 • Gobernanza Operativa</div>
+                        <h2>PETRAL ONE: Organigrama y Manual de Organización y Funciones (MOF)</h2>
+                        <div class="subtitle">Estructura formal de 4 áreas y 6 puestos clave para la custodia del dato y la operación del sistema</div>
+                    </div>
+                    <div class="logo-container">
+                        <img src="LOGO.PETRAL.ONE.jpg" alt="PETRAL ONE">
+                    </div>
+                </div>
+
+                <div class="slide-body">
+                    <table class="tabla-comparativa">
+                        <colgroup>
+                            <col style="width: 22%;">
+                            <col style="width: 20%;">
+                            <col style="width: 32%;">
+                            <col style="width: 26%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Área / Código MOF</th>
+                                <th>Puesto & Responsable</th>
+                                <th>Misión & Entregables en PETRAL ONE</th>
+                                <th>Permisos ERP & Métricas KPI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Dirección General<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-DIR-01</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">Fernando Harten<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">Gerente General</span></td>
+                                <td style="color: #475569;">Aprobación del *Voyage Ledger* oficial previo a la zarpada, validación de políticas de margen de contribución y gobernanza integral del dato naval.</td>
+                                <td style="color: #334155;"><strong>Nivel:</strong> Control Total (Aprobador)<br><strong>KPI:</strong> 100% de viajes con Budget formal cerrado.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Gerencia Comercial<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-COM-01</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">Iosef Zavala<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">Gerente Comercial</span></td>
+                                <td style="color: #475569;">Modelado de cotizaciones SPOT en el Multicotizador, administración de contratos COA y fijación de términos contractuales base de flete.</td>
+                                <td style="color: #334155;"><strong>Nivel:</strong> Editor Comercial<br><strong>KPI:</strong> Emisión de cotizaciones en &lt; 5 minutos.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Operaciones Flota<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-OPS-01 / 02</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">M. E. Castro (Moquegua)<br>Jorge Neyra (Tablones)</td>
+                                <td style="color: #475569;">Ingreso de singladuras, verificación de distancias náuticas, horas estimadas de maniobra/estadía y curvas de consumo teórico por buque.</td>
+                                <td style="color: #334155;"><strong>Nivel:</strong> Editor Operativo<br><strong>KPI:</strong> Cero inconsistencias en calados y tiempos.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Finanzas & Costos FDA<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-FIN-01 / 02</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">Sandra Gálvez (Liq.)<br>Patricia Rueda (FDA)</td>
+                                <td style="color: #475569;">Custodia de matrices tarifarias P × Q de puertos del Pacífico, homologación canónica de bunker y control maestro de cuentas de escala.</td>
+                                <td style="color: #334155;"><strong>Nivel:</strong> Editor Maestros / Auditor<br><strong>KPI:</strong> 100% de tarifas portuarias homologadas.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card-callout">
+                        <strong>Gobernanza como Activo Estratégico:</strong> PETRAL ONE erradica la discrecionalidad y las instrucciones informales por chat. El Organigrama y el MOF institucionalizan el flujo del dato: cada viaje tiene un responsable de cotización, un operador de singladura y un custodio de costos (<code>/mof-manual</code>).
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-footer">
+                <span>NAVIERA PETRAL S.A. &bull; Sistema de Gestión y Forecast de Viajes Marítimos</span>
+                <span>Slide 3 / 6 &bull; PETRAL ONE (Gobernanza & MOF)</span>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 3: PETRAL TWO (EL SIGUIENTE PASO)    -->
+        <!-- ========================================== -->
+        <div class="slide-page">
+            <div>
+                <div class="slide-header">
+                    <div class="header-info">
+                        <div class="tagline blue">Fase 2 • En Diseño de Arquitectura</div>
+                        <h2>PETRAL TWO: Liquidación Real, Cálculo BAF y Auditoría Forense PxQ</h2>
+                        <div class="subtitle">Cerrando la brecha operativa: ajuste BAF por bunker en tanques, consumo real y cuaderno de hechos del puente</div>
+                    </div>
+                    <div class="logo-container">
+                        <img src="LOGO.PETRAL.ONE.jpg" alt="PETRAL ONE">
+                    </div>
+                </div>
+
+                <div class="slide-body">
+                    <table class="tabla-comparativa">
+                        <colgroup>
+                            <col style="width: 25%;">
+                            <col style="width: 37%;">
+                            <col style="width: 38%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Pilar de Liquidación Real</th>
+                                <th>La Realidad Actual (Auditoría Manual y Desvíos)</th>
+                                <th>La Solución Automatizada en PETRAL TWO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: bold; color: #0284c7;">Automatización del Cálculo BAF</td>
+                                <td style="color: #475569;">El cálculo de ajuste de flete por BAF se hace en planillas sueltas post-viaje; riesgo de no trasladar al flete el incremento exacto del costo de combustible consumido.</td>
+                                <td style="color: #334155;"><strong>Cálculo BAF Dinámico por Stock + Spot:</strong> Al liquidar el viaje, el sistema toma el costo ponderado del stock en tanques del buque más las compras spot realizadas, subiendo la tarifa de flete en la proporción contractual exacta.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0284c7;">Monitoreo del Consumo Real de Barco</td>
+                                <td style="color: #475569;">Dificultad para saber si el consumo de fuel y diesel se desvió por mal tiempo, velocidad excesiva o fallas de generadores frente al forecast original de PETRAL ONE.</td>
+                                <td style="color: #334155;"><strong>Control de Consumo Medido vs. Teórico:</strong> Ingesta de los *soundings* diarios de tanques y reportes de máquinas; comparación directa de toneladas reales quemadas vs. el presupuesto base.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0284c7;">Cuaderno de Hechos Digital en el Puente</td>
+                                <td style="color: #475569;">Terminales y agencias emiten liquidaciones con tiempos de maniobra inflados o demoras imputadas injustamente al buque, sin un respaldo horario fidedigno.</td>
+                                <td style="color: #334155;"><strong>Digital SOF desde el Puente de Mando:</strong> Registro en tiempo real del *timing* exacto de práctico, remolcadores, amarre y cada parada de carga/descarga, sirviendo de prueba pericial inalterable contra las liquidaciones de terminal.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0284c7;">Auditoría Forense de Facturas PDF</td>
+                                <td style="color: #475569;">Revisión manual extenuante de decenas de PDFs de proveedores portuarios para verificar si las tarifas coinciden con los acuerdos contractuales.</td>
+                                <td style="color: #334155;"><strong>Cotejo Forense Automatizado & Varianzas:</strong> Extracción digital de facturas PDF, cruce automático con tarifas maestras y semáforo financiero: <em>Budget ONE vs. Actual TWO</em>.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card-callout">
+                        <strong>Impacto Financiero Directo:</strong> PETRAL TWO asegura que cada dólar invertido en bunker se recupere a través de la fórmula BAF real, y que ninguna liquidación portuaria se pague sin antes ser confrontada con la bitácora fidedigna del puente de mando.
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-footer">
+                <span>NAVIERA PETRAL S.A. &bull; Sistema de Gestión y Forecast de Viajes Marítimos</span>
+                <span>Slide 4 / 6 &bull; PETRAL TWO</span>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 4: PETRAL THREE (LA VISIÓN)          -->
+        <!-- ========================================== -->
+        <div class="slide-page">
+            <div>
+                <div class="slide-header">
+                    <div class="header-info">
+                        <div class="tagline purple">Fase 3 • Visión Estratégica</div>
+                        <h2>PETRAL THREE: Optimización Anual de Flota y Red Multivariada</h2>
+                        <div class="subtitle">El reto macro: Analizar la historia de los buques y descubrir qué se hubiera podido hacer mejor</div>
+                    </div>
+                    <div class="logo-container">
+                        <img src="LOGO.PETRAL.ONE.jpg" alt="PETRAL ONE">
+                    </div>
+                </div>
+
+                <div class="slide-body">
+                    <table class="tabla-comparativa">
+                        <colgroup>
+                            <col style="width: 25%;">
+                            <col style="width: 45%;">
+                            <col style="width: 30%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Dimensión Multivariada</th>
+                                <th>Factores Complejos en Juego (Caso Flota 2026: ~30 Viajes/Buque)</th>
+                                <th>Respuesta Analítica en PETRAL THREE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: bold; color: #7e22ce;">Coordinación de Buques</td>
+                                <td style="color: #475569;">Operación simultánea de los buques de la flota (<em>B/M Moquegua</em> y <em>B/M Tablones</em>) realizando cerca de 30 viajes anuales cada uno, con restricciones de calado, velocidad económica y ventanas de marea.</td>
+                                <td style="color: #334155;"><strong>Optimización de Ruteo y Velocidad:</strong> Programación sincronizada para evitar solapamientos y minimizar esperas en fondeadero.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #7e22ce;">Activos e Infraestructura en Tierra</td>
+                                <td style="color: #475569;">El buque no opera solo: depende de la capacidad de acopio en silos de puerto, el caudal de fajas transportadoras, la rotación de camiones mineros y la disponibilidad de patios.</td>
+                                <td style="color: #334155;"><strong>Gemelo Logístico Tierra-Mar:</strong> Modelado integral de cuellos de botella terrestres para prever desabastecimientos de stock.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #7e22ce;">Compromisos con Clientes Mineros</td>
+                                <td style="color: #475569;">Cumplimiento de programas estrictos de contratos COA con gigantes de la industria (Nexa Resources, Southern Peru - SPCC), balanceando penalidades por demora contra rentabilidad de viajes SPOT.</td>
+                                <td style="color: #334155;"><strong>Asignación Óptima de Capacidad:</strong> Algoritmos de investigación de operaciones para maximizar el margen anual ponderado.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #7e22ce;">Variables Estocásticas y Clima</td>
+                                <td style="color: #475569;">Eventos imprevisibles como cierres de puerto por oleaje anómalo (Bravezas), congestión imprevista de muelle o saltos súbitos en el precio del bunker.</td>
+                                <td style="color: #334155;"><strong>Simulación Contrafactual:</strong> Análisis de escenarios retrospectivos ("¿Qué hubiese ocurrido si...?") y recomendaciones prescriptivas.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card-callout">
+                        <strong>La Frontera Tecnológica:</strong> PETRAL THREE aborda un problema de alta matemática y optimización combinatoria. No es un simple dashboard; es la <strong>herramienta de inteligencia prescriptiva</strong> para la toma de decisiones directivas de alto nivel.
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-footer">
+                <span>NAVIERA PETRAL S.A. &bull; Sistema de Gestión y Forecast de Viajes Marítimos</span>
+                <span>Slide 5 / 6 &bull; PETRAL THREE</span>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 6: CONCLUSIONES & CAPACITACIÓN       -->
+        <!-- ========================================== -->
+        <div class="slide-page">
+            <div>
+                <div class="slide-header">
+                    <div class="header-info">
+                        <div class="tagline navy">Capacitación Oficial de Usuarios</div>
+                        <h2>Conclusión: Por Qué la Disciplina en PETRAL ONE Habilita el Futuro</h2>
+                        <div class="subtitle">El rol fundamental de cada integrante del equipo en la construcción del ecosistema naviero</div>
+                    </div>
+                    <div class="logo-container">
+                        <img src="LOGO.PETRAL.ONE.jpg" alt="PETRAL ONE">
+                    </div>
+                </div>
+
+                <div class="slide-body">
+                    <table class="tabla-comparativa">
+                        <colgroup>
+                            <col style="width: 22%;">
+                            <col style="width: 18%;">
+                            <col style="width: 32%;">
+                            <col style="width: 28%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Puesto Oficial (MOF)</th>
+                                <th>Responsable Clave</th>
+                                <th>Misión en PETRAL ONE (El Compromiso Hoy)</th>
+                                <th>Beneficio Futuro en TWO & THREE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Dirección General<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-DIR-01</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">Fernando Harten<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">Gerente General</span></td>
+                                <td style="color: #475569;">Revisar el *Voyage Ledger* oficial antes de autorizar viajes, estableciendo metas de margen de contribución base y gobernanza del dato.</td>
+                                <td style="color: #334155;">Visibilidad en tiempo real del P&L naval, gobernanza sin dispersión y optimización anual de la flota en THREE.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Gerencia Comercial<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-COM-01</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">Iosef Zavala<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">Gerente Comercial</span></td>
+                                <td style="color: #475569;">Ingresar cotizaciones SPOT y contratos COA con rigor; validar clientes, puertos y tarifas base acordadas.</td>
+                                <td style="color: #334155;">Reajuste automático de flete por BAF real en la liquidación de TWO y reportes ejecutivos de rentabilidad por cliente.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Operaciones Flota<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-OPS-01 / 02</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">M. E. Castro (Moquegua)<br>Jorge Neyra (Tablones)</td>
+                                <td style="color: #475569;">Cargar distancias de singladura, consumos teóricos base y horas estimadas de maniobra y estadía portuaria por buque.</td>
+                                <td style="color: #334155;">Auditoría automática de facturas portuarias confrontadas contra el Cuaderno Digital de Hechos del puente de mando.</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold; color: #0f2c59;">Finanzas & Costos FDA<br><span style="font-size: 10px; font-weight: normal; color: #64748b;">MOF-FIN-01 / 02</span></td>
+                                <td style="font-weight: 600; color: #1e293b;">Sandra Gálvez (Liquidaciones)<br>Patricia Rueda (Costos & FDA)</td>
+                                <td style="color: #475569;">Custodiar las matrices tarifarias P × Q de los puertos, homologación de bunker y cuentas maestras de escala.</td>
+                                <td style="color: #334155;">Cierre contable de viaje en minutos, eliminación de fugas en cuentas de escala y conciliación Budget vs. Actual.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card-callout highlight">
+                        <strong>El Principio de Gobernanza:</strong> En sistemas de información existe una ley ineludible: <em>"Garbage In, Garbage Out"</em>. El MOF y el Organigrama de PETRAL ONE aseguran que cada persona sepa qué cargar, cuándo y cómo. <strong>Dominar PETRAL ONE en la capacitación de hoy es poner la llave maestra para inaugurar PETRAL TWO y THREE mañana.</strong>
+                    </div>
+
+                    <div style="margin-top: 24px; text-align: center; font-size: 13px; color: #64748b;">
+                        <strong>NAVIERA PETRAL S.A.</strong> &bull; Sistema de Gestión y Forecast de Viajes Marítimos &bull; <em>petral.one.geeksoft.tech</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide-footer">
+                <span>NAVIERA PETRAL S.A. &bull; Sistema de Gestión y Forecast de Viajes Marítimos</span>
+                <span>Slide 6 / 6 &bull; Capacitación Oficial</span>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

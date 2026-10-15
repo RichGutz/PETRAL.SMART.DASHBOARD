@@ -3,7 +3,8 @@ import {
     Ship, 
     ChevronRight, 
     GitFork, 
-    BookOpen
+    BookOpen,
+    Presentation
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoPetral from '../../assets/Logo.Petral.png';
@@ -65,6 +66,14 @@ export const MofManual_V2: React.FC = () => {
                     >
                         <BookOpen size={14} className="text-slate-500" />
                         <span className="hidden sm:inline">Docs as Code</span>
+                    </button>
+                    <button
+                        onClick={() => navigate('/sota-petral-one')}
+                        className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+                        title="Ver Presentación Ejecutiva SOTA PETRAL ONE"
+                    >
+                        <Presentation size={14} />
+                        <span className="hidden sm:inline">SOTA PETRAL ONE</span>
                     </button>
                 </div>
             </div>

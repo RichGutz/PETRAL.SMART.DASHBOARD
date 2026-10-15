@@ -27,6 +27,7 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/system-documentation')) activeTab = 'system-documentation';
     else if (location.pathname.includes('/company-organigram')) activeTab = 'company-organigram';
     else if (location.pathname.includes('/mof-manual')) activeTab = 'mof-manual';
+    else if (location.pathname.includes('/sota-petral-one')) activeTab = 'sota-petral-one';
 
 
 
@@ -35,7 +36,7 @@ export const ToolsLayout_V2: React.FC = () => {
             
             <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 print:p-0 h-full print:h-auto print:block print:overflow-visible print:w-full">
                 {/* 1. Builder Bar (Shared across interactive modeling tools) */}
-                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'company-organigram' && activeTab !== 'mof-manual' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && (
+                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'company-organigram' && activeTab !== 'mof-manual' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && activeTab !== 'sota-petral-one' && (
                     <div className="print:hidden">
                     <ForecastBuilder 
                         currentStartDate={context.startDate}
