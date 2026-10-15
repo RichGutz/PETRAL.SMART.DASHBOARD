@@ -1210,3 +1210,23 @@ ACCION REALIZADA:
    - npx vite build: Exito limpio en 9.67s (0 errores, Exit code 0).
    - Git Commit: 0aae21b en rama feature/sota-slide-deck-f11.
 ================================================================================
+REGISTRO DE SESION: 2026-10-15 (Escalador Proporcional Dinámico F11 SOTA PETRAL ONE)
+SOLICITUD:
+- A la hora que se hace F11 y se ocupa toda la pantalla, el texto quedaba minimizado (solo una pequeña parte de la pantalla quedaba cubierta por texto). Proceder con el escalador.
+ACCION REALIZADA:
+1. SAFE POINT GIT:
+   - Tag Anotado: PRE.SOTA.AUTO.SCALER.FULLSCREEN
+   - Nueva Rama: feature/sota-auto-scaler-fullscreen
+2. CIRUGIA MODULAR:
+   - sota_petral_one.html y PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html:
+     * Creada función applyDynamicScale() que computa el factor de escala vectorial según windowWidth y windowHeight respecto a la base de diseño 1180px x 730px.
+     * En monitores 1080p y 2K, la lámina se amplía dinámicamente entre 1.34x y 1.80x centrada absolutamente (translate(-50%, -50%) scale(scaleFactor)).
+     * Cubre el 95% del monitor manteniendo proporciones, nitidez y legibilidad total.
+     * Sincronizado en eventos de resize, fullscreenchange y postMessage.
+   - SotaPetralOne_V2.tsx:
+     * Fondo oscuro #090d16 unificado para evitar destellos.
+     * Sincronización automática de evento onLoad en iframe.
+3. VERIFICACION EMPIRICA:
+   - npx vite build: Exito total en 38.67s (0 errores, Exit code 0).
+   - Git Commit: 1987563 en rama feature/sota-auto-scaler-fullscreen.
+================================================================================
