@@ -1107,4 +1107,10 @@ MODIFICACIONES APLICADAS:
 VERIFICACION EMPIRICA:
 - npx vite build: Exito rotundo en 9.67s (1125 modulos, 0 errores, Exit code 0).
 - Git Commit: 0aae21b en rama feature/sota-slide-deck-f11.
+- Merge a main y git push origin main: Commit 11e7b84.
+[2026-10-15 11:04:31] DESPLIEGUE A PRODUCCION EXITOSO (VPS CONTABO 169.58.168.107):
+- Bundle compilado con npx vite build (12.96s, 11.7 MB).
+- deploy_petral_one_contabo.py ejecutado: transferencia SFTP y reinicio de contenedores exitoso.
+- Verificacion HTTP Status: 200 OK en https://petral.one.geeksoft.tech/sota_petral_one.html (54,690 bytes).
+- Producción activa y verificada en vivo: https://petral.one.geeksoft.tech
 ================================================================================
