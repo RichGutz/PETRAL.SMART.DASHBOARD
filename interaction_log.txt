@@ -1,4 +1,34 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-15 (Papelera de Reciclaje Comercial Transversal & Restitución Forense de Cierres de Jorge Neyra)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Arquitectura de Papelera de Reciclaje Transversal (`commercial_trash_bin`):
+   - Creación de tabla PostgreSQL `commercial_trash_bin` con soporte JSONB, metadatos y trazabilidad forense.
+   - Implementación del servicio backend `TrashService` (`move_to_trash`, `list_trash`, `get_trash_count`, `restore_item`, `purge_item`).
+   - Router `trash.py` (`GET /api/v1/trash`, `GET /api/v1/trash/count`, `POST /api/v1/trash/{id}/restore`, `DELETE /api/v1/trash/{id}/purge`) registrado en `main.py`.
+   - Safe Soft-Delete Interceptor en `forecast.py` (`delete_spot_route`, `delete_forecast`, `delete_port_cost_rule`): Ahora ningún documento se borra de manera destructiva; se almacena previamente su snapshot completo.
+
+2. Restitución Forense de Documentos Borrados por Jorge Neyra (`jneyra@petral.com.pe`):
+   - Identificación y recuperación de los 11 documentos de Cierres (COA) / Cotizaciones desde los backups de emergencia.
+   - Ingesta exitosa a `routes_quotes` en Contabo PostgreSQL (total 95 quotes activas) y registro espejo en `commercial_trash_bin` con flag `restored = TRUE` para auditoría permanente.
+   - Inyección de clave primaria formal en `routes_quotes (name)` para garantizar operaciones seguras con UPSERT.
+
+3. Frontend Modular (React 19 + TypeScript + IBM Carbon Design):
+   - Módulo `src/types/commercialTrash.ts`
+   - Servicio API `src/services/commercialTrashService.ts`
+   - Componentes: `CommercialTrashFilters.tsx`, `CommercialTrashTable.tsx`, `CommercialTrashSnapshotModal.tsx`
+   - Vista principal: `CommercialTrashMaster_V2.tsx` bajo la ruta protegida `/commercial-trash`.
+   - Navegación: Agregado botón "🗑️ Papelera Comercial" en `MasterTemplate_V2.tsx` con contador dinámico en vivo.
+
+4. Verificación Empírica & Despliegue Oficial a Producción:
+   - Git: Rama `feature/papelera-reciclaje-comercial` fusionada a `main` y etiquetada con `v1.2.0-commercial-trashbin`.
+   - Compilación: `npx vite build` (SUCCESS, 0 errores, 29.44s).
+   - Despliegue: Sincronización SFTP + Docker a Contabo VPS (`169.58.168.107`) con `deploy_petral_one_contabo.py`.
+   - Verificación HTTP: `https://petral.one.geeksoft.tech/commercial-trash` (HTTP 200 OK) y API `/api/v1/trash/count` (`{"count": 0}`) funcional.
+================================================================================
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-14 (Resolución Pericial Error "Gran Sábana" en Impresión A4 - Docs as Code & Manual MOF)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
@@ -1263,4 +1293,13 @@ ACCION REALIZADA:
 3. VERIFICACION TERMINAL:
    - audit_docs_as_code_drift.py ejecutado: 100% de paridad y 0 errores.
    - verify_routes_and_mof_coverage.py ejecutado: 100% cobertura en Docs as Code (17/17).
+================================================================================
+
+================================================================================
+[2026-10-15 12:41:57] CIERRE DE SESION EXITOSO
+- Todos los cambios documentales, armeria de scripts periciales y guion Word para PM sincronizados.
+- Commit final: b676aff ('docs: registrar protocolo 49 de actualizacion permanente de Docs as Code y armeria de scripts periciales').
+- Rama 'main' sincronizada con origin/main en GitHub.
+- Produccion en VPS Contabo 169.58.168.107 activa y verificada al 100% (HTTP/2 200 OK).
+- Sesion finalizada limpiamente.
 ================================================================================
