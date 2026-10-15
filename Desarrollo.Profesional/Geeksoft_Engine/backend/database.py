@@ -52,6 +52,28 @@ def _prepare_param(val):
         return json.dumps(val)
     return val
 
+KNOWN_PRIMARY_KEYS = {
+    "vessels": ["vessel_id"],
+    "ports": ["port_id"],
+    "terminals": ["terminal_id", "port_id"],
+    "routes": ["origin_port_id", "destination_port_id"],
+    "distances": ["port_a", "port_b"],
+    "bunker_prices": ["fuel_type"],
+    "contracts": ["client_id", "destination_port_id"],
+    "contract_tariffs": ["client_id", "destination_port_id", "min_tonnage", "max_tonnage"],
+    "routes_clients": ["name"],
+    "routes_quotes": ["name"],
+    "suppliers": ["supplier_id"],
+    "port_costs_matrix": ["rule_id"],
+    "port_cost_static": ["port_id", "operation_type", "vessel_id", "sub_operation_type", "terminal_id"],
+    "sources_sinks": ["port_id", "year", "empresa", "producto"],
+    "vessel_terminal_operations": ["port_id", "terminal_id", "vessel_id"],
+    "demurrage_records": ["id"],
+    "app_users": ["id"],
+    "user_permissions": ["user_id"],
+    "clients": ["client_id"]
+}
+
 def get_table_primary_key(cur, table_name: str) -> list:
     if table_name in _PK_CACHE:
         return _PK_CACHE[table_name]
@@ -71,6 +93,13 @@ def get_table_primary_key(cur, table_name: str) -> list:
             return pks
     except Exception:
         pass
+
+    # Fallback canónico determinístico para esquemas sin constraint PK
+    fallback = KNOWN_PRIMARY_KEYS.get(table_name, [])
+    if fallback:
+        _PK_CACHE[table_name] = fallback
+        return fallback
+
     return []
 
 class SupabaseResponse:
