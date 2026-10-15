@@ -1136,5 +1136,9 @@ ACCION REALIZADA:
    - Limpieza completa: 0 ocurrencias de DELFOS en Geeksoft_Frontend/src/.
 3. VERIFICACION LOCAL:
    - npx vite build: Exito total en 35.41s (0 errores, Exit code 0).
+4. DESPLIEGUE A PRODUCCION (VPS CONTABO):
+   - Protocolo oficial de 3 pasos ejecutado tras autorizacion.
+   - Commit e92c7b4 pushed a main.
+   - Deploy SFTP/SSH exitoso a 169.58.168.107.
+   - Producción activa y verificada (HTTP 200 OK): https://petral.one.geeksoft.tech
 ================================================================================
-
