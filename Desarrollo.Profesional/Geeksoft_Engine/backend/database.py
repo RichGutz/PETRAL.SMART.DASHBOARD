@@ -71,7 +71,9 @@ KNOWN_PRIMARY_KEYS = {
     "demurrage_records": ["id"],
     "app_users": ["id"],
     "user_permissions": ["user_id"],
-    "clients": ["client_id"]
+    "clients": ["client_id"],
+    "commercial_forecasts": ["id"],
+    "commercial_trash_bin": ["id"]
 }
 
 def get_table_primary_key(cur, table_name: str) -> list:

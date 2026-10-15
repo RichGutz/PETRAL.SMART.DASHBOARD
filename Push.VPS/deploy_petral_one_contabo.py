@@ -18,17 +18,27 @@ CONTABO_PASS = "VivaLaVida2026$"
 
 ROOT_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD"
 DIST_DIR = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Frontend", "dist")
-LOCAL_AUTH_PY = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Engine", "backend", "api", "routers", "auth.py")
-LOCAL_DATABASE_PY = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Engine", "backend", "database.py")
+BACKEND_DIR = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Geeksoft_Engine", "backend")
 TAR_PATH = os.path.join(ROOT_DIR, "scratch", "frontend_dist.tar.gz")
+BACKEND_TAR_PATH = os.path.join(ROOT_DIR, "scratch", "backend_dist.tar.gz")
 
-def make_tarfile(output_filename, source_dir):
-    print(f"\n[1. Empaquetando dist en {output_filename}...]")
+def make_frontend_tar(output_filename, source_dir):
+    print(f"\n[1. Empaquetando dist frontend en {output_filename}...]")
     with tarfile.open(output_filename, "w:gz") as tar:
         for item in os.listdir(source_dir):
             full_path = os.path.join(source_dir, item)
             tar.add(full_path, arcname=item)
-    print(f"  >> Archivo tar.gz creado con éxito: {os.path.getsize(output_filename)/1024:.2f} KB ✓")
+    print(f"  >> Frontend tar.gz creado con éxito: {os.path.getsize(output_filename)/1024:.2f} KB ✓")
+
+def make_backend_tar(output_filename, source_dir):
+    print(f"\n[2. Empaquetando backend en {output_filename}...]")
+    def filter_pyc(tarinfo):
+        if "__pycache__" in tarinfo.name or tarinfo.name.endswith(".pyc"):
+            return None
+        return tarinfo
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(source_dir, arcname="backend", filter=filter_pyc)
+    print(f"  >> Backend tar.gz creado con éxito: {os.path.getsize(output_filename)/1024:.2f} KB ✓")
 
 def run(client, cmd, desc=""):
     print(f"\n[{desc}]")
@@ -47,9 +57,10 @@ def deploy():
     print(f"  IP VPS: {CONTABO_IP}")
     print(f"{'='*65}")
 
-    # 1. Crear tar.gz de frontend
+    # 1. Empaquetar
     os.makedirs(os.path.dirname(TAR_PATH), exist_ok=True)
-    make_tarfile(TAR_PATH, DIST_DIR)
+    make_frontend_tar(TAR_PATH, DIST_DIR)
+    make_backend_tar(BACKEND_TAR_PATH, BACKEND_DIR)
 
     # 2. Conectar a Contabo
     client = paramiko.SSHClient()
@@ -60,23 +71,19 @@ def deploy():
 
     sftp = client.open_sftp()
 
-    # 3. Subir backend files (auth.py y database.py)
-    print(f"\n[2. Subiendo backend files al backend de Contabo...]")
-    remote_auth_stack = "/opt/petral_stack/backend/api/routers/auth.py"
-    sftp.put(LOCAL_AUTH_PY, "/tmp/auth.py")
-    run(client, f"mkdir -p /opt/petral_stack/backend/api/routers && cp /tmp/auth.py {remote_auth_stack} ; docker cp /tmp/auth.py petral-backend:/app/backend/api/routers/auth.py", "Copiar auth.py a host y a petral-backend")
-
-    remote_db_stack = "/opt/petral_stack/backend/database.py"
-    sftp.put(LOCAL_DATABASE_PY, "/tmp/database.py")
-    run(client, f"mkdir -p /opt/petral_stack/backend && cp /tmp/database.py {remote_db_stack} ; docker cp /tmp/database.py petral-backend:/app/backend/database.py", "Copiar database.py a host y a petral-backend")
+    # 3. Subir y sincronizar backend
+    print(f"\n[3. Subiendo backend completo a Contabo...]")
+    sftp.put(BACKEND_TAR_PATH, "/tmp/backend_dist.tar.gz")
+    run(client, "mkdir -p /opt/petral_stack && tar -xzf /tmp/backend_dist.tar.gz -C /opt/petral_stack/", "Desempaquetar backend en /opt/petral_stack")
+    run(client, "docker cp /opt/petral_stack/backend/. petral-backend:/app/backend/", "Sincronizar backend a contenedor petral-backend")
 
     # 4. Subir tar.gz de frontend
-    print(f"\n[3. Subiendo bundle frontend dist a Contabo...]")
+    print(f"\n[4. Subiendo bundle frontend dist a Contabo...]")
     sftp.put(TAR_PATH, "/tmp/frontend_dist.tar.gz")
     sftp.close()
 
     # 5. Desempaquetar frontend y actualizar contenedor
-    run(client, "rm -rf /opt/petral_stack/frontend_dist/* && tar -xzf /tmp/frontend_dist.tar.gz -C /opt/petral_stack/frontend_dist/", "Desempaquetar dist en /opt/petral_stack/frontend_dist")
+    run(client, "mkdir -p /opt/petral_stack/frontend_dist && rm -rf /opt/petral_stack/frontend_dist/* && tar -xzf /tmp/frontend_dist.tar.gz -C /opt/petral_stack/frontend_dist/", "Desempaquetar dist en /opt/petral_stack/frontend_dist")
     run(client, "docker cp /opt/petral_stack/frontend_dist/. petral-frontend:/usr/share/nginx/html/", "Copiar frontend dist a contenedor petral-frontend")
 
     # 6. Reiniciar contenedores
@@ -84,14 +91,15 @@ def deploy():
     run(client, "docker restart petral-frontend", "Reiniciar petral-frontend")
 
     # 7. Validar endpoints en vivo
-    time.sleep(3)
+    time.sleep(4)
     run(client, "curl -s -I https://petral.one.geeksoft.tech/ | head -n 5", "Verificar Frontend HTTP Status")
-    run(client, 'curl -s -X POST https://petral.one.geeksoft.tech/api/v1/auth/login-password -H "Content-Type: application/json" -d "{}"', "Verificar nuevo endpoint login-password")
+    run(client, 'curl -s https://petral.one.geeksoft.tech/api/v1/trash/count', "Verificar Endpoint Trash Count")
+    run(client, 'curl -s https://petral.one.geeksoft.tech/api/v1/auth/login-password -H "Content-Type: application/json" -d "{}"', "Verificar endpoint auth login-password")
 
     client.close()
     print(f"\n{'='*65}")
     print(f"  ¡DESPLIEGUE A PRODUCCIÓN COMPLETADO CON ÉXITO!")
-    print(f"  🌐 URL OFICIAL: https://petral.one.geeksoft.tech/dashboard")
+    print(f"  🌐 URL OFICIAL: https://petral.one.geeksoft.tech/commercial-trash")
     print(f"{'='*65}\n")
 
 if __name__ == "__main__":

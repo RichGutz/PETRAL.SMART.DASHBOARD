@@ -5,6 +5,7 @@ import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { useAuth } from '../../context/AuthContext';
 import { AuthService } from '../../services/api';
+import { CommercialTrashService } from '../../services/commercialTrashService';
 // import { TelemetryConsoleModal } from '../common/TelemetryConsoleModal'; // SERIE 33: DESACTIVADO — hook violation. Pendiente refactor.
 
 
@@ -62,12 +63,24 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
             'audit-ledger', 'audit-engine', 'audit-final'
         ],
         fisicos: ['vessels', 'ports', 'routes'],
-        comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections'],
+        comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections', 'commercial-trash'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
         mercado: ['bunker', 'sources-sinks'],
         documentacion: ['system-documentation', 'system-flowchart', 'company-organigram', 'mof-manual', 'sota-petral-one'],
         admin: ['users', 'device-vault', 'audit-ledger', 'settings']
     };
+
+    // Estado del contador de la papelera comercial
+    const [trashCount, setTrashCount] = useState<number>(0);
+
+    React.useEffect(() => {
+        const fetchTrashCount = () => {
+            CommercialTrashService.getTrashCount().then(c => setTrashCount(c)).catch(() => {});
+        };
+        fetchTrashCount();
+        window.addEventListener('commercial_trash_updated', fetchTrashCount);
+        return () => window.removeEventListener('commercial_trash_updated', fetchTrashCount);
+    }, []);
 
     const getActiveCategory = (tab: string): string => {
         for (const [cat, tabs] of Object.entries(categoryTabs)) {
@@ -428,6 +441,23 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                             </button>
                                         </>
                                     )}
+
+                                    {/* PAPELERA DE RECICLAJE COMERCIAL */}
+                                    <button 
+                                        onClick={() => navigate('/commercial-trash')}
+                                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between transition-all ${activeTab === 'commercial-trash' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs">🗑️</span> Papelera Comercial
+                                        </div>
+                                        {trashCount > 0 && (
+                                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                                                activeTab === 'commercial-trash' ? 'bg-white text-blue-700' : 'bg-rose-100 text-rose-700 border border-rose-200'
+                                            }`}>
+                                                {trashCount}
+                                            </span>
+                                        )}
+                                    </button>
                                 </nav>
                             )}
                         </div>

@@ -188,8 +188,27 @@ def load_forecast(forecast_id: str):
 def delete_forecast(forecast_id: str):
     try:
         from backend.database import get_supabase
+        from backend.services.trash_service import TrashService
         sb = get_supabase()
         
+        # Interceptor seguro: respaldar snapshot en papelera de reciclaje
+        try:
+            fc_res = sb.table("commercial_forecasts").select("*").eq("id", forecast_id).execute()
+            if fc_res.data:
+                for item in fc_res.data:
+                    TrashService.move_to_trash(
+                        entity_type="PRESUPUESTO",
+                        entity_id=str(item.get("id") or forecast_id),
+                        source_table="commercial_forecasts",
+                        document_name=item.get("title") or f"Presupuesto {forecast_id}",
+                        client_name=item.get("client"),
+                        vessel_id=item.get("vessel"),
+                        payload=item,
+                        deleted_by="Usuario Comercial"
+                    )
+        except Exception as trash_err:
+            logger.warning(f"Error al respaldar en papelera commercial_forecast {forecast_id}: {trash_err}")
+
         res = sb.table("commercial_forecasts").delete().eq("id", forecast_id).execute()
         return {"status": "success", "message": f"Forecast {forecast_id} deleted successfully"}
     except Exception as e:
@@ -780,12 +799,73 @@ def save_spot_voyage(request: SpotSaveRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/spot/delete/{spot_id}")
-def delete_spot_route(spot_id: str, is_prospect: bool = False):
+def delete_spot_route(spot_id: str, is_prospect: bool = False, deleted_by: str = "Usuario Comercial"):
     try:
         from backend.database import get_supabase
         from backend.services.forecast_service import clear_forecast_cache
+        from backend.services.trash_service import TrashService
         sb = get_supabase()
         
+        # Interceptor seguro: respaldar snapshot en commercial_trash_bin
+        try:
+            # 1. Buscar en routes_quotes
+            rq_res = sb.table("routes_quotes").select("*").eq("name", spot_id).execute()
+            if not rq_res.data and spot_id.isdigit():
+                rq_res = sb.table("routes_quotes").select("*").eq("id", int(spot_id)).execute()
+            
+            if rq_res.data:
+                for item in rq_res.data:
+                    desc = str(item.get("description") or "").upper()
+                    name_u = str(item.get("name") or "").upper()
+                    if "COA" in desc or "COA" in name_u or "CIERRE" in desc or "CIERRE" in name_u:
+                        e_type = "CIERRE"
+                    elif "PRESUPUESTO" in desc or "PPTO" in desc or item.get("is_budget"):
+                        e_type = "PRESUPUESTO"
+                    else:
+                        e_type = "COTIZACION"
+                    
+                    TrashService.move_to_trash(
+                        entity_type=e_type,
+                        entity_id=str(item.get("name") or spot_id),
+                        source_table="routes_quotes",
+                        document_name=item.get("name") or spot_id,
+                        client_name=item.get("client_id") or item.get("client_name"),
+                        vessel_id=item.get("vessel_id"),
+                        payload=item,
+                        deleted_by=deleted_by
+                    )
+            else:
+                # 2. Si no estaba en routes_quotes, buscar en routes_clients
+                rc_res = sb.table("routes_clients").select("*").or_(f"route_id.eq.{spot_id},name.eq.{spot_id}").execute()
+                if rc_res.data:
+                    for item in rc_res.data:
+                        TrashService.move_to_trash(
+                            entity_type="COTIZACION",
+                            entity_id=str(item.get("name") or spot_id),
+                            source_table="routes_clients",
+                            document_name=item.get("name") or spot_id,
+                            client_name=item.get("client_id") or item.get("client_name"),
+                            vessel_id=item.get("vessel_id"),
+                            payload=item,
+                            deleted_by=deleted_by
+                        )
+                # 3. Buscar en contracts
+                ct_res = sb.table("contracts").select("*").or_(f"contract_id.eq.{spot_id},name.eq.{spot_id}").execute()
+                if ct_res.data:
+                    for item in ct_res.data:
+                        TrashService.move_to_trash(
+                            entity_type="CIERRE",
+                            entity_id=str(item.get("contract_id") or item.get("name") or spot_id),
+                            source_table="contracts",
+                            document_name=item.get("name") or spot_id,
+                            client_name=item.get("client_name") or item.get("client_id"),
+                            vessel_id=item.get("vessel_id"),
+                            payload=item,
+                            deleted_by=deleted_by
+                        )
+        except Exception as trash_err:
+            logger.warning(f"No se pudo respaldar en papelera antes de borrar {spot_id}: {trash_err}")
+
         # 1. Intentar borrar en routes_quotes por name o id
         try:
             sb.table("routes_quotes").delete().eq("name", spot_id).execute()
@@ -1673,7 +1753,27 @@ def save_port_costs_matrix(items: List[PortCostRuleMaster]):
 def delete_port_cost_rule(rule_id: str):
     try:
         from backend.database import get_supabase
+        from backend.services.trash_service import TrashService
         sb = get_supabase()
+        
+        # Interceptor seguro: respaldar snapshot en commercial_trash_bin
+        try:
+            rule_res = sb.table('port_costs_matrix').select('*').eq('rule_id', rule_id).execute()
+            if rule_res.data:
+                for item in rule_res.data:
+                    TrashService.move_to_trash(
+                        entity_type="MATRIZ",
+                        entity_id=str(rule_id),
+                        source_table="port_costs_matrix",
+                        document_name=f"Regla Matriz: {item.get('port_id')} - {item.get('concept_id', '')} ({item.get('vessel_id', 'FLOTA')})",
+                        client_name=None,
+                        vessel_id=item.get('vessel_id'),
+                        payload=item,
+                        deleted_by="Usuario Comercial"
+                    )
+        except Exception as trash_err:
+            logger.warning(f"Error al respaldar en papelera port_costs_matrix {rule_id}: {trash_err}")
+
         sb.table('port_costs_matrix').delete().eq('rule_id', rule_id).execute()
         return {'status': 'success'}
     except Exception as e:
