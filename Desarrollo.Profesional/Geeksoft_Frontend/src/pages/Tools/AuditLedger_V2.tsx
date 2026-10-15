@@ -40,7 +40,7 @@ export const AuditLedger_V2: React.FC = () => {
                 </div>
 
                 <div className="text-[11px] font-mono text-slate-400 hidden sm:block">
-                    DELFOS LEDGER ENGINE • V2.0
+                    PETRAL ONE LEDGER ENGINE • V2.0
                 </div>
             </div>
 

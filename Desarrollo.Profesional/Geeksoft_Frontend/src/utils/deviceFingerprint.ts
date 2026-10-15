@@ -1,6 +1,6 @@
 /**
  * Módulo de Extracción de Huella Digital de Hardware (Device Fingerprint)
- * Sistema: DELFOS SHIPPING SOFTWARE / PETRAL ONE
+ * Sistema: PETRAL ONE
  * 
  * Implementa persistencia Zero-Trust mediante Token Criptográfico Inmutable (localStorage)
  * anclado a la plataforma y arquitectura del equipo.

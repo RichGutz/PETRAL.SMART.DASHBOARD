@@ -115,7 +115,7 @@ export const DeviceVaultMaster: React.FC = () => {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-sm font-black tracking-wide text-slate-800 uppercase">
-                                    Bóveda de Dispositivos DELFOS
+                                    Bóveda de Dispositivos PETRAL ONE
                                 </h2>
                                 <span className="text-[10px] font-black bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-200">
                                     MFA & DRM ACTIVE

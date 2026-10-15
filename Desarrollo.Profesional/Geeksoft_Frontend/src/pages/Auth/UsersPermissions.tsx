@@ -246,7 +246,7 @@ export const UsersPermissions: React.FC = () => {
     return (
         <MasterTemplate 
             title="GESTIÓN DE USUARIOS Y MATRIZ DE PERMISOS" 
-            subtitle="Administración centralizada de cuentas de acceso, roles y niveles de privilegio en DELFOS" 
+            subtitle="Administración centralizada de cuentas de acceso, roles y niveles de privilegio en PETRAL ONE" 
             activeTab="users"
         >
             <div className="flex-1 flex flex-col gap-4 max-w-full w-full">

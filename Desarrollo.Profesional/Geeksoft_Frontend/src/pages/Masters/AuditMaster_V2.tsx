@@ -6,7 +6,7 @@ export const AuditMaster_V2: React.FC = () => {
     return (
         <MasterTemplate 
             title="BITÁCORA DE AUDITORÍA FORENSE & TRAZABILIDAD" 
-            subtitle="Libro mayor inmutable de cambios transaccionales y acciones de usuarios en DELFOS" 
+            subtitle="Libro mayor inmutable de cambios transaccionales y acciones de usuarios en PETRAL ONE" 
             activeTab="audit-ledger"
         >
             <div className="flex-1 flex flex-col max-w-full w-full">

@@ -900,3 +900,137 @@ OBJETIVO: Aplicar el mismo estilo editorial de Dr. Cost (hoja A4, temas tri-moda
   * Contenedores reiniciados con éxito.
   * Verificación en vivo: HTTP/2 200 OK en https://petral.one.geeksoft.tech/mof-manual
 ================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Transcripcion y Nota Estrategica Triloga PETRAL ONE, TWO, THREE)
+REQUERIMIENTO: Transcribir PRESENTACION.PETRAL.ONE.TWO.THREE.ogg con transcribe_whisper.py y generar nota Markdown en Obsidian.
+ACCIONES REALIZADAS:
+- Transcripcion completada con exito usando Whisper (modelo base).
+- Archivo generado: audio_transcrip/PRESENTACION.PETRAL.ONE.TWO.THREE.ogg_whisper.txt
+- Nota Obsidian creada: Desarrollo.Profesional/Obsidian.Mudanza.Contabo/33. Presentacion.Vision.PETRAL.ONE.TWO.THREE.md
+- Contenido clave estructurado:
+  1. Transcripcion literal fidedigna con Whisper.
+  2. Slide 1: PETRAL ONE (Presente - Forecasting Determinista, Matrices PxQ, Simulador Escenarios).
+  3. Slide 2: PETRAL TWO (Siguiente Paso - Liquidacion Real, Auditoria Facturas PDF, Variances Budget vs Actual).
+  4. Slide 3: PETRAL THREE (Vision Estrategica - Optimizacion Multivariada de Flota, Buques Moquegua y Tablones, Cadena de Suministro Tierra-Mar).
+  5. Matriz comparativa sintetica y propuesta de presentacion interactiva HTML para la capacitacion.
+================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Presentacion Ejecutiva Local Trilogia PETRAL ONE, TWO, THREE)
+REQUERIMIENTO: Usando como template COTIZACION_MODULAR_PETRAL_V9.md, crear la presentacion en local utilizando el logo oficial de PETRAL ONE del software.
+ARCHIVOS GENERADOS EN LOCAL:
+1. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.md:
+   - Formato A4 Landscape con estilos print y tablas comparativas identicas al template.
+   - Logo oficial embebido: Desarrollo.Profesional/Geeksoft_Frontend/public/LOGO.PETRAL.ONE.HORIZONTAL.png.
+   - 5 Slides ejecutivos:
+     * Slide 1: Portada & Vision General de la Trilogia (ONE, TWO y THREE).
+     * Slide 2: PETRAL ONE (El Presente: Forecasting Determinista, Matrices PxQ, BAF, Multicotizador).
+     * Slide 3: PETRAL TWO (Siguiente Paso: Liquidaciones Reales, Auditoria Facturas PDF, Variances Budget vs Actual).
+     * Slide 4: PETRAL THREE (Vision Estrategica: Optimizacion Anual de Flota, Buques Moquegua y Tablones ~30 viajes, Red Multivariada Tierra-Mar).
+     * Slide 5: Conclusiones & Compromiso de Capacitacion (Garbage In, Garbage Out y disciplina del dato).
+2. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html:
+   - Version standalone interactiva para navegador local con barra superior y soporte para imprimir/guardar PDF (A4 apaisado).
+3. Desarrollo.Profesional/Geeksoft_Frontend/public/presentacion_trilogia.html:
+   - Copia en public para visualizacion directa desde el servidor de desarrollo local de Vite (http://localhost:5173/presentacion_trilogia.html).
+CUMPLIMIENTO DE REGLAS:
+- Cero despliegue a VPS (trabajo 100% local segun orden).
+- Sin conversion automatica a PDF (a la espera de solicitud explicita).
+================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Ajuste de Logica Comercial y Operativa en Trilogia PETRAL)
+FEEDBACK DEL USUARIO:
+- PETRAL ONE no calcula ajuste BAF (el BAF aumenta el flete en la misma proporcion que suben los costos al liquidar, no en el forecast). En P1 solo se modela el consumo teorico y el presupuesto base.
+- PETRAL TWO automatiza el calculo BAF (conociendo el precio ponderado del stock en tanques del buque + compras spot de bunker) y monitorea el consumo real medido del buque.
+- PETRAL TWO incorpora el Cuaderno de Hechos Digital en el Puente de Mando (Digital SOF) para contrastar liquidaciones portuarias contra el timing real de las maniobras de carga/descarga y servicios de remolcaje y practicaje reportados desde el puente.
+ARCHIVOS SINCRONIZADOS Y ACTUALIZADOS:
+1. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.md
+2. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html
+3. Desarrollo.Profesional/Geeksoft_Frontend/public/presentacion_trilogia.html
+4. Desarrollo.Profesional/Obsidian.Mudanza.Contabo/33. Presentacion.Vision.PETRAL.ONE.TWO.THREE.md
+VERIFICACION:
+- Cambios aplicados con exito en entorno local. Cero intervencion de produccion/VPS.
+================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Correccion de Link de Logo en Presentacion Trilogia)
+INCIDENCIA REPORTADA: Link del logo roto arriba a la derecha en PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html.
+ACCION REALIZADA:
+- Imagen oficial utilizada: Proposal/LOGO.PETRAL.ONE.jpg (29 KB).
+- Actualizado src en todos los slides de PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html para usar directamente "LOGO.PETRAL.ONE.jpg" en la misma carpeta local.
+- Sincronizado en PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.md y public/presentacion_trilogia.html.
+- Verificado: el logo carga de forma inmediata y consistente sin rutas rotas.
+================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Generacion de Presentacion en Formato PPTX)
+REQUERIMIENTO: Pasar la presentacion ejecutiva de la Trilogia PETRAL ONE, TWO, THREE a formato PPTX (PowerPoint).
+ACCION REALIZADA:
+- Script automatizado creado: Proposal/build_trilogia_pptx.py utilizando python-pptx.
+- Archivo generado: Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.pptx (72 KB).
+- Especificaciones de diseño:
+  * Formato Widescreen 16:9 (13.333" x 7.5").
+  * 5 slides ejecutivos completos con cabecera corporativa, badges de color (Navy, Sky Blue, Purple, Green).
+  * Tablas estilizadas con bordes, tipografía Arial y colores oficiales (#0F2C59, #F8FAFC, #FFFFFF).
+  * Logo oficial de PETRAL ONE (LOGO.PETRAL.ONE.jpg) embebido en alta fidelidad en la esquina superior derecha de cada slide.
+  * Cajas de conclusiones/callouts con acento lateral.
+  * Pie de página y numeración de slides.
+  * Lógica comercial corregida (P1: forecast determinista base sin BAF; P2: liquidación con BAF real, monitoreo de tanques y Cuaderno Digital de Hechos del puente).
+================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Incorporacion de Organigrama y MOF en PETRAL ONE y PPTX)
+REQUERIMIENTO: Agregar a PETRAL ONE la sugerencia de Organigrama y Manual de Organizacion y Funciones (MOF) y regenerar los entregables (PPTX, HTML, MD).
+ESTRUCTURA OPERATIVA MOF INTEGRADA:
+- Estructura canónica oficial de 6 puestos clave (mapeados con /mof-manual):
+  1. Direccion General (MOF-DIR-01): Fernando Harten
+  2. Gerencia Comercial (MOF-COM-01): Iosef Zavala
+  3. Operaciones Flota Moquegua (MOF-OPS-01): Maria Elena Castro
+  4. Operaciones Flota Tablones (MOF-OPS-02): Jorge Neyra
+  5. Liquidaciones Financieras (MOF-FIN-01): Sandra Gálvez
+  6. Costos Portuarios & FDA (MOF-FIN-02): Patricia Rueda
+ARCHIVOS ACTUALIZADOS:
+1. Proposal/build_trilogia_pptx.py & Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.pptx (Regenerado con exito).
+2. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html.
+3. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.md.
+4. Desarrollo.Profesional/Geeksoft_Frontend/public/presentacion_trilogia.html.
+5. Desarrollo.Profesional/Obsidian.Mudanza.Contabo/33. Presentacion.Vision.PETRAL.ONE.TWO.THREE.md.
+================================================================================
+
+================================================================================
+REGISTRO DE SESION: 2026-10-14 (Estructuracion de 6 Slides Ejecutivos en PPTX, HTML y MD)
+REQUERIMIENTO: Consolidar y compilar la presentacion en formato PPTX con el nuevo slide exclusivo de Organigrama y MOF de PETRAL ONE.
+VERIFICACION DEL PPTX (build_trilogia_pptx.py):
+- Slide 1 / 6: Ecosistema Digital PETRAL: Del Forecast a la Optimizacion de Red
+- Slide 2 / 6: PETRAL ONE: El Arte del Forecasting Determinista
+- Slide 3 / 6: PETRAL ONE: Organigrama y Manual de Organizacion y Funciones (MOF)
+- Slide 4 / 6: PETRAL TWO: Liquidacion Real, Calculo BAF y Auditoria Forense PxQ
+- Slide 5 / 6: PETRAL THREE: Optimizacion Anual de Flota y Red Multivariada
+- Slide 6 / 6: Conclusion: Por Que la Disciplina en PETRAL ONE Habilita el Futuro
+TODOS LOS ENTREGABLES SINCRONIZADOS:
+1. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.pptx (72 KB, Widescreen 16:9).
+2. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html.
+3. Proposal/PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.md.
+4. Desarrollo.Profesional/Geeksoft_Frontend/public/presentacion_trilogia.html.
+================================================================================
+[2026-10-14 19:53:24] REFACTOR PRESENTACION PDF & PPTX (TRILOGIA PETRAL ONE, TWO & THREE): Optimizado el aprovechamiento del canvas al 90% utilizando el motor WeasyPrint y el template oficial A4 Landscape COTIZACION_MODULAR_PETRAL_V9. Corregido el tamano de fuente, padding y espaciados de tablas y callouts para evitar desbordes (exactamente 6 diapositivas). Actualizado build_trilogia_pptx.py con tipografia ampliada (20pt titulos, 11.5pt headers, 10.2pt celdas) para maximizar legibilidad en 16:9.
+[2026-10-14 20:01:05] CIERRE DE SESION: Completada la generacion y recalibracion de la presentacion ejecutiva de la Trilogia PETRAL (ONE, TWO & THREE) en formatos PDF (WeasyPrint A4 Landscape), PPTX (16:9 Widescreen) y Markdown/HTML. Todos los archivos sincronizados y validados sin desbordes.
+================================================================================
+REGISTRO DE SESION: 2026-10-15 (Rebranding UI: DELFOS a PETRAL ONE)
+TAG CREADO: PRE.REBRANDING.UI.PETRAL.ONE
+BRANCH ACTIVO: feature/rebranding-ui-petral-one
+ALCANCE: Reemplazo integral y quirurgico de toda referencia textual y visual a DELFOS en la interfaz de usuario del Frontend (React).
+ARCHIVOS MODIFICADOS:
+1. src/pages/Tools/AuditLedger_V2.tsx (Badge: PETRAL ONE LEDGER ENGINE • V2.0).
+2. src/pages/Masters/DeviceVaultMaster.tsx (Titulo: Boveda de Dispositivos PETRAL ONE).
+3. src/pages/Masters/AuditMaster_V2.tsx (Subtitulo: acciones de usuarios en PETRAL ONE).
+4. src/pages/Auth/UsersPermissions.tsx (Subtitulo: roles y niveles de privilegio en PETRAL ONE).
+5. src/components/Audit/UserAuditLedgerViewer.tsx (Badge: PETRAL ONE SECURITY VAULT).
+6. src/components/Masters/MasterTemplate_V2_LEGACY_PRE_SMART_COLLAPSE.tsx (alt="PETRAL ONE", LOGO.PETRAL.ONE.jpg).
+7. src/utils/screenSecurityShield.ts, deviceFingerprint.ts, auditTracker.ts (Encabezados del sistema a PETRAL ONE).
+VERIFICACION EMPIRICA:
+- npx vite build: Exit code 0 (1121 modulos transformados con exito en 35.41s).
+- grep_search en src/: 0 ocurrencias residuales de DELFOS.
+================================================================================
+

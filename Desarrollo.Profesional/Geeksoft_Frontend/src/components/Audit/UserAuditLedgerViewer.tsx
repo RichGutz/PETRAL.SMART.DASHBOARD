@@ -207,7 +207,7 @@ export const UserAuditLedgerViewer: React.FC = () => {
                                 Módulo de Auditoría Forense &amp; Trazabilidad
                             </h1>
                             <span className="bg-teal-50 text-teal-700 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-teal-200">
-                                DELFOS SECURITY VAULT
+                                PETRAL ONE SECURITY VAULT
                             </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">

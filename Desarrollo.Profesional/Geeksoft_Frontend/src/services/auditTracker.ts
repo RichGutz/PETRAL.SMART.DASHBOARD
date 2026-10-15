@@ -1,6 +1,6 @@
 /**
  * Módulo de Trazabilidad y Auditoría de Acciones de Usuario en Frontend
- * Sistema: DELFOS SHIPPING SOFTWARE
+ * Sistema: PETRAL ONE
  */
 
 import { api } from './api';

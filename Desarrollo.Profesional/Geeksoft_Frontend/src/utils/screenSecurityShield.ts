@@ -1,6 +1,6 @@
 /**
  * Módulo de Blindaje Web, Anti-Captura de Pantalla & DRM Forense
- * Sistema: DELFOS SHIPPING SOFTWARE
+ * Sistema: PETRAL ONE
  * 
  * 5 Capas de Protección Activa:
  * 1. Anti-PrintScreen & Vaciado de Portapapeles (Clipboard Purge).
