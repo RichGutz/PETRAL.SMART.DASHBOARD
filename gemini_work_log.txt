@@ -1062,3 +1062,23 @@ VERIFICACION EMPIRICA:
 - deploy_petral_one_contabo.py: SFTP upload, desempaquetado en Contabo y reinicio de contenedores.
 - Verificacion HTTP Status: 200 OK en https://petral.one.geeksoft.tech/dashboard con mejoras esteticas activas en vivo.
 ================================================================================
+REGISTRO DE SESION: 2026-10-15 (Zoom Ctrl+Wheel en 4 Módulos & Menú SOTA PETRAL ONE)
+TAG CREADO: PRE.ZOOM.AND.SOTA.PETRAL.ONE
+BRANCH ACTIVO: feature/zoom-and-sota-petral-one
+MODIFICACIONES APLICADAS:
+1. Zoom Interactivo con Ctrl + Scroll del mouse (interceptando preventDefault con listener nativo { passive: false }):
+   - SystemFlowchartViewer_V2.tsx: Zoom 40% a 250% sobre el canvas SVG/diagrama de flujo.
+   - CompanyOrganigram_V2.tsx: Zoom 40% a 180% sobre el árbol jerárquico organizacional.
+   - DocsAsCodeBookReader_V2.tsx: Escala 60% a 200% sobre la hoja A4 editorial de lectura técnica.
+   - MofRoleBookReader_V2.tsx: Escala 60% a 200% sobre la hoja A4 de perfil de puesto canónico.
+2. Nuevo Menú y Visor SOTA PETRAL ONE:
+   - SotaPetralOne_V2.tsx: Creada nueva vista de presentación ejecutiva de la Trilogía PETRAL: ONE, TWO & THREE.
+   - Modo Pantalla Completa: Responde a la tecla F11 o botón interactivo utilizando la Fullscreen API para expandirse al 100% de la pantalla.
+   - Public HTML: Sincronizado PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html en public/sota_petral_one.html y public/presentacion_trilogia.html.
+   - Enrutamiento: Registrada ruta /sota-petral-one en App_V2.tsx y configurada en ToolsLayout_V2.tsx.
+   - Menú Lateral: Agregado ítem 'SOTA PETRAL ONE' en MasterTemplate_V2.tsx bajo 'Documentación & Sistema' con overflow-hidden para eliminar barras de desplazamiento secundarias.
+   - Navegación Cruzada: Enlaces directos a SOTA PETRAL ONE integrados en Docs as Code, MOF y Organigrama.
+VERIFICACION EMPIRICA:
+- npx vite build: Exito rotundo en 9.50s (1125 modulos transformados, 0 errores, Exit code 0).
+- Git Commit: fdf351d en rama feature/zoom-and-sota-petral-one.
+================================================================================

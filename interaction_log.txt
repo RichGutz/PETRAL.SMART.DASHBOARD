@@ -1163,3 +1163,24 @@ ACCION REALIZADA:
    - Protocolo de 3 pasos ejecutado: Merge a main (Commit 1491e34), Vite build OK y deploy SFTP/SSH.
    - En vivo y verificado (HTTP 200 OK): https://petral.one.geeksoft.tech
 ================================================================================
+REGISTRO DE SESION: 2026-10-15 (Zoom Ctrl+Wheel en 4 Módulos & Menú SOTA PETRAL ONE)
+SOLICITUD:
+1. En Docs as Code, Flujograma, Manual MOF y Organigrama la acción Ctrl + Scroll del mouse debe producir zoom de lo mostrado en el contenedor principal.
+2. Crear un nuevo menú en documentación llamado SOTA PETRAL ONE donde se coloque PRESENTACION_TRILOGIA_PETRAL_ONE_TWO_THREE.html, con soporte para tecla F11 y que cubra toda la pantalla.
+ACCION REALIZADA:
+1. SAFE POINT GIT:
+   - Tag Anotado: PRE.ZOOM.AND.SOTA.PETRAL.ONE
+   - Nueva Rama: feature/zoom-and-sota-petral-one
+2. CIRUGIA MODULAR:
+   - SystemFlowchartViewer_V2.tsx: Listener wheel con { passive: false } interceptando Ctrl+Wheel para zoom dinámico 40%-250%.
+   - CompanyOrganigram_V2.tsx: Listener wheel con { passive: false } interceptando Ctrl+Wheel para zoom dinámico 0.4x-1.8x.
+   - DocsAsCodeBookReader_V2.tsx: Listener wheel con { passive: false } interceptando Ctrl+Wheel para zoom dinámico 60%-200% sobre folio A4 y barra de escala.
+   - MofRoleBookReader_V2.tsx: Listener wheel con { passive: false } interceptando Ctrl+Wheel para zoom dinámico 60%-200% sobre folio A4 y barra de escala.
+   - SotaPetralOne_V2.tsx: Creada nueva vista de presentación ejecutiva de la Trilogía PETRAL: ONE, TWO & THREE. Modo Fullscreen F11 / API interactiva al 100% de la pantalla sin márgenes, con controles de zoom y enlaces a otras herramientas documentales.
+   - MasterTemplate_V2.tsx: Agregado ítem SOTA PETRAL ONE en 'Documentación & Sistema' y overflow-hidden condicional.
+   - App_V2.tsx y ToolsLayout_V2.tsx: Registrada ruta /sota-petral-one.
+   - Enlaces cruzados: Integrado botón SOTA PETRAL ONE en Docs as Code, MOF y Organigrama.
+3. VERIFICACION EMPIRICA:
+   - npx vite build: Exito total en 9.50s (1125 módulos transformados, 0 errores, Exit code 0).
+   - Git Commit: fdf351d en rama feature/zoom-and-sota-petral-one.
+================================================================================
