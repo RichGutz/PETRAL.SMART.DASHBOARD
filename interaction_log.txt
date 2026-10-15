@@ -1159,4 +1159,7 @@ ACCION REALIZADA:
    - MofManual_V2.tsx: buscador removido, header fijo y scroll confinado a la hoja del puesto.
 3. VERIFICACION LOCAL:
    - npx vite build: Exito limpio en 10.58s (0 errores, Exit code 0).
+4. DESPLIEGUE A PRODUCCION (VPS CONTABO):
+   - Protocolo de 3 pasos ejecutado: Merge a main (Commit 1491e34), Vite build OK y deploy SFTP/SSH.
+   - En vivo y verificado (HTTP 200 OK): https://petral.one.geeksoft.tech
 ================================================================================

@@ -1056,4 +1056,9 @@ MODIFICACIONES APLICADAS:
    - Header corporativo fijo y scroll vertical confinado exclusivamente a la hoja del rol.
 VERIFICACION EMPIRICA:
 - npx vite build: Exito rotundo en 10.58s (0 errores, Exit code 0).
+[2026-10-15 10:29:23] DESPLIEGUE A PRODUCCION EXITOSO (VPS CONTABO 169.58.168.107):
+- Merge a main y git push origin main (Commit 1491e34).
+- npx vite build: Compilado en 10.42s (bundle 11.7 MB).
+- deploy_petral_one_contabo.py: SFTP upload, desempaquetado en Contabo y reinicio de contenedores.
+- Verificacion HTTP Status: 200 OK en https://petral.one.geeksoft.tech/dashboard con mejoras esteticas activas en vivo.
 ================================================================================
