@@ -201,4 +201,29 @@ CREATE INDEX IF NOT EXISTS idx_bunker_invoices_vessel ON bunker_invoices(vessel_
   * Factor BAF: **0.9669** (Exacto 0.9669 SPCC).
   * Variación Tarifa: **-0.1380 USD/pmt** (Exacto -0.1380 SPCC).
   * Streaming PDF: 74,250 bytes servidos al visor de factura.
-* [x] **Paso 8:** Compilación limpia `npx vite build` (código de salida 0 en 29.48s, 0 errores).
+* [x] **Paso 8:** Compilación limpia `npx vite build` (código de salida 0 en 29.48s y 12.17s, 0 errores).
+* [x] **Paso 9:** Despliegue oficial a Producción Contabo VPS (`169.58.168.107`):
+  * **Git Push a Producción:** Rama `feature/maestro-bunker-bootstrapping` fusionada a `main` y subida a GitHub (`origin/main`).
+  * **Sincronización de Contenedores:** `petral-backend` y `petral-frontend` actualizados y reiniciados.
+  * **Base de Datos Contabo:** Migración SQL `20261016000001_create_bunker_events_and_invoices.sql` aplicada en producción.
+  * **Directorio Persistente:** `/opt/petral_stack/storage/bunker_invoices/` creado en el host de Contabo.
+  * **Verificación de Endpoints en Vivo:**
+    * Frontend: `https://petral.one.geeksoft.tech/bunker-bootstrapping` (HTTP 200 OK).
+    * Backend API: `https://petral.one.geeksoft.tech/api/v1/bunker-bootstrapping/events/MOQUEGUA` (`{"status":"success","data":[]}` HTTP 200 OK).
+    * Trash API: `https://petral.one.geeksoft.tech/api/v1/trash/count` (HTTP 200 OK).
+
+---
+
+## 8. 🏁 Acta de Cierre de Sesión y Estado Final del Sistema
+
+| Parámetro | Estado / Valor Oficial |
+|---|---|
+| **Ambiente de Producción** | `https://petral.one.geeksoft.tech/bunker-bootstrapping` |
+| **IP Servidor VPS** | Contabo `169.58.168.107` (Docker `petral-backend` + `petral-frontend`) |
+| **Repositorio Git** | Rama `main` al día con `origin/main` |
+| **Punto de Retorno Seguro** | Tag `TAG.PRE.MAESTRO.BUNKER.BOOTSTRAPPING` |
+| **Legacy `BunkerMaster.tsx`** | Intacto e inalterado en `/bunker-prices` |
+| **Nuevo Módulo V2** | `BunkerMasterBootstrapping.tsx` en `/bunker-bootstrapping` |
+| **Almacenamiento de PDFs** | Volumen persistente `/opt/petral_stack/storage/bunker_invoices/` + Respaldo Base64 en PostgreSQL |
+| **Validación Matemática** | BAF SPCC Factor: **`0.9669`** \| Variación: **`-0.1380 USD/pmt`** (100% de coincidencia con Excel de SPCC) |
+| **Estado General** | ✅ 100% Operativo, Desplegado en Vivo y Certificado |
