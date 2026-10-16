@@ -4,10 +4,13 @@
 > **Sistema:** PETRAL ONE (`SHIPPING.SOFT ENTERPRISE`)  
 > **Estrategia de Despliegue:** Creación en Paralelo de `BunkerMasterBootstrapping.tsx` (`/bunker-bootstrapping`) preservando intacto el legacy `BunkerMaster.tsx` (`/bunker-prices`) hasta homologación final  
 > **Control de Versiones:** Rama `feature/maestro-bunker-bootstrapping` | Tag de Retorno `TAG.PRE.MAESTRO.BUNKER.BOOTSTRAPPING`  
-> **Fuente de Audio:** `audio_transcrip/Refactorizacion.Mudulo.BUNKER.ogg` (Transcripción Whisper 15/10/2026)  
+> **Fuentes de Audio Auditadas:**  
+>   * `audio_transcrip/Refactorizacion.Mudulo.BUNKER.ogg` (Whisper 15/10/2026 - Lógica y BAF SPCC)  
+>   * `audio_transcrip/REFACTO.UI.BUNKER.BOOT.ogg` (Whisper 16/10/2026 - Refactorización Visual & UX Inandes)  
+> **Referencia Visual / UI:** Inandes ERP CRM Certificados (`https://inandes.geeksoft.tech/#crm_certificados`) respaldado en `Obsidian.Maestro.Costos.Portuarios/PNGs/UI_Inandes_Certificados_Referencia_Bunker.png`  
 > **Sustentos Documentales Auditados:** `Facturas.Bunker.MEC.15.10.26` (Facturas F001-3123, F001-3124, F001-3125 de Oil Trading y Excel Octavo Ajuste Bunker SPCC)  
-> **Fecha:** 15 de Octubre de 2026  
-> **Estado:** 🚀 En Ejecución Modular por Fases  
+> **Fecha:** 15-16 de Octubre de 2026  
+> **Estado:** 🎨 En Refactorización de UI & UX según estándar Inandes ERP  
 
 ---
 
@@ -227,3 +230,128 @@ CREATE INDEX IF NOT EXISTS idx_bunker_invoices_vessel ON bunker_invoices(vessel_
 | **Almacenamiento de PDFs** | Volumen persistente `/opt/petral_stack/storage/bunker_invoices/` + Respaldo Base64 en PostgreSQL |
 | **Validación Matemática** | BAF SPCC Factor: **`0.9669`** \| Variación: **`-0.1380 USD/pmt`** (100% de coincidencia con Excel de SPCC) |
 | **Estado General** | ✅ 100% Operativo, Desplegado en Vivo y Certificado |
+
+---
+
+## 9. 🎨 REFACTORIZACIÓN VISUAL Y UX: Adopción del Estándar UI Inandes ERP y Descarte del Modo Oscuro (Feedback Audio 16/10/2026)
+
+### 9.1 🎙️ Transcripción Oficial del Audio de Gerencia (`REFACTO.UI.BUNKER.BOOT.ogg`)
+* **Archivo de Audio:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\audio_transcrip\REFACTO.UI.BUNKER.BOOT.ogg`
+* **Motor de Transcripción:** Whisper (Base) vía `transcribe_whisper.py`
+* **Texto Extraído Fidedigno:**
+
+> *"Femini retomamos el desarrollo del maestro de Bunke, de bootstraping. Primero, lo primero es que, ¿por qué cambias el look and feel? ¿Por qué metes todo negro? Definitivamente, no debes hacer eso. Debemos mantener el mismo look and feel que todo existe. Entonces, adiós lo negro. Segundo. Y cada tab debería tener dentro de cada tab su propio nuevo tanqueo. O sea, los precios de cada que Bunke tanqueados son los que deben, digamos, este calcularse con el método de bootstraping. OK, está mal lo que está haciendo. No tiene sentido afuera y no. Fas un camino lógico, ¿no? Entonces, quizás, en el primer río, el maestro de Bunke, bootstraping, ahí ponen los tabsitos de los barcos. No tiene sentido que pongas un nuevo río para eso. Tampoco me sirve en esas burbujas que están ahí arriba, que dicen, ponderado, ponderado. Eso no me sirve. Yo te voy a pasar una UI con lo que quiero que hagas. OK."*
+
+---
+
+### 9.2 🕵️‍♂️ Protocolo Pericial Benoit Blanc (BEN / LEG / DIFF / NOTA)
+
+#### **BEN (Auditoría Forense)**
+Inspeccionamos la discordancia entre la versión inicial del módulo V2 y la experiencia de usuario (UX) corporativa aprobada en los demás sistemas de la compañía (específicamente la interfaz de **CRM Certificados** de `Inandes ERP` en `https://inandes.geeksoft.tech/#crm_certificados`).
+
+#### **LEG (Escena del Crimen / Estado V1 Previo)**
+1. **Paleta Oscura Extrema:** Se utilizó un contenedor con `bg-slate-900 border border-slate-800` ("todo negro"), rompiendo la armonía visual clara de PETRAL.
+2. **Filas Redundantes ("Ríos Innecesarios"):** Se colocó una fila aislada exclusivamente para los botones de las naves (`BunkerFleetTabs`), generando dispersión vertical.
+3. **Burbujas Infladas de "Ponderado":** Se insertaron tarjetas voluminosas en la parte superior repitiendo "Ponderado IFO / Ponderado MDO", saturando la atención del operador.
+4. **Desconexión Operativa del Flujo de Tanqueo:** El botón de "Nuevo Tanqueo" estaba flotando de manera genérica afuera, sin estar acoplado al buque activo seleccionado.
+
+#### **DIFF (Diferencias Sustanciales y Corrección de Rumbo)**
+1. **Adiós al Modo Negro (`bg-slate-900` $\rightarrow$ Clean Light Corporate):** Retorno inmediato a fondos blancos y pizarra clara (`bg-white dark:bg-slate-950`, `border-slate-200 dark:border-slate-800`, textos oscuros de alta legibilidad `#0f172a` y acento azul corporativo `#0284c7`).
+2. **Navegación Unificada en Primera Fila:** Integración de los botones de buques (`MOQUEGUA`, `TABLONES`, `HUEMUL`, `CONCON`, `TODOS`) como botones tipo píldora (**Pills**) directamente en la misma barra superior de filtros, eliminando la fila adicional.
+3. **Eliminación de Burbujas:** Reemplazo de las tarjetas redundantes por el formato ejecutivo **APEFAC / Inandes** de 2 tarjetas métricas:
+   * **Tarjeta Izquierda (1 Columna):** Hito / Conteo de Eventos de Tanqueo Registrados.
+   * **Tarjeta Derecha (2 Columnas):** Inversión y Volumen Total Gestionado ($TM$ y $USD$ consolidados).
+4. **Flujo de Tanqueo por Nave:** Cada tab de barco gestiona sus propios eventos y dispone de su propio botón `[+ Nuevo Tanqueo]` y `[⚙️ Saldo Génesis]`.
+5. **Acordeón Colapsable por Buque + Botón Azul `[VISOR]`:**
+   * La lista de tanqueos se organiza en acordeones colapsables por buque con el total monetario acumulado a la derecha.
+   * Cada fila de tanqueo/factura dispone de su botón azul corporativo **`[VISOR]`** para desplegar el modal con el visor de PDF nativo embebido vía streaming.
+
+---
+
+### 9.3 📐 Mapeo Anatómico: Inandes ERP (`crm_certificados`) ➔ Búnker PETRAL Bootstrapping
+
+> **Respaldo Local de Captura de Pantalla:**  
+> 1. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\UI_Inandes_Certificados_Referencia_Bunker.png`  
+> 2. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\UI_Inandes_Certificados_Referencia_Bunker.png`
+
+| Sección en Inandes ERP (`#crm_certificados`) | Equivalente en Búnker PETRAL Bootstrapping | Clases Tailwind / Look & Feel Estándar |
+| :--- | :--- | :--- |
+| **Top KPI Izquierdo (1 col)** | `Certificados Vigentes: 201` $\rightarrow$ **`Tanqueos Registrados: N`** | `glass-card p-5 bg-white border border-slate-200 rounded-2xl` |
+| **Top KPI Derecho (2 cols)** | `Capital Total Gestionado (AUM): USD 3.4M \| PEN 27.5M` $\rightarrow$ **`Costo Total Búnker: USD Consolidado \| TM IFO & MDO`** | `glass-card p-5 md:col-span-2 text-lg font-mono font-black text-[#0284c7]` |
+| **Selector de Pestañas Superiores** | `Vigentes` \| `Aumento de Capital` \| `Visor & Ledger` $\rightarrow$ **`✅ Historial por Naves` \| `➕ Registrar Tanqueo / Génesis` \| `📑 Repositorio de Facturas`** | `border-b-[3px] border-[#0284c7] text-[#0284c7] text-xs font-black uppercase tracking-wider` |
+| **Omnibox de Búsqueda** | `Buscar por Titular, DNI, RUC...` $\rightarrow$ **`Buscar por Nave, Proveedor, Factura, Puerto o N° Viaje...`** | `rounded-xl border-slate-200 py-2 pl-9 pr-8 text-xs font-semibold text-slate-800` |
+| **Pills de Filtro Inmediatos** | `PEN 1`, `PEN 2`, `PEN 3`, `USD 01`, `USD 02`, `CON 01` $\rightarrow$ **`MOQUEGUA`, `TABLONES`, `HUEMUL`, `CONCON`, `TODAS`** | `h-8 text-[11px] font-black uppercase px-3 rounded-lg bg-[#0284c7] text-white shadow-xs` |
+| **Selector de Período** | Dropdown `Todos los Periodos`, `2026-08`... $\rightarrow$ **`Todos los Periodos`, `2026-10`, `2026-09`...** | `bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700` |
+| **Barra de Acciones Masivas** | `[Enviar a Selección]`, `[Descargar Excel]`, `[Descargar ZIP]` $\rightarrow$ **`[+ Nuevo Tanqueo]`, `[⚙️ Saldo Génesis]`, `[Excel Consolidado]`, `[Facturas ZIP]`** | Botones de acción rápida con paleta esmeralda (`#10b981`), ámbar (`#f59e0b`) y azul (`#0284c7`) |
+| **Acordeón por Agrupación** | `📁 FDO NSG MIPYME PEN 01 (32 VIGENTES) --- PEN 9,134,782.09 ▼` $\rightarrow$ **`🚢 BT MOQUEGUA (3 TANQUEOS) --- USD 428,958.10 ▼`** | Encabezado colapsable con badge de conteo y total financiero a la derecha |
+| **Grilla Tabular de Alta Densidad** | `Certificado`, `Titulares`, `Moneda`, `Inversión`, `Capital`, `Plazo`, `Último Evento`, `Fecha`, `Acción` $\rightarrow$ **`ID / Facturas`, `Fecha`, `Puerto`, `ROB Previo`, `TM Compradas`, `Precio Ponderado`, `BAF SPCC`, `Acción`** | Celdas numéricas monoespaciadas (`font-mono`), badges de estado y alineación contable estricta |
+| **Botón de Acción Final** | **`[VISOR]`** (Botón azul con texto blanco) $\rightarrow$ **`[VISOR]`** | `bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-black px-3 py-1 rounded-md uppercase tracking-wider` |
+
+---
+
+### 9.4 🏗️ Flujograma de Arquitectura de la Nueva UI
+
+```mermaid
+graph TD
+    A["BunkerMasterBootstrapping.tsx (Contenedor Clean Light)"] --> B["BunkerHeaderMetrics.tsx (Estilo APEFAC: Tanqueos Registrados + AUM Búnker Consolidado)"]
+    A --> C["BunkerTabsNavigation.tsx (Pestañas con Underline Azul Corporativo)"]
+    
+    C --> D["Vista: Historial por Naves"]
+    C --> E["Vista: Registrar Tanqueo / Génesis"]
+    C --> F["Vista: Repositorio & Auditoría Facturas"]
+    
+    D --> G["Barra de Filtros Integrada (Fila Única)"]
+    G --> G1["Omnibox de Búsqueda Reactiva (Lupa + Clear X)"]
+    G --> G2["Pill Buttons de Naves (MOQUEGUA | TABLONES | HUEMUL | CONCON | TODAS)"]
+    G --> G3["Selector de Período Dropdown (2026-10, 2026-09...)"]
+    
+    D --> H["Barra de Acciones de la Nave Activa"]
+    H --> H1["Botón [+ Nuevo Tanqueo] (Abre Wizard Split-Screen con Nave Preseleccionada)"]
+    H --> H2["Botón [⚙️ Saldo Génesis / Bootstrap]"]
+    H --> H3["Botón [Descargar Excel Consolidado] (SheetJS)"]
+    H --> H4["Botón [Descargar Facturas ZIP] (JSZip)"]
+    
+    D --> I["BunkerVesselAccordions.tsx (Acordeones Colapsables por Buque)"]
+    I --> J["Encabezado: [✓] Ícono Buque + Nombre + Conteo | Importe Total USD | Chevron ▼"]
+    J --> K["Grilla de Tanqueos (Eventos, ROB, Compras, Ponderado, Factor BAF)"]
+    K --> L["Columna ACCIÓN: Botón [VISOR]"]
+    L --> M["BunkerPdfViewerModal.tsx (Iframe Nativo con Streaming de Factura Original)"]
+```
+
+---
+
+### 9.5 📋 Plan Quirúrgico de Modificación Frontend
+
+1. **`BunkerMasterBootstrapping.tsx` (`src/pages/Masters/`):**
+   * Eliminar todas las clases `bg-slate-900`, `border-slate-800` y textos blancos oscuros.
+   * Implementar la paleta clara corporativa `bg-white dark:bg-slate-950`, `border-slate-200 dark:border-slate-800`.
+   * Integrar la barra de filtros unificada y las pestañas superiores.
+2. **`BunkerKpis.tsx` (`src/components/Masters/BunkerBootstrapping/`):**
+   * Transformar las burbujas redundantes en las 2 tarjetas métricas tipo APEFAC de Inandes.
+3. **`BunkerFleetTabs.tsx` (`src/components/Masters/BunkerBootstrapping/`):**
+   * Convertir de fila aislada a componente horizontal compacto tipo Pills para incrustarse en la toolbar de filtros.
+4. **`BunkerEventsHistoryTable.tsx` (`src/components/Masters/BunkerBootstrapping/`):**
+   * Incorporar la lógica de acordeón colapsable por nave (`expandedVessels`), sumatoria total a la derecha del encabezado y botón azul corporativo `[VISOR]`.
+5. **Preservación Intacta del Backend y Base de Datos:**
+   * La lógica de cálculo ponderado ($P_{Ponderado\ IFO} = \$911.90$, $P_{Ponderado\ MDO} = \$1,571.65$, BAF Factor = $0.9669$), los endpoints FastAPI en `/api/v1/bunker-bootstrapping/` y la base de datos PostgreSQL en Contabo se mantienen **100% inalterados**, asegurando cero impacto colateral en el motor matemático.
+
+---
+
+### 9.6 🚀 Implementación Concluida & Verificación Empírica (16/10/2026)
+
+* [x] **Campo para Juntar Facturas de la Misma Tanqueada:**
+  * Implementado en `BunkerEventsHistoryTable.tsx` como el **acordeón contenedor de la Tanqueada** con código formal (`TNK-YYYYMMDD-PUERTO-NAVE` / `N° Viaje`), buque y fecha.
+  * Implementado en `BunkerBunkeringWizardModal.tsx` en la Sección 1 como el campo explícito editable `Código Tanqueada` y vinculador multifactura.
+* [x] **Campos para Stock ROB y Precio:**
+  * Implementados en el encabezado de cada tanqueada con badges destacados para **ROB IFO ($TM$) @ Precio Previo ($USD/TM$) $\rightarrow$ Ponderado Resultante** y **ROB MDO ($TM$) @ Precio Previo ($USD/TM$) $\rightarrow$ Ponderado Resultante**, junto con el Factor BAF SPCC.
+  * Implementados en el Wizard en la Sección 2 con inputs dedicados y precargado automático del último evento.
+* [x] **Líneas que son los Datos de la Factura (Grilla Inandes ERP):**
+  * Cada factura asociada a la tanqueada se renderiza como una línea individual en la grilla interior del acordeón (`Factura N°`, `Proveedor / RUC`, `Combustible`, `Cantidad TM`, `Precio Compra $/TM`, `Total Factura $ USD`, `Stock ROB Prev`, `Precio Prev`, `Fecha Emisión`).
+  * Cada línea cuenta con el botón corporativo azul **`[VISOR]`** (`bg-[#0284c7] text-white`) idéntico a Inandes para abrir el modal nativo con el PDF de la factura original servido vía streaming.
+* [x] **Adopción Total de la Paleta Limpia (Adiós Modo Negro):**
+  * Reemplazo total de fondos `bg-slate-900` por `bg-white`, bordes `border-slate-200`, métricas APEFAC de 2 tarjetas y toolbar compacta en fila única con pills de selección de naves.
+* [x] **Gate de Verificación Empírica:**
+  * Compilación TypeScript y empaquetado de producción ejecutado con `npx vite build`:
+    * Resultado: **Exit Code 0** (compilado limpio en **21.23s**, 0 errores).
+
+

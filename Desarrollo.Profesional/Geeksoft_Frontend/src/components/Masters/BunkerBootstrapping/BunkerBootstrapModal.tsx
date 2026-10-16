@@ -59,58 +59,56 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
             onSuccess();
             onClose();
         } catch (err: any) {
-            setErrorMsg(err.message || 'Error al guardar el saldo inicial');
+            console.error('Error registrando bootstrap:', err);
+            setErrorMsg(err.message || 'Error al guardar saldo inicial');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col">
+                
                 {/* Header */}
-                <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
                             <Sparkles size={20} />
                         </div>
                         <div>
-                            <h3 className="text-base font-black uppercase tracking-wider text-white flex items-center gap-2">
-                                Saldo Inicial de Búnker (Bootstrapping)
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                                Saldo Inicial Génesis (Bootstrapping Buque)
                             </h3>
-                            <p className="text-xs text-slate-400 font-mono">
-                                Hito génesis de combustible remanente (ROB) y costo base de partida
+                            <p className="text-xs text-slate-500">
+                                Establece el inventario físico en tanques ($ROB_0$) y precio base contable ($P_0$)
                             </p>
                         </div>
                     </div>
-                    <button
-                        type="button"
+                    <button 
+                        type="button" 
                         onClick={onClose}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-xs">
                     {errorMsg && (
-                        <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-center gap-2">
-                            <AlertCircle size={16} className="shrink-0" />
+                        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2">
+                            <AlertCircle size={16} />
                             <span>{errorMsg}</span>
                         </div>
                     )}
 
-                    {/* Fila 1: Buque, Fecha, Puerto */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                                <Anchor size={12} className="text-blue-400" /> Buque de la Flota
-                            </label>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Buque a Inicializar</label>
                             <select
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 font-bold text-slate-800 dark:text-white"
                                 value={vesselId}
                                 onChange={(e) => setVesselId(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-blue-500 font-mono"
                             >
                                 <option value="MOQUEGUA">BT MOQUEGUA</option>
                                 <option value="TABLONES">BT TABLONES</option>
@@ -121,150 +119,101 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                         </div>
 
                         <div>
-                            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                Fecha de Corte Inicial
-                            </label>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Fecha de Corte Génesis</label>
                             <input
                                 type="date"
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 font-bold text-slate-800 dark:text-white"
                                 value={eventDate}
                                 onChange={(e) => setEventDate(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-blue-500 font-mono"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                                Puerto de Referencia
-                            </label>
-                            <input
-                                type="text"
-                                value={portId}
-                                onChange={(e) => setPortId(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-blue-500 font-mono uppercase"
                                 required
                             />
                         </div>
                     </div>
 
-                    {/* Fila 2: IFO 380 VLSFO */}
-                    <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase text-amber-400 flex items-center gap-1.5">
-                                <Fuel size={14} /> Combustible IFO 380 (VLSFO)
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-400">85% Pond. SPCC</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/80 flex flex-col gap-2">
+                        <span className="text-[11px] font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <Fuel size={14} className="text-amber-600" />
+                            Condición Inicial IFO 380 (VLSFO)
+                        </span>
+                        <div className="grid grid-cols-2 gap-3 font-mono">
                             <div>
-                                <label className="block text-[10px] text-slate-400 uppercase font-mono mb-1">
-                                    Stock Remanente Inicial (ROB en TM)
-                                </label>
+                                <label className="text-[10px] font-bold text-amber-900/70 uppercase block mb-1">ROB Inicial (TM)</label>
                                 <input
                                     type="number"
-                                    step="0.0001"
+                                    step="0.01"
+                                    className="w-full bg-white border border-amber-300 rounded-lg p-2 font-black text-slate-800"
                                     value={robIfoMt}
                                     onChange={(e) => setRobIfoMt(parseFloat(e.target.value) || 0)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white font-mono focus:border-amber-500 focus:outline-none"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] text-slate-400 uppercase font-mono mb-1">
-                                    Precio Base Inicial (USD / TM)
-                                </label>
+                                <label className="text-[10px] font-bold text-amber-900/70 uppercase block mb-1">Precio Base ($ USD/TM)</label>
                                 <input
                                     type="number"
-                                    step="0.0001"
+                                    step="0.01"
+                                    className="w-full bg-white border border-amber-300 rounded-lg p-2 font-black text-slate-800"
                                     value={pricePrevIfoUsd}
                                     onChange={(e) => setPricePrevIfoUsd(parseFloat(e.target.value) || 0)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white font-mono focus:border-amber-500 focus:outline-none"
                                     required
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Fila 3: MDO (MGO Homologado) */}
-                    <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase text-cyan-400 flex items-center gap-1.5">
-                                <Fuel size={14} /> Combustible MDO (Diesel Marino / MGO)
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-400">15% Pond. SPCC</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-3.5 rounded-xl bg-cyan-50/60 border border-cyan-200/80 flex flex-col gap-2">
+                        <span className="text-[11px] font-black text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <Fuel size={14} className="text-cyan-600" />
+                            Condición Inicial MDO (Marine Diesel / MGO Homologado)
+                        </span>
+                        <div className="grid grid-cols-2 gap-3 font-mono">
                             <div>
-                                <label className="block text-[10px] text-slate-400 uppercase font-mono mb-1">
-                                    Stock Remanente Inicial (ROB en TM)
-                                </label>
+                                <label className="text-[10px] font-bold text-cyan-900/70 uppercase block mb-1">ROB Inicial (TM)</label>
                                 <input
                                     type="number"
-                                    step="0.0001"
+                                    step="0.01"
+                                    className="w-full bg-white border border-cyan-300 rounded-lg p-2 font-black text-slate-800"
                                     value={robMdoMt}
                                     onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white font-mono focus:border-cyan-500 focus:outline-none"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] text-slate-400 uppercase font-mono mb-1">
-                                    Precio Base Inicial (USD / TM)
-                                </label>
+                                <label className="text-[10px] font-bold text-cyan-900/70 uppercase block mb-1">Precio Base ($ USD/TM)</label>
                                 <input
                                     type="number"
-                                    step="0.0001"
+                                    step="0.01"
+                                    className="w-full bg-white border border-cyan-300 rounded-lg p-2 font-black text-slate-800"
                                     value={pricePrevMdoUsd}
                                     onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white font-mono focus:border-cyan-500 focus:outline-none"
                                     required
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Cálculo Previo BAF */}
-                    <div className="p-3 bg-purple-950/30 border border-purple-800/40 rounded-xl flex items-center justify-between text-xs font-mono">
-                        <span className="text-purple-300 flex items-center gap-1.5">
-                            <ShieldCheck size={16} /> BAF Resultante Estimado:
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs font-mono">
+                        <span className="text-slate-600 font-bold">BAF Inicial Resultante:</span>
+                        <span className="font-black text-[#0284c7]">
+                            Factor: {totalBaf.toFixed(4)} | Tarifa: ${newBaf.toFixed(4)} USD/pmt
                         </span>
-                        <div className="flex items-center gap-3">
-                            <span className="text-white font-bold">{totalBaf.toFixed(4)} factor</span>
-                            <span className={bafVar <= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                                {bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt
-                            </span>
-                        </div>
                     </div>
 
-                    {/* Notas */}
-                    <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                            Notas de Auditoría
-                        </label>
-                        <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            rows={2}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                    <div className="flex items-center justify-end gap-3 pt-2">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+                            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 font-black flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-50"
+                            className="px-5 py-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                         >
-                            <Save size={16} />
-                            <span>{loading ? 'Guardando Saldo Inicial...' : 'Confirmar Saldo Inicial (Bootstrapping)'}</span>
+                            <Save size={14} />
+                            <span>{loading ? 'Guardando...' : 'Establecer Saldo Génesis'}</span>
                         </button>
                     </div>
                 </form>

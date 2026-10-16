@@ -1,55 +1,50 @@
 import React from 'react';
-import { Ship, Layers } from 'lucide-react';
 
 interface BunkerFleetTabsProps {
     activeVessel: string;
     onSelectVessel: (vesselId: string) => void;
-    vessels?: Array<{ vessel_id: string; vessel_name: string }>;
+    vessels?: Array<{ vessel_id: string; vessel_name: string; short_label?: string }>;
 }
 
 export const BunkerFleetTabs: React.FC<BunkerFleetTabsProps> = ({
     activeVessel,
     onSelectVessel,
     vessels = [
-        { vessel_id: 'MOQUEGUA', vessel_name: 'BT MOQUEGUA' },
-        { vessel_id: 'TABLONES', vessel_name: 'BT TABLONES' },
-        { vessel_id: 'HUEMUL', vessel_name: 'BT HUEMUL' },
-        { vessel_id: 'CONCON_TRADER', vessel_name: 'CONCON TRADER' },
-        { vessel_id: 'BOW_CONDOR', vessel_name: 'BOW CONDOR' },
+        { vessel_id: 'MOQUEGUA', vessel_name: 'BT MOQUEGUA', short_label: 'MOQUEGUA' },
+        { vessel_id: 'TABLONES', vessel_name: 'BT TABLONES', short_label: 'TABLONES' },
+        { vessel_id: 'HUEMUL', vessel_name: 'BT HUEMUL', short_label: 'HUEMUL' },
+        { vessel_id: 'CONCON_TRADER', vessel_name: 'CONCON TRADER', short_label: 'CONCON' },
+        { vessel_id: 'BOW_CONDOR', vessel_name: 'BOW CONDOR', short_label: 'BOW CONDOR' },
     ]
 }) => {
     return (
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 rounded-xl border border-slate-200 shadow-inner overflow-x-auto w-full">
+        <div className="flex items-center gap-1.5 flex-wrap">
             <button
                 type="button"
                 onClick={() => onSelectVessel('TODOS')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                className={`h-8 text-[11px] font-black uppercase px-3 rounded-lg cursor-pointer transition-all ${
                     activeVessel === 'TODOS'
-                        ? 'bg-slate-900 text-white shadow-md'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                        ? 'bg-[#0284c7] text-white shadow-xs ring-1 ring-[#38bdf8]'
+                        : 'bg-white hover:bg-[#f0f9ff] border border-[#e2e8f0] text-[#475569] hover:text-[#0284c7] hover:border-[#bae6fd] dark:bg-[#1e293b] dark:border-[#334155] dark:text-[#cbd5e1]'
                 }`}
             >
-                <Layers size={14} className={activeVessel === 'TODOS' ? 'text-amber-400' : 'text-slate-400'} />
-                <span>FLOTA COMPLETA</span>
+                TODAS LAS NAVES
             </button>
 
-            <div className="h-4 w-[1px] bg-slate-300 mx-1 shrink-0" />
-
             {vessels.map((v) => {
-                const isActive = activeVessel === v.vessel_id;
+                const isSelected = activeVessel === v.vessel_id;
                 return (
                     <button
                         key={v.vessel_id}
                         type="button"
                         onClick={() => onSelectVessel(v.vessel_id)}
-                        className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                            isActive
-                                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                        className={`h-8 text-[11px] font-black uppercase px-3 rounded-lg cursor-pointer transition-all ${
+                            isSelected
+                                ? 'bg-[#0284c7] text-white shadow-xs ring-1 ring-[#38bdf8]'
+                                : 'bg-white hover:bg-[#f0f9ff] border border-[#e2e8f0] text-[#475569] hover:text-[#0284c7] hover:border-[#bae6fd] dark:bg-[#1e293b] dark:border-[#334155] dark:text-[#cbd5e1]'
                         }`}
                     >
-                        <Ship size={14} className={isActive ? 'text-cyan-300' : 'text-slate-400'} />
-                        <span>{v.vessel_name}</span>
+                        {v.short_label || v.vessel_name}
                     </button>
                 );
             })}
