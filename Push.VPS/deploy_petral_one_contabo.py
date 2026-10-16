@@ -87,6 +87,7 @@ def deploy():
     run(client, "docker cp /opt/petral_stack/frontend_dist/. petral-frontend:/usr/share/nginx/html/", "Copiar frontend dist a contenedor petral-frontend")
 
     # 6. Reiniciar contenedores
+    run(client, "mkdir -p /opt/petral_stack/storage/bunker_invoices", "Asegurar directorio persistente bunker_invoices")
     run(client, "docker restart petral-backend", "Reiniciar petral-backend")
     run(client, "docker restart petral-frontend", "Reiniciar petral-frontend")
 
@@ -94,12 +95,12 @@ def deploy():
     time.sleep(4)
     run(client, "curl -s -I https://petral.one.geeksoft.tech/ | head -n 5", "Verificar Frontend HTTP Status")
     run(client, 'curl -s https://petral.one.geeksoft.tech/api/v1/trash/count', "Verificar Endpoint Trash Count")
-    run(client, 'curl -s https://petral.one.geeksoft.tech/api/v1/auth/login-password -H "Content-Type: application/json" -d "{}"', "Verificar endpoint auth login-password")
+    run(client, 'curl -s https://petral.one.geeksoft.tech/api/v1/bunker-bootstrapping/events/MOQUEGUA', "Verificar Endpoint Bunker Bootstrapping Events")
 
     client.close()
     print(f"\n{'='*65}")
     print(f"  ¡DESPLIEGUE A PRODUCCIÓN COMPLETADO CON ÉXITO!")
-    print(f"  🌐 URL OFICIAL: https://petral.one.geeksoft.tech/commercial-trash")
+    print(f"  🌐 URL OFICIAL: https://petral.one.geeksoft.tech/bunker-bootstrapping")
     print(f"{'='*65}\n")
 
 if __name__ == "__main__":
