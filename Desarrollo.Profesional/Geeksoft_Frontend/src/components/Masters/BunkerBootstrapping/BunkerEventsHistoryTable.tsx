@@ -207,92 +207,110 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                         key={ev.id}
                         className="border rounded-2xl shadow-2xs overflow-hidden transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                     >
-                        {/* 1. ENCABEZADO DEL ACORDEÓN: UNA SOLA LÍNEA COMPACTA Y MINIMALISTA */}
+                        {/* 1. ENCABEZADO DEL ACORDEÓN: RIBBON DE 2 LÍNEAS ELEGANTES Y MINIMALISTAS */}
                         <div 
-                            className="px-4 py-2.5 border-b flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 cursor-pointer transition-colors bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:bg-slate-100/70 text-xs font-mono"
+                            className="px-4 py-2.5 border-b flex flex-col gap-1.5 cursor-pointer transition-colors bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:bg-slate-100/70 text-xs font-mono"
                             onClick={() => toggleAccordion(ev.id)}
                         >
-                            <div className="flex items-center gap-2.5 flex-wrap min-w-0">
-                                {onToggleSelectEvent && (
+                            {/* LÍNEA 1: IDENTIFICADOR + FÓRMULAS DE COMBUSTIBLE + IMPORTE Y ACCIONES */}
+                            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                                <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+                                    {onToggleSelectEvent && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onToggleSelectEvent(ev.id);
+                                            }}
+                                            className="text-slate-400 hover:text-[#0284c7] transition-colors shrink-0"
+                                        >
+                                            {isSelected ? (
+                                                <CheckSquare size={15} className="text-[#0284c7]" />
+                                            ) : (
+                                                <Square size={15} />
+                                            )}
+                                        </button>
+                                    )}
+
+                                    <span className="font-bold px-2 py-0.5 rounded border text-[#0284c7] dark:text-[#38bdf8] bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-900 shrink-0 text-[11px]">
+                                        {tanqueadaCode}
+                                    </span>
+                                    <span className="text-slate-600 dark:text-slate-400 font-sans text-xs shrink-0">
+                                        {ev.event_date} ({ev.port_id})
+                                    </span>
+
+                                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                                    <span className="text-slate-800 dark:text-slate-100">
+                                        <strong className="text-amber-800 dark:text-amber-400 font-sans">IFO:</strong> [{ifoFormulaStr}] / {totalIfoMt.toFixed(2)} TM = <strong className="text-amber-900 dark:text-amber-200 font-bold">${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM</strong>
+                                    </span>
+
+                                    {supportsMdo && (
+                                        <>
+                                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                                            <span className="text-slate-800 dark:text-slate-100">
+                                                <strong className="text-cyan-800 dark:text-cyan-400 font-sans">MDO:</strong> [{mdoFormulaStr}] / {totalMdoMt.toFixed(2)} TM = <strong className="text-cyan-900 dark:text-cyan-200 font-bold">${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM</strong>
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* DERECHA: IMPORTE TANQUEADA EN UNA SOLA LÍNEA + ACCIONES */}
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-slate-600 dark:text-slate-300 font-sans text-xs">
+                                        Importe: <strong className="font-mono font-black text-slate-900 dark:text-white">${totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</strong>
+                                    </span>
+
+                                    {onEditEvent && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEditEvent(ev);
+                                            }}
+                                            className="p-1 rounded text-slate-400 hover:text-[#0284c7] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+                                            title="Editar tanqueada (ROB y datos del viaje)"
+                                        >
+                                            <Edit2 size={13} />
+                                        </button>
+                                    )}
+
                                     <button
                                         type="button"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onToggleSelectEvent(ev.id);
+                                            if (window.confirm('¿Seguro que deseas eliminar esta operación de tanqueo y sus facturas asociadas?')) {
+                                                onDeleteEvent(ev.id);
+                                            }
                                         }}
-                                        className="text-slate-400 hover:text-[#0284c7] transition-colors shrink-0"
+                                        className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                        title="Eliminar registro"
                                     >
-                                        {isSelected ? (
-                                            <CheckSquare size={15} className="text-[#0284c7]" />
-                                        ) : (
-                                            <Square size={15} />
-                                        )}
+                                        <Trash2 size={14} />
                                     </button>
-                                )}
 
-                                <span className="font-bold px-2 py-0.5 rounded border text-[#0284c7] dark:text-[#38bdf8] bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-900 shrink-0 text-[11px]">
-                                    {tanqueadaCode}
-                                </span>
-                                <span className="text-slate-600 dark:text-slate-400 font-sans text-xs shrink-0">
-                                    {ev.event_date} ({ev.port_id})
-                                </span>
-
-                                <span className="text-slate-300 dark:text-slate-700">•</span>
-                                <span className="text-slate-800 dark:text-slate-100">
-                                    <strong className="text-amber-800 dark:text-amber-400 font-sans">IFO:</strong> [{ifoFormulaStr}] / {totalIfoMt.toFixed(2)} TM = <strong className="text-amber-900 dark:text-amber-200 font-bold">${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM</strong>
-                                </span>
-
-                                {supportsMdo && (
-                                    <>
-                                        <span className="text-slate-300 dark:text-slate-700">•</span>
-                                        <span className="text-slate-800 dark:text-slate-100">
-                                            <strong className="text-cyan-800 dark:text-cyan-400 font-sans">MDO:</strong> [{mdoFormulaStr}] / {totalMdoMt.toFixed(2)} TM = <strong className="text-cyan-900 dark:text-cyan-200 font-bold">${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM</strong>
-                                        </span>
-                                    </>
-                                )}
-
-                                <span className="text-slate-300 dark:text-slate-700">•</span>
-                                <span className="text-purple-900 dark:text-purple-300">
-                                    <strong className="font-sans">BAF SPCC:</strong> {bafPolyStr} = <strong className={bafVar <= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt</strong>
-                                </span>
+                                    <div className="text-slate-400">
+                                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* DERECHA: IMPORTE TANQUEADA EN UNA SOLA LÍNEA + ACCIONES */}
-                            <div className="flex items-center gap-3 shrink-0">
-                                <span className="text-slate-600 dark:text-slate-300 font-sans text-xs">
-                                    Importe: <strong className="font-mono font-black text-slate-900 dark:text-white">${totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</strong>
-                                </span>
+                            {/* LÍNEA 2 DEL RIBBON: POLINOMIO CONTRACTUAL BAF SPCC */}
+                            <div className="pt-2 mt-0.5 border-t border-slate-200/70 dark:border-slate-800/70 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1 font-sans text-[10px] bg-purple-100/80 dark:bg-purple-950/60 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800 shrink-0 uppercase tracking-wider">
+                                        ⚡ Polinomio BAF SPCC:
+                                    </span>
+                                    <span className="text-slate-700 dark:text-slate-300 font-mono text-[11px]">
+                                        {bafPolyStr}
+                                    </span>
+                                    <span className="text-slate-400 font-mono">=</span>
+                                    <span className="font-mono text-slate-900 dark:text-white font-bold">
+                                        Factor {bafFactor.toFixed(4)} ➔ <strong className={bafVar <= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt</strong>
+                                    </span>
+                                </div>
 
-                                {onEditEvent && (
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onEditEvent(ev);
-                                        }}
-                                        className="p-1 rounded text-slate-400 hover:text-[#0284c7] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
-                                        title="Editar tanqueada (ROB y datos del viaje)"
-                                    >
-                                        <Edit2 size={13} />
-                                    </button>
-                                )}
-
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (window.confirm('¿Seguro que deseas eliminar esta operación de tanqueo y sus facturas asociadas?')) {
-                                            onDeleteEvent(ev.id);
-                                        }
-                                    }}
-                                    className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                                    title="Eliminar registro"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-
-                                <div className="text-slate-400">
-                                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                <div className="text-[10px] text-slate-400 font-mono shrink-0">
+                                    Canasta: 38.40 TM IFO {supportsMdo ? '+ 9.50 TM MDO' : ''} • Base Contrato: ${bafBase.toFixed(2)} USD/pmt
                                 </div>
                             </div>
                         </div>

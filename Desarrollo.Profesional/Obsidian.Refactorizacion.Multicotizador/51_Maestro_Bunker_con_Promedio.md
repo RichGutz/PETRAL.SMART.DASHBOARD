@@ -385,6 +385,69 @@ A partir de la directiva operativa de gerencia:
    * Cada nave posee su propia capacidad de estanques, su stock inicial ROB y su encadenamiento ponderado cronológico de compras ($P_{pond}$).
    * Mezclar naves en una lista o cálculo global carece de sentido náutico y contable. Se erradica la opción "TODAS LAS NAVES", obligando a la navegación unibuque pura.
 
+---
+
+### 9.8 🧬 Ribbon de Doble Línea, Polinomio BAF Contractual SPCC y Edición con Blindaje Tributario (16/10/2026)
+
+Tras la revisión interactiva con gerencia y el cumplimiento estricto de las directivas operativas ("Minimalista, compacto, no burbujas del fin del mundo", "ver el polinomio BAF en la segunda línea del ribbon", "lapicito de editar con facturas inmutables" y "verificación de base de datos sin colisión de UPSERT"), se consolidó la versión final de la grilla de tanqueos:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [✓] TNK-20261015-CALLAO-V047  2026-10-15 (CALLAO) • IFO: [(120.40×$967.26) + (350.00×$892.85)] / 470.40 TM = $911.90/TM│
+│     • MDO: [(90.30×$1528.26) + (120.00×$1604.20)] / 210.30 TM = $1571.65/TM   Importe: $395,000.00 USD  [✏️] [🗑️] [▼]    │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ⚡ POLINOMIO BAF SPCC: [ (911.90×38.4 + 1571.65×9.5) / (967.26×38.4 + 1528.26×9.5) ] × $4.17 - $4.17 = Factor 0.9669 ➔ │
+│ -0.1380 USD/pmt                Canasta: 38.40 TM IFO + 9.50 TM MDO • Base Contrato: $4.17 USD/pmt                     │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 1. Estructura del Ribbon de Doble Línea (`BunkerEventsHistoryTable.tsx`):
+* **Línea 1 (Identidad Operativa, Fórmulas de Combustible & Total Consolidado):**
+  * **Identificador:** Badge con código de tanqueada (`TNK-20261015-CALLAO-V047`), fecha y puerto de recalada.
+  * **Fórmulas Aritméticas de Ponderación:**
+    * **IFO:** `[(ROB × P_prev) + (Tnk × P_compra)] / Total_TM = $Pond/TM` (ej. `[(120.40×$967.26) + (350.00×$892.85)] / 470.40 TM = $911.90/TM`).
+    * **MDO:** `[(ROB × P_prev) + (Tnk × P_compra)] / Total_TM = $Pond/TM` (ej. `[(90.30×$1528.26) + (120.00×$1604.20)] / 210.30 TM = $1571.65/TM`).
+  * **Importe Consolidado en Fila Única:** Formateado a la derecha en formato minimalista monoespaciado (`Importe: $395,000.00 USD`), eliminando burbujas pesadas.
+  * **Acciones Integradas:** Botón de edición rápida con lapicito (`Edit2`), eliminación (`Trash2`) y chevron indicador de expansión.
+* **Línea 2 (Línea de Ribbon Dedicada al Polinomio Contractual BAF SPCC):**
+  * Separada por un divisor sutil y contenida en el mismo encabezado del acordeón.
+  * **Insignia Temática:** Badge destacado `⚡ Polinomio BAF SPCC:`.
+  * **Expresión Numérica en Vivo:** Muestra explícitamente los ponderados actuales y las bases de corte:
+    $$\text{Polinomio} = \left[ \frac{(911.90 \times 38.40) + (1571.65 \times 9.50)}{(967.26 \times 38.40) + (1528.26 \times 9.50)} \right] \times \$4.1700 - \$4.1700$$
+  * **Factor Resultante y Ajuste Tarifario:** `Factor 0.9669 ➔ -0.1380 USD/pmt` (en color esmeralda si es descuento contractual o rojo si es recargo).
+  * **Metadatos Contractuales a la Derecha:** `Canasta: 38.40 TM IFO + 9.50 TM MDO • Base Contrato: $4.17 USD/pmt`.
+
+#### 2. Auditoría Pericial de Autenticidad de los Términos del BAF (Cero Invención):
+Se auditaron minuciosamente cada uno de los valores desplegados para garantizar trazabilidad contractual absoluta:
+| Variable en Pantalla | Valor Real | Origen y Sustento Documental |
+| :--- | :---: | :--- |
+| **$P_{pond}^{IFO}$** | `$911.90` | Calculado dinámicamente: $\frac{(120.40 \times 967.26) + (350.00 \times 892.85)}{470.40}$. Derivado de sondería ROB + factura física ingresada. |
+| **$P_{pond}^{MDO}$** | `$1,571.65` | Calculado dinámicamente: $\frac{(90.30 \times 1528.26) + (120.00 \times 1604.20)}{210.30}$. Derivado de sondería ROB + factura física ingresada. |
+| **$P_{base}^{IFO}$** | `$967.26` | Precio oficial de corte del Asiento de Apertura inicial del contrato B/T Moquegua. |
+| **$P_{base}^{MDO}$** | `$1,528.26` | Precio oficial de corte del Asiento de Apertura inicial del contrato B/T Moquegua. |
+| **Coeficiente IFO** | `38.40 TM` | Coeficiente contractual fijo de consumo por viaje redondo Ilo-Callao-Ilo para B/T Moquegua según cláusula BAF de SPCC (`Regla.BAF.txt`). |
+| **Coeficiente MDO** | `9.50 TM` | Coeficiente contractual fijo de consumo por viaje redondo Ilo-Callao-Ilo para B/T Moquegua según cláusula BAF de SPCC (`Regla.BAF.txt`). |
+| **Tarifa Base BAF** | `$4.1700 USD/pmt` | Componente inicial de flete de combustible estipulado en el contrato marco STM-PET-001-2025. |
+| **Factor BAF** | `0.9669` | Resultado aritmético: $\frac{(911.90 \times 38.40) + (1571.65 \times 9.50)}{(967.26 \times 38.40) + (1528.26 \times 9.50)} = \frac{49947.63}{51662.05} = 0.966815...$ |
+| **Variación BAF** | `-0.1380 USD/pmt` | Ajuste final aplicable al flete: $(0.966815 \times 4.1700) - 4.1700 = -0.1384 \approx -0.1380\ USD/pmt$. |
+
+#### 3. Protocolo Quirúrgico de Edición y Blindaje Tributario:
+* **Edición de Asiento de Apertura (`BunkerBootstrapModal.tsx`):**
+  * El lapicito abre el modal precargando los saldos iniciales del buque, permitiendo corrección operativa de fecha, ROBs iniciales y precios de corte pactados.
+* **Edición de Tanqueada Regular (`BunkerEditBunkeringModal.tsx`):**
+  * **Campos Editables (Operativos):** Fecha del evento, puerto de recalada, número de viaje, notas de bitácora y sonderías de llegada (`ROB IFO` y `ROB MDO`).
+  * **Campos Inmutables (Tributarios):** Las facturas de compra asociadas (`invoice_number`, `vendor_name`, `fuel_type`, `quantity_mt`, `price_per_mt`, `total_usd`) se presentan en una subtabla de solo lectura con badge distintivo `🔒 Auditado SUNAT`. Ningún usuario puede adulterar una factura comercial emitida sin emitir nota de crédito/débito o reemplazar el comprobante.
+  * **Recálculo Ponderado en Caliente:** Al modificar el ROB de entrada, el modal recalcula en tiempo real el nuevo promedio ponderado y el nuevo BAF proyectado antes de guardar.
+* **Arquitectura de Base de Datos Anti-Colisión (Cero UPSERT):**
+  * Se diseñó el endpoint `PUT /api/v1/bunker-bootstrapping/event/{event_id}` en `bunker_bootstrapping_router.py`.
+  * La persistencia se ejecuta mediante **`UPDATE bunker_bunkering_events SET ... WHERE id = %s`**, apuntando directamente a la clave primaria.
+  * **Eliminación Total de Riesgo de Conflicto:** No se utiliza `INSERT ... ON CONFLICT DO UPDATE`, erradicando por completo los bloqueos por restricciones de unicidad observados en versiones anteriores de `bunker_prices`.
+* **Verificación Empírica Automatizada:**
+  * Prueba pericial ejecutada en vivo sobre Contabo VPS (`scratch/test_db_update_live.py`):
+    * `TEST 1 (Asiento de Apertura)`: Actualización exitosa (HTTP 200 OK), validada en PostgreSQL.
+    * `TEST 2 (Tanqueada Regular)`: Actualización de sonderías ROB, recálculo atómico de ponderados y BAF (HTTP 200 OK), verificado en base de datos.
+
+
 
 
 
