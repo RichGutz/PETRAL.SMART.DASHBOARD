@@ -72,6 +72,7 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                     || (Number(ev.purchased_ifo_total_usd || 0) + Number(ev.purchased_mdo_total_usd || 0));
 
                 const bafFactor = ev.spcc_baf_factor !== undefined ? Number(ev.spcc_baf_factor) : 0.9669;
+                const bafBase = ev.spcc_initial_fuel_value !== undefined ? Number(ev.spcc_initial_fuel_value) : 4.1700;
                 const bafVar = ev.spcc_baf_variation !== undefined ? Number(ev.spcc_baf_variation) : -0.1380;
 
                 // Identificador / Código de Tanqueada o Asiento de Apertura
@@ -138,17 +139,56 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                     );
                 }
 
+                // Desglose de fórmulas matemáticas para IFO y MDO (ROB + Tanqueadas / Volumen Total)
+                const ifoInvoices = invoicesList.filter(inv => inv.fuel_type === 'IFO');
+                const ifoTerms: string[] = [];
+                if (Number(ev.rob_ifo_mt) > 0 || Number(ev.price_prev_ifo_usd) > 0) {
+                    ifoTerms.push(`ROB ${Number(ev.rob_ifo_mt).toFixed(2)} × $${Number(ev.price_prev_ifo_usd).toFixed(2)}`);
+                }
+                if (ifoInvoices.length > 0) {
+                    ifoInvoices.forEach((inv, i) => {
+                        const label = ifoInvoices.length > 1 ? `Tnk.${i + 1} ` : 'Tnk. ';
+                        ifoTerms.push(`${label}${Number(inv.quantity_mt).toFixed(2)} × $${Number(inv.unit_price_usd).toFixed(2)}`);
+                    });
+                } else if (Number(ev.purchased_ifo_mt) > 0) {
+                    const unitP = Number(ev.purchased_ifo_total_usd) / (Number(ev.purchased_ifo_mt) || 1);
+                    ifoTerms.push(`Tnk. ${Number(ev.purchased_ifo_mt).toFixed(2)} × $${unitP.toFixed(2)}`);
+                }
+                const ifoFormulaStr = ifoTerms.length > 0 ? ifoTerms.join(' + ') : '0.00';
+                const totalIfoMt = Number(ev.rob_ifo_mt) + (ifoInvoices.length > 0 
+                    ? ifoInvoices.reduce((acc, inv) => acc + Number(inv.quantity_mt), 0) 
+                    : Number(ev.purchased_ifo_mt));
+
+                const mdoInvoices = invoicesList.filter(inv => inv.fuel_type === 'MDO');
+                const mdoTerms: string[] = [];
+                if (Number(ev.rob_mdo_mt) > 0 || Number(ev.price_prev_mdo_usd) > 0) {
+                    mdoTerms.push(`ROB ${Number(ev.rob_mdo_mt).toFixed(2)} × $${Number(ev.price_prev_mdo_usd).toFixed(2)}`);
+                }
+                if (mdoInvoices.length > 0) {
+                    mdoInvoices.forEach((inv, i) => {
+                        const label = mdoInvoices.length > 1 ? `Tnk.${i + 1} ` : 'Tnk. ';
+                        mdoTerms.push(`${label}${Number(inv.quantity_mt).toFixed(2)} × $${Number(inv.unit_price_usd).toFixed(2)}`);
+                    });
+                } else if (Number(ev.purchased_mdo_mt) > 0) {
+                    const unitP = Number(ev.purchased_mdo_total_usd) / (Number(ev.purchased_mdo_mt) || 1);
+                    mdoTerms.push(`Tnk. ${Number(ev.purchased_mdo_mt).toFixed(2)} × $${unitP.toFixed(2)}`);
+                }
+                const mdoFormulaStr = mdoTerms.length > 0 ? mdoTerms.join(' + ') : '0.00';
+                const totalMdoMt = Number(ev.rob_mdo_mt) + (mdoInvoices.length > 0 
+                    ? mdoInvoices.reduce((acc, inv) => acc + Number(inv.quantity_mt), 0) 
+                    : Number(ev.purchased_mdo_mt));
+
                 return (
                     <div 
                         key={ev.id}
                         className="border rounded-2xl shadow-2xs overflow-hidden transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                     >
-                        {/* 1. ENCABEZADO DEL ACORDEÓN */}
+                        {/* 1. ENCABEZADO DEL ACORDEÓN: UNA SOLA LÍNEA COMPACTA Y MINIMALISTA */}
                         <div 
-                            className="p-4 border-b flex flex-wrap items-center justify-between gap-3 cursor-pointer transition-colors bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:bg-slate-100/70"
+                            className="px-4 py-2.5 border-b flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 cursor-pointer transition-colors bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:bg-slate-100/70 text-xs font-mono"
                             onClick={() => toggleAccordion(ev.id)}
                         >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2.5 flex-wrap min-w-0">
                                 {onToggleSelectEvent && (
                                     <button
                                         type="button"
@@ -156,72 +196,48 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                             e.stopPropagation();
                                             onToggleSelectEvent(ev.id);
                                         }}
-                                        className="text-slate-400 hover:text-[#0284c7] transition-colors"
+                                        className="text-slate-400 hover:text-[#0284c7] transition-colors shrink-0"
                                     >
                                         {isSelected ? (
-                                            <CheckSquare size={16} className="text-[#0284c7]" />
+                                            <CheckSquare size={15} className="text-[#0284c7]" />
                                         ) : (
-                                            <Square size={16} />
+                                            <Square size={15} />
                                         )}
                                     </button>
                                 )}
 
-                                <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold bg-blue-100 dark:bg-blue-900/40 text-[#0284c7] dark:text-[#38bdf8]">
-                                    <Anchor size={16} />
-                                </div>
+                                <span className="font-bold px-2 py-0.5 rounded border text-[#0284c7] dark:text-[#38bdf8] bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-900 shrink-0 text-[11px]">
+                                    {tanqueadaCode}
+                                </span>
+                                <span className="text-slate-600 dark:text-slate-400 font-sans text-xs shrink-0">
+                                    {ev.event_date} ({ev.port_id})
+                                </span>
 
-                                <div>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-mono font-black text-xs px-2 py-0.5 rounded border text-[#0284c7] dark:text-[#38bdf8] bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-900">
-                                            {tanqueadaCode}
+                                <span className="text-slate-300 dark:text-slate-700">•</span>
+                                <span className="text-slate-800 dark:text-slate-100">
+                                    <strong className="text-amber-800 dark:text-amber-400 font-sans">IFO:</strong> [{ifoFormulaStr}] / {totalIfoMt.toFixed(2)} TM = <strong className="text-amber-900 dark:text-amber-200 font-bold">${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM</strong>
+                                </span>
+
+                                {supportsMdo && (
+                                    <>
+                                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                                        <span className="text-slate-800 dark:text-slate-100">
+                                            <strong className="text-cyan-800 dark:text-cyan-400 font-sans">MDO:</strong> [{mdoFormulaStr}] / {totalMdoMt.toFixed(2)} TM = <strong className="text-cyan-900 dark:text-cyan-200 font-bold">${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM</strong>
                                         </span>
-                                        <span className="text-[11px] text-slate-500 font-bold">
-                                            • {ev.event_date} ({ev.port_id})
-                                        </span>
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                            {invoicesCount} {invoicesCount === 1 ? 'FACTURA' : 'FACTURAS'}
-                                        </span>
-                                        {!supportsMdo && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-300">
-                                                SOLO IFO
-                                            </span>
-                                        )}
-                                    </div>
-                                    
-                                    {/* RESULTADO COMERCIAL: PRECIOS PROMEDIO PONDERADOS RESULTANTES Y BAF EN UNA SOLA LÍNEA */}
-                                    <div className="flex items-center gap-3 mt-1.5 flex-wrap text-xs font-mono">
-                                        <span className="text-slate-700 dark:text-slate-300">
-                                            <strong className="text-amber-800 dark:text-amber-300 font-sans">Pond. IFO:</strong> ${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM
-                                        </span>
-                                        {supportsMdo && (
-                                            <>
-                                                <span className="text-slate-300 dark:text-slate-700 font-sans">•</span>
-                                                <span className="text-slate-700 dark:text-slate-300">
-                                                    <strong className="text-cyan-800 dark:text-cyan-300 font-sans">Pond. MDO:</strong> ${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM
-                                                </span>
-                                            </>
-                                        )}
-                                        <span className="text-slate-300 dark:text-slate-700 font-sans">•</span>
-                                        <span className="text-purple-900 dark:text-purple-200 font-bold">
-                                            <span className="font-sans">BAF SPCC:</span> {bafFactor.toFixed(4)} 
-                                            <span className={`ml-1 font-sans text-[11px] ${bafVar <= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                ({bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt)
-                                            </span>
-                                        </span>
-                                    </div>
-                                </div>
+                                    </>
+                                )}
+
+                                <span className="text-slate-300 dark:text-slate-700">•</span>
+                                <span className="text-purple-900 dark:text-purple-300">
+                                    <strong className="font-sans">BAF SPCC:</strong> ({bafFactor.toFixed(4)} × ${bafBase.toFixed(2)}) - ${bafBase.toFixed(2)} = <strong className={bafVar <= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt</strong>
+                                </span>
                             </div>
 
-                            {/* TOTAL CONSOLIDADO A LA DERECHA & TOGGLE */}
-                            <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                                        Importe Tanqueada
-                                    </span>
-                                    <span className="text-sm font-mono font-black text-[#0284c7] dark:text-[#38bdf8]">
-                                        USD {totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
+                            {/* DERECHA: IMPORTE TANQUEADA EN UNA SOLA LÍNEA + ACCIONES */}
+                            <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-slate-600 dark:text-slate-300 font-sans text-xs">
+                                    Importe: <strong className="font-mono font-black text-slate-900 dark:text-white">${totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</strong>
+                                </span>
 
                                 <button
                                     type="button"
@@ -231,14 +247,14 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                             onDeleteEvent(ev.id);
                                         }
                                     }}
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                    className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                                     title="Eliminar registro"
                                 >
                                     <Trash2 size={14} />
                                 </button>
 
                                 <div className="text-slate-400">
-                                    {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                 </div>
                             </div>
                         </div>
