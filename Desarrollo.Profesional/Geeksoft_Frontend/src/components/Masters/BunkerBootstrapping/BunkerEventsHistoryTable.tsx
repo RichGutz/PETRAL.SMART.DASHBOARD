@@ -193,6 +193,15 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                     ? mdoInvoices.reduce((acc, inv) => acc + Number(inv.quantity_mt), 0) 
                     : Number(ev.purchased_mdo_mt));
 
+                const ifoAvg = Number(ev.weighted_avg_ifo_usd) || 0;
+                const mdoAvg = Number(ev.weighted_avg_mdo_usd) || 0;
+                const ifoBase = Number(ev.price_prev_ifo_usd) || 967.26;
+                const mdoBase = Number(ev.price_prev_mdo_usd) || 1528.26;
+
+                const bafPolyStr = supportsMdo
+                    ? `[ (${ifoAvg.toFixed(2)}×38.4 + ${mdoAvg.toFixed(2)}×9.5) / (${ifoBase.toFixed(2)}×38.4 + ${mdoBase.toFixed(2)}×9.5) ] × $${bafBase.toFixed(2)} - $${bafBase.toFixed(2)}`
+                    : `[ (${ifoAvg.toFixed(2)}×38.4) / (${ifoBase.toFixed(2)}×38.4) ] × $${bafBase.toFixed(2)} - $${bafBase.toFixed(2)}`;
+
                 return (
                     <div 
                         key={ev.id}
@@ -244,7 +253,7 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
 
                                 <span className="text-slate-300 dark:text-slate-700">•</span>
                                 <span className="text-purple-900 dark:text-purple-300">
-                                    <strong className="font-sans">BAF SPCC:</strong> ({bafFactor.toFixed(4)} × ${bafBase.toFixed(2)}) - ${bafBase.toFixed(2)} = <strong className={bafVar <= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt</strong>
+                                    <strong className="font-sans">BAF SPCC:</strong> {bafPolyStr} = <strong className={bafVar <= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt</strong>
                                 </span>
                             </div>
 
