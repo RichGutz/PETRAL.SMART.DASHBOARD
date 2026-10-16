@@ -7,23 +7,19 @@ import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { BunkerFleetTabs } from '../../components/Masters/BunkerBootstrapping/BunkerFleetTabs';
-import { BunkerKpis } from '../../components/Masters/BunkerBootstrapping/BunkerKpis';
 import { BunkerEventsHistoryTable } from '../../components/Masters/BunkerBootstrapping/BunkerEventsHistoryTable';
-import { BunkerInvoicesTable } from '../../components/Masters/BunkerBootstrapping/BunkerInvoicesTable';
 import { BunkerBootstrapModal } from '../../components/Masters/BunkerBootstrapping/BunkerBootstrapModal';
 import { BunkerBunkeringWizardModal } from '../../components/Masters/BunkerBootstrapping/BunkerBunkeringWizardModal';
 import { BunkerPdfViewerModal } from '../../components/Masters/BunkerBootstrapping/BunkerPdfViewerModal';
 import { BunkerBootstrappingService } from '../../services/bunkerBootstrappingService';
-import type { BunkeringEventRecord, InvoiceRecord } from '../../services/bunkerBootstrappingService';
+import type { BunkeringEventRecord } from '../../services/bunkerBootstrappingService';
 
 export const BunkerMasterBootstrapping: React.FC = () => {
     const navigate = useNavigate();
     const [activeVessel, setActiveVessel] = useState<string>('MOQUEGUA');
-    const [activeTab, setActiveTab] = useState<'events' | 'invoices'>('events');
 
     // Datos maestros
     const [events, setEvents] = useState<BunkeringEventRecord[]>([]);
-    const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -55,12 +51,8 @@ export const BunkerMasterBootstrapping: React.FC = () => {
         setLoading(true);
         setErrorMsg(null);
         try {
-            const [evs, invs] = await Promise.all([
-                BunkerBootstrappingService.getVesselEvents(activeVessel),
-                BunkerBootstrappingService.getVesselInvoices(activeVessel),
-            ]);
+            const evs = await BunkerBootstrappingService.getVesselEvents(activeVessel);
             setEvents(evs);
-            setInvoices(invs);
         } catch (err: any) {
             console.error('Error cargando datos de bunker:', err);
             setErrorMsg(err.message || 'Error cargando datos');
@@ -122,22 +114,6 @@ export const BunkerMasterBootstrapping: React.FC = () => {
         });
     }, [events, searchQuery, selectedPeriodo]);
 
-    const filteredInvoices = useMemo(() => {
-        return invoices.filter(inv => {
-            if (selectedPeriodo !== 'TODOS') {
-                if (!inv.issue_date.startsWith(selectedPeriodo)) return false;
-            }
-            if (searchQuery.trim()) {
-                const q = searchQuery.toLowerCase().trim();
-                const matchInv = inv.invoice_number.toLowerCase().includes(q);
-                const matchSup = inv.supplier.toLowerCase().includes(q);
-                const matchRuc = (inv.supplier_ruc || '').includes(q);
-                const matchVessel = inv.vessel_id.toLowerCase().includes(q);
-                if (!matchInv && !matchSup && !matchRuc && !matchVessel) return false;
-            }
-            return true;
-        });
-    }, [invoices, searchQuery, selectedPeriodo]);
 
     // Periodos disponibles
     const availablePeriodos = useMemo(() => {
@@ -231,189 +207,149 @@ export const BunkerMasterBootstrapping: React.FC = () => {
         <MasterTemplate activeTab="bunker-bootstrapping">
             <div className="flex flex-col gap-6 w-full animate-fadeIn pb-16">
                 
-                {/* 1. Header Metrics Estilo APEFAC / Inandes ERP */}
-                <BunkerKpis
-                    events={events}
-                    latestEvent={latestEvent}
-                    activeVessel={activeVessel}
-                />
 
-                {/* 2. Selector de Pestañas Superiores */}
-                <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-0.5">
-                        <div className="flex gap-4">
-                            {[
-                                { id: 'events', label: '✅ Historial de Tanqueos por Nave' },
-                                { id: 'invoices', label: '📑 Repositorio Digital de Facturas' },
-                            ].map(tab => (
+
+                {/* 2. Toolbar Unificada (Fila Única: Omnibox + Pills de Buques + Selector de Periodo + Refrescar) */}
+                <div className="glass-card p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col gap-4 shadow-2xs">
+                    
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        
+                        {/* Omnibox de Búsqueda Inteligente */}
+                        <div className="relative flex-1 min-w-[280px] max-w-md">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <Search size={14} />
+                            </span>
+                            <input
+                                type="text"
+                                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-8 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] shadow-2xs transition-all"
+                                placeholder="Buscar por Nave, Proveedor, Factura, Puerto o N° Viaje..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            {searchQuery && (
                                 <button
-                                    key={tab.id}
                                     type="button"
-                                    className={`py-2 px-1 text-xs font-black uppercase tracking-wider border-b-[3px] cursor-pointer transition-colors ${
-                                        activeTab === tab.id 
-                                            ? 'border-[#0284c7] text-[#0284c7] dark:text-[#38bdf8]' 
-                                            : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                                    }`}
-                                    onClick={() => setActiveTab(tab.id as any)}
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                                 >
-                                    {tab.label}
+                                    <X size={14} />
                                 </button>
-                            ))}
+                            )}
                         </div>
 
-                        <div className="flex items-center gap-2 pb-1">
+                        {/* Pills de Buques */}
+                        <BunkerFleetTabs
+                            activeVessel={activeVessel}
+                            onSelectVessel={setActiveVessel}
+                        />
+
+                        {/* Selector de Período y Botón Refrescar */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:inline">
+                                Período:
+                            </span>
+                            <select
+                                value={selectedPeriodo}
+                                onChange={(e) => setSelectedPeriodo(e.target.value)}
+                                className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-[#0284c7] cursor-pointer shadow-2xs"
+                            >
+                                <option value="TODOS">Todos los Periodos</option>
+                                {availablePeriodos.map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                ))}
+                            </select>
+
                             <button
                                 type="button"
                                 onClick={loadData}
                                 disabled={loading}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-[#0284c7] hover:bg-blue-50 transition-colors"
+                                className="p-2 rounded-xl text-slate-500 hover:text-[#0284c7] hover:bg-blue-50 border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
                                 title="Refrescar datos"
                             >
-                                <RefreshCw size={15} className={loading ? "animate-spin text-[#0284c7]" : ""} />
+                                <RefreshCw size={14} className={loading ? "animate-spin text-[#0284c7]" : ""} />
                             </button>
                         </div>
                     </div>
 
-                    {/* 3. Toolbar Unificada (Fila Única: Omnibox + Pills de Buques + Selector de Periodo) */}
-                    <div className="glass-card p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col gap-4 shadow-2xs">
+                    {/* Barra de Acciones de la Nave Activa */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
                         
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            
-                            {/* Omnibox de Búsqueda Inteligente */}
-                            <div className="relative flex-1 min-w-[280px] max-w-md">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                                    <Search size={14} />
-                                </span>
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={toggleSelectAll}
+                                className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#0284c7] flex items-center gap-1.5 cursor-pointer"
+                            >
                                 <input
-                                    type="text"
-                                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-8 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] shadow-2xs transition-all"
-                                    placeholder="Buscar por Nave, Proveedor, Factura, Puerto o N° Viaje..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    type="checkbox"
+                                    checked={filteredEvents.length > 0 && selectedEventIds.size === filteredEvents.length}
+                                    onChange={toggleSelectAll}
+                                    className="rounded text-[#0284c7] cursor-pointer"
                                 />
-                                {searchQuery && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                )}
-                            </div>
+                                <span>Seleccionar Todos ({filteredEvents.length})</span>
+                            </button>
 
-                            {/* Pills de Buques (Integrados en la misma barra superior) */}
-                            <BunkerFleetTabs
-                                activeVessel={activeVessel}
-                                onSelectVessel={setActiveVessel}
-                            />
-
-                            {/* Selector de Período */}
-                            <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden md:inline">
-                                    Período:
-                                </span>
-                                <select
-                                    value={selectedPeriodo}
-                                    onChange={(e) => setSelectedPeriodo(e.target.value)}
-                                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-[#0284c7] cursor-pointer shadow-2xs"
-                                >
-                                    <option value="TODOS">Todos los Periodos</option>
-                                    {availablePeriodos.map(p => (
-                                        <option key={p} value={p}>{p}</option>
-                                    ))}
-                                </select>
+                            <div className="text-xs text-slate-400 font-mono">
+                                Buque Activo: <span className="font-bold text-[#0284c7]">{activeVessel}</span>
                             </div>
                         </div>
 
-                        {/* Barra de Acciones de la Nave Activa */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-                            
-                            <div className="flex items-center gap-3">
-                                {activeTab === 'events' && (
-                                    <button
-                                        type="button"
-                                        onClick={toggleSelectAll}
-                                        className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#0284c7] flex items-center gap-1.5 cursor-pointer"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={filteredEvents.length > 0 && selectedEventIds.size === filteredEvents.length}
-                                            onChange={toggleSelectAll}
-                                            className="rounded text-[#0284c7] cursor-pointer"
-                                        />
-                                        <span>Seleccionar Todos ({filteredEvents.length})</span>
-                                    </button>
-                                )}
+                        {/* Botones Operativos con Look Corporativo */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                                type="button"
+                                onClick={() => setIsBootstrapOpen(true)}
+                                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                title="Establecer Asiento de Apertura (ROB Inicial y precio de corte para la nave)"
+                            >
+                                <Sparkles size={14} className="text-amber-600" />
+                                <span>Asiento de Apertura</span>
+                            </button>
 
-                                <div className="text-xs text-slate-400 font-mono">
-                                    Buque Activo: <span className="font-bold text-[#0284c7]">{activeVessel}</span>
-                                </div>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsWizardOpen(true)}
+                                className="px-4 py-1.5 rounded-xl text-xs font-black bg-[#0284c7] hover:bg-[#0369a1] text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                                title="Registrar nuevo tanqueo y agrupar múltiples facturas"
+                            >
+                                <Plus size={15} />
+                                <span>+ Nueva Tanqueada</span>
+                            </button>
 
-                            {/* Botones Operativos con Look Corporativo */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                                
-                                <button
-                                    type="button"
-                                    onClick={() => setIsBootstrapOpen(true)}
-                                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                                    title="Establecer inventario inicial ROB y precio de corte para la nave"
-                                >
-                                    <Sparkles size={14} className="text-amber-600" />
-                                    <span>Saldo Génesis (Bootstrap)</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsWizardOpen(true)}
-                                    className="px-4 py-1.5 rounded-xl text-xs font-black bg-[#0284c7] hover:bg-[#0369a1] text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-                                    title="Registrar nuevo tanqueo y agrupar múltiples facturas"
-                                >
-                                    <Plus size={15} />
-                                    <span>+ Nueva Tanqueada</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={handleExportExcel}
-                                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                                >
-                                    <FileSpreadsheet size={14} className="text-emerald-600" />
-                                    <span>Descargar Excel</span>
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={handleExportExcel}
+                                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                            >
+                                <FileSpreadsheet size={14} className="text-emerald-600" />
+                                <span>Descargar Excel</span>
+                            </button>
                         </div>
                     </div>
-
-                    {/* 4. Contenido Principal */}
-                    {loading ? (
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-16 text-center text-slate-500 font-mono shadow-2xs">
-                            <RefreshCw size={32} className="animate-spin text-[#0284c7] mx-auto mb-3" />
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Sincronizando estado del búnker...</p>
-                        </div>
-                    ) : activeTab === 'events' ? (
-                        <BunkerEventsHistoryTable
-                            events={filteredEvents}
-                            onOpenPdfViewer={handleOpenPdf}
-                            onDeleteEvent={handleDeleteEvent}
-                            selectedEventIds={selectedEventIds}
-                            onToggleSelectEvent={toggleSelectEvent}
-                        />
-                    ) : (
-                        <BunkerInvoicesTable
-                            invoices={filteredInvoices}
-                            onOpenPdfViewer={handleOpenPdf}
-                        />
-                    )}
                 </div>
+
+                {/* 3. Contenido Principal: Grilla Unificada de Tanqueos con sus Facturas */}
+                {loading ? (
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-16 text-center text-slate-500 font-mono shadow-2xs">
+                        <RefreshCw size={32} className="animate-spin text-[#0284c7] mx-auto mb-3" />
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Sincronizando estado del búnker...</p>
+                    </div>
+                ) : (
+                    <BunkerEventsHistoryTable
+                        events={filteredEvents}
+                        onOpenPdfViewer={handleOpenPdf}
+                        onDeleteEvent={handleDeleteEvent}
+                        selectedEventIds={selectedEventIds}
+                        onToggleSelectEvent={toggleSelectEvent}
+                    />
+                )}
 
                 {/* 5. Modales Operativos */}
                 <BunkerBootstrapModal
                     isOpen={isBootstrapOpen}
                     onClose={() => setIsBootstrapOpen(false)}
                     onSuccess={loadData}
-                    initialVesselId={activeVessel === 'TODOS' ? 'MOQUEGUA' : activeVessel}
+                    initialVesselId={activeVessel}
                 />
 
                 <BunkerBunkeringWizardModal

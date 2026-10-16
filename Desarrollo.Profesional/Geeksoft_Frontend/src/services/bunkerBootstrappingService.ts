@@ -49,6 +49,33 @@ export interface InvoiceItemPayload {
     parsed_metadata?: any;
 }
 
+export interface VesselFuelConfig {
+    vessel_id: string;
+    vessel_name: string;
+    short_label: string;
+    fuels: ('IFO' | 'MDO')[];
+    supportsMdo: boolean;
+}
+
+export const VESSEL_FUEL_CONFIG: Record<string, VesselFuelConfig> = {
+    'MOQUEGUA': { vessel_id: 'MOQUEGUA', vessel_name: 'BT MOQUEGUA', short_label: 'MOQUEGUA', fuels: ['IFO', 'MDO'], supportsMdo: true },
+    'TABLONES': { vessel_id: 'TABLONES', vessel_name: 'BT TABLONES', short_label: 'TABLONES', fuels: ['IFO', 'MDO'], supportsMdo: true },
+    'HUEMUL': { vessel_id: 'HUEMUL', vessel_name: 'BT HUEMUL', short_label: 'HUEMUL', fuels: ['IFO'], supportsMdo: false },
+    'CONCON_TRADER': { vessel_id: 'CONCON_TRADER', vessel_name: 'CONCON TRADER', short_label: 'CONCON', fuels: ['IFO'], supportsMdo: false },
+    'BOW_CONDOR': { vessel_id: 'BOW_CONDOR', vessel_name: 'BOW CONDOR', short_label: 'BOW CONDOR', fuels: ['IFO', 'MDO'], supportsMdo: true },
+};
+
+export const getVesselFuelConfig = (vesselId: string): VesselFuelConfig => {
+    const key = (vesselId || '').toUpperCase().trim();
+    return VESSEL_FUEL_CONFIG[key] || {
+        vessel_id: key,
+        vessel_name: key,
+        short_label: key,
+        fuels: ['IFO', 'MDO'],
+        supportsMdo: true
+    };
+};
+
 export interface BunkeringEventRecord {
     id: string;
     event_date: string;

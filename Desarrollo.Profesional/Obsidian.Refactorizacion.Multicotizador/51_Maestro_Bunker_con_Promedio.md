@@ -354,4 +354,37 @@ graph TD
   * Compilación TypeScript y empaquetado de producción ejecutado con `npx vite build`:
     * Resultado: **Exit Code 0** (compilado limpio en **21.23s**, 0 errores).
 
+---
+
+### 9.7 🎯 Adopción Radical del Principio KISS & Acordeón Inandes ERP (`#herramientas_estado_posicion`)
+
+A partir de la directiva operativa de gerencia:
+> *"No tiene que haber esto: Historial de Tanqueos por Nave / Repositorio Digital de Facturas. La razón es que el historial de tanqueos es a la vez la base de datos de facturas. Al subir un tanqueo se agregan las facturas de ese tanqueo. Entendido? KISS."*  
+> *"Inspirate en el acordeón de allí por favor (`https://inandes.geeksoft.tech/#herramientas_estado_posicion`). Pero agrégale el visor de PDF. Dime que me entiendes por favor."*
+
+#### Decisiones de Diseño & Arquitectura Unificada:
+1. **Unificación Total (El Tanqueo ES la Factura):**
+   * Se elimina la división artificial de pestañas superiores (`Historial de Tanqueos por Nave` vs `Repositorio Digital de Facturas`).
+   * No existen dos vistas desconectadas: el módulo presenta una **única grilla ejecutiva unificada**.
+2. **Patrón de Acordeón Inandes (`#herramientas_estado_posicion` / `#crm_certificados`):**
+   * Cada elemento del acordeón representa **UNA TANQUEADA** u operación de abastecimiento de búnker (`TNK-YYYYMMDD-VIAJE/NAVE`).
+   * **Encabezado del Acordeón:**
+     * Checkbox de selección individual / masiva.
+     * Código de Tanqueada, Buque, Fecha, Puerto y Badge con la cantidad de facturas asociadas (`[3 FACTURAS]`).
+     * Indicadores financieros y de stock en tiempo real: `ROB IFO @ Precio Previo ➔ Ponderado`, `ROB MDO @ Precio Previo ➔ Ponderado`, y `Factor BAF SPCC`.
+     * Total consolidado en USD alineado a la derecha (`USD 197,358.55`) y chevron de colapso/expansión.
+   * **Contenido Expandido (Líneas de Factura):**
+     * Tabla con el detalle línea por línea de las facturas comerciales: `N° Factura`, `Proveedor`, `RUC`, `Combustible` (IFO / MDO), `Cantidad TM`, `Precio Compra $/TM`, `Total USD`, `Stock ROB Previo`, `Precio Previo`, `Fecha Emisión`.
+     * Botón azul corporativo **`[VISOR]`** (`bg-[#0284c7] text-white`) idéntico a Inandes para abrir el modal nativo con el PDF original de la factura servido vía streaming.
+3. **Barra de Herramientas Compacta (Toolbar Unificada):**
+   * Omnibox de búsqueda global en tiempo real (por Proveedor, RUC, N° Factura, Puerto o N° Viaje dentro de la nave seleccionada).
+   * Pills horizontales de selección estricta por nave (`MOQUEGUA`, `TABLONES`, `HUEMUL`, `CONCON`, `BOW CONDOR`).
+   * Selector de período mensual y botón de refresco rápido.
+   * Botones de acción directa: `[+ Nueva Tanqueada]`, `[Saldo Génesis (Bootstrap)]` y `[Descargar Excel]`.
+4. **Aislamiento Físico y Matemático por Nave (Prohibición de 'Todas las Naves'):**
+   * Cada nave posee su propia capacidad de estanques, su stock inicial ROB y su encadenamiento ponderado cronológico de compras ($P_{pond}$).
+   * Mezclar naves en una lista o cálculo global carece de sentido náutico y contable. Se erradica la opción "TODAS LAS NAVES", obligando a la navegación unibuque pura.
+
+
+
 

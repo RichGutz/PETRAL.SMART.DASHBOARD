@@ -3,7 +3,7 @@ import {
     X, Upload, Plus, Trash2, Eye, ShieldCheck, Fuel, 
     Anchor, Calendar, Save, AlertCircle, FileText, CheckCircle2, RotateCcw, Sparkles
 } from 'lucide-react';
-import { BunkerBootstrappingService } from '../../../services/bunkerBootstrappingService';
+import { BunkerBootstrappingService, getVesselFuelConfig } from '../../../services/bunkerBootstrappingService';
 import type { 
     BunkeringEventRecord, 
     InvoiceItemPayload, 
@@ -27,7 +27,10 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
     latestEvent
 }) => {
     // 1. Campo para juntar facturas de la misma tanqueada (Encabezado de la Tanqueada)
-    const [vesselId, setVesselId] = useState(activeVessel === 'TODOS' ? 'MOQUEGUA' : activeVessel);
+    const [vesselId, setVesselId] = useState(activeVessel || 'MOQUEGUA');
+    const fuelConfig = getVesselFuelConfig(vesselId);
+    const supportsMdo = fuelConfig.supportsMdo;
+
     const [eventDate, setEventDate] = useState(new Date().toISOString().split('T')[0]);
     const [portId, setPortId] = useState('CALLAO');
     const [voyageNumber, setVoyageNumber] = useState('V-2026-OCT');
@@ -66,7 +69,7 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
 
     // Auto-generar código de tanqueada y precargar ROBs del último evento
     useEffect(() => {
-        const vId = activeVessel === 'TODOS' ? 'MOQUEGUA' : activeVessel;
+        const vId = activeVessel || 'MOQUEGUA';
         setVesselId(vId);
         setTanqueadaCode(`TNK-${eventDate.replace(/-/g, '')}-${vId}`);
 
@@ -167,9 +170,13 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
     const mdoTotalCost = (robMdoMt * pricePrevMdoUsd) + mdoPurchasedTotal;
     const mdoWeightedAvg = mdoTotalMt > 0 ? (mdoTotalCost / mdoTotalMt) : pricePrevMdoUsd;
 
-    // BAF SPCC Fórmula
-    const baseDenom = (pricePrevIfoUsd * 38.40) + (pricePrevMdoUsd * 9.50);
-    const currNumer = (ifoWeightedAvg * 38.40) + (mdoWeightedAvg * 9.50);
+    // BAF SPCC Fórmula (Adaptada si la nave solo consume IFO)
+    const baseDenom = supportsMdo
+        ? ((pricePrevIfoUsd * 38.40) + (pricePrevMdoUsd * 9.50))
+        : (pricePrevIfoUsd * 38.40);
+    const currNumer = supportsMdo
+        ? ((ifoWeightedAvg * 38.40) + (mdoWeightedAvg * 9.50))
+        : (ifoWeightedAvg * 38.40);
     const rawBaf = baseDenom > 0 ? (currNumer / baseDenom) : 1.0;
     const bafFactor = Math.ceil(rawBaf * 10000) / 10000;
     const newBaf = bafFactor * 4.17;
@@ -193,8 +200,8 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                 voyage_number: voyageNumber || tanqueadaCode,
                 rob_ifo_mt: Number(robIfoMt),
                 price_prev_ifo_usd: Number(pricePrevIfoUsd),
-                rob_mdo_mt: Number(robMdoMt),
-                price_prev_mdo_usd: Number(pricePrevMdoUsd),
+                rob_mdo_mt: supportsMdo ? Number(robMdoMt) : 0,
+                price_prev_mdo_usd: supportsMdo ? Number(pricePrevMdoUsd) : 0,
                 notes: notes ? `${notes} [${tanqueadaCode}]` : `Tanqueada ${tanqueadaCode}`,
                 created_by: 'operaciones@petral.com',
                 invoices: invoices
@@ -333,7 +340,7 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                             </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 font-mono">
+                        <div className={`grid grid-cols-1 ${supportsMdo ? 'md:grid-cols-4' : 'md:grid-cols-2'} gap-3 font-mono`}>
                             <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-amber-200 dark:border-amber-900/50">
                                 <label className="text-[10px] font-bold text-amber-800 dark:text-amber-300 block mb-1">Stock ROB Previo IFO (TM)</label>
                                 <input
@@ -356,27 +363,31 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                                 />
                             </div>
 
-                            <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-cyan-200 dark:border-cyan-900/50">
-                                <label className="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 block mb-1">Stock ROB Previo MDO (TM)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
-                                    value={robMdoMt}
-                                    onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
-                                />
-                            </div>
+                            {supportsMdo && (
+                                <>
+                                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-cyan-200 dark:border-cyan-900/50">
+                                        <label className="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 block mb-1">Stock ROB Previo MDO (TM)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
+                                            value={robMdoMt}
+                                            onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
+                                        />
+                                    </div>
 
-                            <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-cyan-200 dark:border-cyan-900/50">
-                                <label className="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 block mb-1">Precio Previo MDO ($ USD/TM)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
-                                    value={pricePrevMdoUsd}
-                                    onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
-                                />
-                            </div>
+                                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-cyan-200 dark:border-cyan-900/50">
+                                        <label className="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 block mb-1">Precio Previo MDO ($ USD/TM)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
+                                            value={pricePrevMdoUsd}
+                                            onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -434,7 +445,7 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                                     onChange={(e) => setCurrentFuel(e.target.value as any)}
                                 >
                                     <option value="IFO">IFO 380 (VLSFO)</option>
-                                    <option value="MDO">MDO (MGO)</option>
+                                    {supportsMdo && <option value="MDO">MDO (MGO)</option>}
                                 </select>
                             </div>
 
@@ -549,17 +560,19 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                             </span>
                         </div>
 
-                        <div>
-                            <span className="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 block">
-                                Ponderado Resultante MDO:
-                            </span>
-                            <span className="text-base font-black text-cyan-700 dark:text-cyan-400">
-                                ${mdoWeightedAvg.toFixed(4)} USD/TM
-                            </span>
-                            <span className="text-[10px] text-slate-500 block">
-                                Total: {mdoTotalMt.toFixed(2)} TM (ROB: {robMdoMt.toFixed(2)} + Compra: {mdoPurchasedMt.toFixed(2)})
-                            </span>
-                        </div>
+                        {supportsMdo && (
+                            <div>
+                                <span className="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 block">
+                                    Ponderado Resultante MDO:
+                                </span>
+                                <span className="text-base font-black text-cyan-700 dark:text-cyan-400">
+                                    ${mdoWeightedAvg.toFixed(4)} USD/TM
+                                </span>
+                                <span className="text-[10px] text-slate-500 block">
+                                    Total: {mdoTotalMt.toFixed(2)} TM (ROB: {robMdoMt.toFixed(2)} + Compra: {mdoPurchasedMt.toFixed(2)})
+                                </span>
+                            </div>
+                        )}
 
                         <div>
                             <span className="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 block">

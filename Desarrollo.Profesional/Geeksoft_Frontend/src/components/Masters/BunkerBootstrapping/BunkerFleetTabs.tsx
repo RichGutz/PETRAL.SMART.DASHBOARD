@@ -19,18 +19,6 @@ export const BunkerFleetTabs: React.FC<BunkerFleetTabsProps> = ({
 }) => {
     return (
         <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-                type="button"
-                onClick={() => onSelectVessel('TODOS')}
-                className={`h-8 text-[11px] font-black uppercase px-3 rounded-lg cursor-pointer transition-all ${
-                    activeVessel === 'TODOS'
-                        ? 'bg-[#0284c7] text-white shadow-xs ring-1 ring-[#38bdf8]'
-                        : 'bg-white hover:bg-[#f0f9ff] border border-[#e2e8f0] text-[#475569] hover:text-[#0284c7] hover:border-[#bae6fd] dark:bg-[#1e293b] dark:border-[#334155] dark:text-[#cbd5e1]'
-                }`}
-            >
-                TODAS LAS NAVES
-            </button>
-
             {vessels.map((v) => {
                 const isSelected = activeVessel === v.vessel_id;
                 return (

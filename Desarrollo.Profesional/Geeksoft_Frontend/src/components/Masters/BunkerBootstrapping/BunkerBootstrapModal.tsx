@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Sparkles, Anchor, Fuel, ShieldCheck, Save, AlertCircle } from 'lucide-react';
-import { BunkerBootstrappingService } from '../../../services/bunkerBootstrappingService';
+import React, { useState, useEffect } from 'react';
+import { X, Sparkles, Anchor, Fuel, ShieldCheck, Save, AlertCircle, BookOpen } from 'lucide-react';
+import { BunkerBootstrappingService, getVesselFuelConfig } from '../../../services/bunkerBootstrappingService';
 import type { BootstrapPayload } from '../../../services/bunkerBootstrappingService';
 
 interface BunkerBootstrapModalProps {
@@ -28,11 +28,19 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    // Actualizar cuando cambie initialVesselId
+    useEffect(() => {
+        setVesselId(initialVesselId);
+    }, [initialVesselId]);
+
+    const fuelConfig = getVesselFuelConfig(vesselId);
+    const supportsMdo = fuelConfig.supportsMdo;
+
     if (!isOpen) return null;
 
     // BAF de Referencia Inicial (Base Contrato SPCC: $967.26 IFO / $1528.26 MDO)
-    const baseDenom = (967.26 * 38.40) + (1528.26 * 9.50);
-    const currNumer = (pricePrevIfoUsd * 38.40) + (pricePrevMdoUsd * 9.50);
+    const baseDenom = (967.26 * 38.40) + (supportsMdo ? (1528.26 * 9.50) : 0);
+    const currNumer = (pricePrevIfoUsd * 38.40) + (supportsMdo ? (pricePrevMdoUsd * 9.50) : 0);
     const totalBaf = baseDenom > 0 ? (Math.ceil((currNumer / baseDenom) * 10000) / 10000) : 1.0;
     const newBaf = totalBaf * 4.17;
     const bafVar = newBaf - 4.17;
@@ -49,8 +57,8 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                 voyage_number: voyageNumber,
                 rob_ifo_mt: Number(robIfoMt),
                 price_prev_ifo_usd: Number(pricePrevIfoUsd),
-                rob_mdo_mt: Number(robMdoMt),
-                price_prev_mdo_usd: Number(pricePrevMdoUsd),
+                rob_mdo_mt: supportsMdo ? Number(robMdoMt) : 0,
+                price_prev_mdo_usd: supportsMdo ? Number(pricePrevMdoUsd) : 0,
                 notes,
                 created_by: 'admin@petral.com'
             };
@@ -78,10 +86,12 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                         </div>
                         <div>
                             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                                Saldo Inicial Génesis (Bootstrapping Buque)
+                                Asiento de Apertura • Saldo Inicial Génesis ({fuelConfig.vessel_name})
                             </h3>
                             <p className="text-xs text-slate-500">
-                                Establece el inventario físico en tanques ($ROB_0$) y precio base contable ($P_0$)
+                                {supportsMdo 
+                                    ? 'Establece el inventario físico en tanques (ROB₀ IFO/MDO) y precio base contable de corte (P₀)'
+                                    : 'Establece el inventario físico en tanques (ROB₀ IFO) y precio base contable de corte (P₀) • Buque Solo IFO'}
                             </p>
                         </div>
                     </div>
@@ -161,36 +171,39 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                         </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-cyan-50/60 border border-cyan-200/80 flex flex-col gap-2">
-                        <span className="text-[11px] font-black text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
-                            <Fuel size={14} className="text-cyan-600" />
-                            Condición Inicial MDO (Marine Diesel / MGO Homologado)
-                        </span>
-                        <div className="grid grid-cols-2 gap-3 font-mono">
-                            <div>
-                                <label className="text-[10px] font-bold text-cyan-900/70 uppercase block mb-1">ROB Inicial (TM)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full bg-white border border-cyan-300 rounded-lg p-2 font-black text-slate-800"
-                                    value={robMdoMt}
-                                    onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-bold text-cyan-900/70 uppercase block mb-1">Precio Base ($ USD/TM)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full bg-white border border-cyan-300 rounded-lg p-2 font-black text-slate-800"
-                                    value={pricePrevMdoUsd}
-                                    onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
-                                    required
-                                />
+                    {/* MDO: Solo para buques que consumen MDO en el Maestro de Flota */}
+                    {supportsMdo && (
+                        <div className="p-3.5 rounded-xl bg-cyan-50/60 border border-cyan-200/80 flex flex-col gap-2">
+                            <span className="text-[11px] font-black text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <Fuel size={14} className="text-cyan-600" />
+                                Condición Inicial MDO (Marine Diesel / MGO Homologado)
+                            </span>
+                            <div className="grid grid-cols-2 gap-3 font-mono">
+                                <div>
+                                    <label className="text-[10px] font-bold text-cyan-900/70 uppercase block mb-1">ROB Inicial (TM)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        className="w-full bg-white border border-cyan-300 rounded-lg p-2 font-black text-slate-800"
+                                        value={robMdoMt}
+                                        onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
+                                        required={supportsMdo}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-cyan-900/70 uppercase block mb-1">Precio Base ($ USD/TM)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        className="w-full bg-white border border-cyan-300 rounded-lg p-2 font-black text-slate-800"
+                                        value={pricePrevMdoUsd}
+                                        onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
+                                        required={supportsMdo}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs font-mono">
                         <span className="text-slate-600 font-bold">BAF Inicial Resultante:</span>
