@@ -290,5 +290,21 @@ export const BunkerBootstrappingService = {
             throw new Error(err.detail || `Error eliminando evento: ${res.statusText}`);
         }
         return await res.json();
+    },
+
+    /**
+     * Edita un evento de tanqueo o asiento de apertura (campos operativos y ROBs)
+     */
+    async updateBunkeringEvent(eventId: string, payload: Partial<BunkeringEventRecord>): Promise<any> {
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/event/${encodeURIComponent(eventId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || `Error actualizando evento: ${res.statusText}`);
+        }
+        return await res.json();
     }
 };

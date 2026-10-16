@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Sparkles, Anchor, Fuel, ShieldCheck, Save, AlertCircle, BookOpen, MapPin, Hash, FileText, DollarSign } from 'lucide-react';
 import { BunkerBootstrappingService, getVesselFuelConfig } from '../../../services/bunkerBootstrappingService';
-import type { BootstrapPayload } from '../../../services/bunkerBootstrappingService';
+import type { BootstrapPayload, BunkeringEventRecord } from '../../../services/bunkerBootstrappingService';
 
 interface BunkerBootstrapModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
     initialVesselId?: string;
+    editRecord?: BunkeringEventRecord | null;
 }
 
 export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
@@ -15,9 +16,10 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
     onClose,
     onSuccess,
     initialVesselId = 'MOQUEGUA',
+    editRecord = null,
 }) => {
     // 1. El buque es inmutable dentro de este modal (fijado por la pestaña activa)
-    const vesselId = initialVesselId;
+    const vesselId = editRecord ? editRecord.vessel_id : initialVesselId;
     const fuelConfig = getVesselFuelConfig(vesselId);
     const supportsMdo = fuelConfig.supportsMdo;
 
@@ -37,6 +39,30 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
 
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    // Cargar datos existentes si está en modo edición
+    useEffect(() => {
+        if (!isOpen) return;
+        if (editRecord) {
+            setEventDate(editRecord.event_date);
+            setPortId(editRecord.port_id || 'CALLAO');
+            setVoyageNumber(editRecord.voyage_number || 'SALDO-INICIAL');
+            setNotes(editRecord.notes || 'Reporte del Puente de Mando');
+            setRobIfoMt(editRecord.rob_ifo_mt);
+            setPricePrevIfoUsd(editRecord.price_prev_ifo_usd);
+            setRobMdoMt(editRecord.rob_mdo_mt || '');
+            setPricePrevMdoUsd(editRecord.price_prev_mdo_usd || '');
+        } else {
+            setEventDate('2026-10-01');
+            setPortId('CALLAO');
+            setVoyageNumber('SALDO-INICIAL-OCT26');
+            setNotes('Reporte del Puente de Mando');
+            setRobIfoMt('');
+            setPricePrevIfoUsd('');
+            setRobMdoMt('');
+            setPricePrevMdoUsd('');
+        }
+    }, [editRecord, isOpen]);
 
     const numRobIfo = Number(robIfoMt) || 0;
     const numPriceIfo = Number(pricePrevIfoUsd) || 0;
@@ -84,7 +110,11 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                 created_by: 'operaciones@petral.com'
             };
 
-            await BunkerBootstrappingService.bootstrapVessel(payload);
+            if (editRecord) {
+                await BunkerBootstrappingService.updateBunkeringEvent(editRecord.id, payload);
+            } else {
+                await BunkerBootstrappingService.bootstrapVessel(payload);
+            }
             onSuccess();
             onClose();
         } catch (err: any) {
@@ -108,7 +138,7 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                         <div>
                             <div className="flex items-center gap-2">
                                 <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                                    Asiento de Apertura • Saldo Inicial Génesis
+                                    {editRecord ? 'Editar Asiento de Apertura' : 'Asiento de Apertura • Saldo Inicial Génesis'}
                                 </h3>
                                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-[#0284c7] dark:bg-blue-900/40 dark:text-blue-300">
                                     {fuelConfig.vessel_name}
@@ -335,7 +365,7 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                             className="px-5 py-2.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
                         >
                             <Save size={14} />
-                            <span>{loading ? 'Guardando Asiento...' : 'Guardar Asiento de Apertura'}</span>
+                            <span>{loading ? 'Guardando Asiento...' : (editRecord ? 'Guardar Cambios' : 'Guardar Asiento de Apertura')}</span>
                         </button>
                     </div>
                 </form>

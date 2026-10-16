@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { 
     Calendar, Anchor, Fuel, ShieldCheck, ChevronDown, ChevronUp, 
     FileText, Eye, Trash2, Sparkles, Layers, CheckSquare, Square,
-    ExternalLink, Download, BookOpen
+    ExternalLink, Download, BookOpen, Edit2
 } from 'lucide-react';
 import { getVesselFuelConfig } from '../../../services/bunkerBootstrappingService';
 import type { BunkeringEventRecord, InvoiceRecord } from '../../../services/bunkerBootstrappingService';
@@ -11,6 +11,7 @@ interface BunkerEventsHistoryTableProps {
     events: BunkeringEventRecord[];
     onOpenPdfViewer: (invoiceId: string, invoiceNumber: string, filename?: string) => void;
     onDeleteEvent: (eventId: string) => void;
+    onEditEvent?: (event: BunkeringEventRecord) => void;
     selectedEventIds?: Set<string>;
     onToggleSelectEvent?: (eventId: string) => void;
 }
@@ -19,6 +20,7 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
     events,
     onOpenPdfViewer,
     onDeleteEvent,
+    onEditEvent,
     selectedEventIds = new Set(),
     onToggleSelectEvent
 }) => {
@@ -121,6 +123,19 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                 <span className="text-emerald-700 dark:text-emerald-400 font-bold font-sans text-[11px] bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
                                     ✓ Base Auditada
                                 </span>
+                                {onEditEvent && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditEvent(ev);
+                                        }}
+                                        className="p-1 rounded text-slate-400 hover:text-[#0284c7] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+                                        title="Editar asiento de apertura"
+                                    >
+                                        <Edit2 size={13} />
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={(e) => {
@@ -238,6 +253,20 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                 <span className="text-slate-600 dark:text-slate-300 font-sans text-xs">
                                     Importe: <strong className="font-mono font-black text-slate-900 dark:text-white">${totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</strong>
                                 </span>
+
+                                {onEditEvent && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditEvent(ev);
+                                        }}
+                                        className="p-1 rounded text-slate-400 hover:text-[#0284c7] hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+                                        title="Editar tanqueada (ROB y datos del viaje)"
+                                    >
+                                        <Edit2 size={13} />
+                                    </button>
+                                )}
 
                                 <button
                                     type="button"

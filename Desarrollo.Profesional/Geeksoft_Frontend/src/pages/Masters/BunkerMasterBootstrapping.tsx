@@ -11,6 +11,7 @@ import { BunkerEventsHistoryTable } from '../../components/Masters/BunkerBootstr
 import { BunkerBootstrapModal } from '../../components/Masters/BunkerBootstrapping/BunkerBootstrapModal';
 import { BunkerBunkeringWizardModal } from '../../components/Masters/BunkerBootstrapping/BunkerBunkeringWizardModal';
 import { BunkerPdfViewerModal } from '../../components/Masters/BunkerBootstrapping/BunkerPdfViewerModal';
+import { BunkerEditBunkeringModal } from '../../components/Masters/BunkerBootstrapping/BunkerEditBunkeringModal';
 import { BunkerBootstrappingService } from '../../services/bunkerBootstrappingService';
 import type { BunkeringEventRecord } from '../../services/bunkerBootstrappingService';
 
@@ -33,6 +34,17 @@ export const BunkerMasterBootstrapping: React.FC = () => {
     // Modals
     const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
     const [isBootstrapOpen, setIsBootstrapOpen] = useState<boolean>(false);
+    const [isEditBunkeringOpen, setIsEditBunkeringOpen] = useState<boolean>(false);
+    const [editingEvent, setEditingEvent] = useState<BunkeringEventRecord | null>(null);
+
+    const handleEditEvent = (event: BunkeringEventRecord) => {
+        setEditingEvent(event);
+        if (event.is_bootstrap) {
+            setIsBootstrapOpen(true);
+        } else {
+            setIsEditBunkeringOpen(true);
+        }
+    };
 
     // Visor de Factura
     const [pdfViewer, setPdfViewer] = useState<{
@@ -339,6 +351,7 @@ export const BunkerMasterBootstrapping: React.FC = () => {
                         events={filteredEvents}
                         onOpenPdfViewer={handleOpenPdf}
                         onDeleteEvent={handleDeleteEvent}
+                        onEditEvent={handleEditEvent}
                         selectedEventIds={selectedEventIds}
                         onToggleSelectEvent={toggleSelectEvent}
                     />
@@ -347,9 +360,13 @@ export const BunkerMasterBootstrapping: React.FC = () => {
                 {/* 5. Modales Operativos */}
                 <BunkerBootstrapModal
                     isOpen={isBootstrapOpen}
-                    onClose={() => setIsBootstrapOpen(false)}
+                    onClose={() => {
+                        setIsBootstrapOpen(false);
+                        setEditingEvent(null);
+                    }}
                     onSuccess={loadData}
                     initialVesselId={activeVessel}
+                    editRecord={editingEvent}
                 />
 
                 <BunkerBunkeringWizardModal
@@ -358,6 +375,16 @@ export const BunkerMasterBootstrapping: React.FC = () => {
                     onSuccess={loadData}
                     activeVessel={activeVessel}
                     latestEvent={latestEvent}
+                />
+
+                <BunkerEditBunkeringModal
+                    isOpen={isEditBunkeringOpen}
+                    onClose={() => {
+                        setIsEditBunkeringOpen(false);
+                        setEditingEvent(null);
+                    }}
+                    onSuccess={loadData}
+                    event={editingEvent}
                 />
 
                 <BunkerPdfViewerModal

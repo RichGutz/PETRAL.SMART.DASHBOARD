@@ -602,3 +602,121 @@ def delete_bunkering_event(event_id: str, deleted_by: str = "admin@petral.com"):
     finally:
         cur.close()
         conn.close()
+
+
+class EventUpdatePayload(BaseModel):
+    event_date: Optional[str] = None
+    port_id: Optional[str] = None
+    voyage_number: Optional[str] = None
+    notes: Optional[str] = None
+    rob_ifo_mt: Optional[float] = None
+    price_prev_ifo_usd: Optional[float] = None
+    rob_mdo_mt: Optional[float] = None
+    price_prev_mdo_usd: Optional[float] = None
+
+
+@router.put("/event/{event_id}")
+def update_bunkering_event(event_id: str, payload: EventUpdatePayload):
+    """
+    Edita un evento de tanqueo o asiento de apertura.
+    Campos editables: fecha, puerto, viaje, notas y saldos físicos ROB de tanques.
+    Los campos provenientes de las facturas (cantidades y precios comprados) son inmutables.
+    Recalcula automáticamente promedios ponderados y BAF.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT * FROM bunker_bunkering_events WHERE id = %s;", (event_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Evento no encontrado")
+        
+        cols = [desc[0] for desc in cur.description]
+        ev = dict(zip(cols, row))
+        vessel_id = ev["vessel_id"]
+        is_bootstrap = ev["is_bootstrap"]
+
+        fuel_cap = get_vessel_fuel_capability(cur, vessel_id)
+        supports_mdo = fuel_cap["supports_mdo"]
+
+        # 1. Metadatos generales
+        new_event_date = payload.event_date if payload.event_date is not None else str(ev["event_date"])
+        new_port_id = payload.port_id.strip().upper() if payload.port_id is not None else ev["port_id"]
+        new_voyage_number = payload.voyage_number if payload.voyage_number is not None else ev["voyage_number"]
+        new_notes = payload.notes if payload.notes is not None else ev["notes"]
+
+        if is_bootstrap:
+            # En Asiento de Apertura, se editan saldos ROB y Precios Base contables
+            new_rob_ifo = float(payload.rob_ifo_mt if payload.rob_ifo_mt is not None else ev["rob_ifo_mt"])
+            new_price_ifo = float(payload.price_prev_ifo_usd if payload.price_prev_ifo_usd is not None else ev["price_prev_ifo_usd"])
+            new_rob_mdo = float(payload.rob_mdo_mt if payload.rob_mdo_mt is not None else ev["rob_mdo_mt"]) if supports_mdo else 0.0
+            new_price_mdo = float(payload.price_prev_mdo_usd if payload.price_prev_mdo_usd is not None else ev["price_prev_mdo_usd"]) if supports_mdo else 0.0
+
+            baf = calculate_baf_spcc(new_price_ifo, new_price_mdo, supports_mdo=supports_mdo)
+
+            cur.execute("""
+                UPDATE bunker_bunkering_events
+                SET event_date = %s, port_id = %s, voyage_number = %s, notes = %s,
+                    rob_ifo_mt = %s, price_prev_ifo_usd = %s, weighted_avg_ifo_usd = %s,
+                    rob_mdo_mt = %s, price_prev_mdo_usd = %s, weighted_avg_mdo_usd = %s,
+                    spcc_baf_factor = %s, spcc_initial_fuel_value = %s, spcc_new_baf = %s, spcc_baf_variation = %s
+                WHERE id = %s RETURNING *;
+            """, (
+                new_event_date, new_port_id, new_voyage_number, new_notes,
+                new_rob_ifo, new_price_ifo, new_price_ifo,
+                new_rob_mdo, new_price_mdo, new_price_mdo,
+                baf["spcc_baf_factor"], baf["spcc_initial_fuel_value"], baf["spcc_new_baf"], baf["spcc_baf_variation"],
+                event_id
+            ))
+        else:
+            # En Tanqueada regular:
+            # Facturas y precios previos son INMUTABLES (provienen de comprobantes tributarios)
+            new_rob_ifo = float(payload.rob_ifo_mt if payload.rob_ifo_mt is not None else ev["rob_ifo_mt"])
+            price_prev_ifo = float(ev["price_prev_ifo_usd"] or 0.0)
+            purchased_ifo_mt = float(ev["purchased_ifo_mt"] or 0.0)
+            purchased_ifo_total_usd = float(ev["purchased_ifo_total_usd"] or 0.0)
+
+            total_ifo_mt = new_rob_ifo + purchased_ifo_mt
+            cost_ifo = (new_rob_ifo * price_prev_ifo) + purchased_ifo_total_usd
+            new_weighted_ifo = round(cost_ifo / total_ifo_mt, 4) if total_ifo_mt > 0 else price_prev_ifo
+
+            if supports_mdo:
+                new_rob_mdo = float(payload.rob_mdo_mt if payload.rob_mdo_mt is not None else ev["rob_mdo_mt"])
+                price_prev_mdo = float(ev["price_prev_mdo_usd"] or 0.0)
+                purchased_mdo_mt = float(ev["purchased_mdo_mt"] or 0.0)
+                purchased_mdo_total_usd = float(ev["purchased_mdo_total_usd"] or 0.0)
+
+                total_mdo_mt = new_rob_mdo + purchased_mdo_mt
+                cost_mdo = (new_rob_mdo * price_prev_mdo) + purchased_mdo_total_usd
+                new_weighted_mdo = round(cost_mdo / total_mdo_mt, 4) if total_mdo_mt > 0 else price_prev_mdo
+            else:
+                new_rob_mdo = 0.0
+                price_prev_mdo = 0.0
+                new_weighted_mdo = 0.0
+
+            baf = calculate_baf_spcc(new_weighted_ifo, new_weighted_mdo, price_prev_ifo, price_prev_mdo, supports_mdo=supports_mdo)
+
+            cur.execute("""
+                UPDATE bunker_bunkering_events
+                SET event_date = %s, port_id = %s, voyage_number = %s, notes = %s,
+                    rob_ifo_mt = %s, weighted_avg_ifo_usd = %s,
+                    rob_mdo_mt = %s, weighted_avg_mdo_usd = %s,
+                    spcc_baf_factor = %s, spcc_initial_fuel_value = %s, spcc_new_baf = %s, spcc_baf_variation = %s
+                WHERE id = %s RETURNING *;
+            """, (
+                new_event_date, new_port_id, new_voyage_number, new_notes,
+                new_rob_ifo, new_weighted_ifo,
+                new_rob_mdo, new_weighted_mdo,
+                baf["spcc_baf_factor"], baf["spcc_initial_fuel_value"], baf["spcc_new_baf"], baf["spcc_baf_variation"],
+                event_id
+            ))
+
+        conn.commit()
+        return {"status": "success", "message": f"Evento {event_id} actualizado con éxito"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Error actualizando evento: {str(e)}")
+    finally:
+        cur.close()
+        conn.close()
+
