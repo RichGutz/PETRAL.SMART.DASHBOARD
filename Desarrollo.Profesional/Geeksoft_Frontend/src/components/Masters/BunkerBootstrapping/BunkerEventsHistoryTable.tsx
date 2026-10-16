@@ -81,22 +81,71 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                         ? `TNK-${ev.event_date.replace(/-/g, '')}-${ev.voyage_number}` 
                         : `TNK-${ev.event_date.replace(/-/g, '')}-${ev.vessel_id}`);
 
+                // 1. ASIENTO DE APERTURA: Renderizado en una SOLA LÍNEA HORIZONTAL PURA (Sin acordeón, sin duplicidad de buque)
+                if (ev.is_bootstrap) {
+                    return (
+                        <div 
+                            key={ev.id}
+                            className="bg-amber-50/40 dark:bg-amber-950/20 border border-amber-300/80 dark:border-amber-800/60 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono shadow-2xs"
+                        >
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                                <span className="font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1.5 font-sans uppercase tracking-wider text-[11px] bg-amber-200/80 dark:bg-amber-900/50 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700">
+                                    <BookOpen size={13} className="text-amber-700 dark:text-amber-400 shrink-0" />
+                                    Asiento de Apertura
+                                </span>
+                                <span className="text-slate-600 dark:text-slate-400 font-sans text-xs">
+                                    {ev.event_date} ({ev.port_id || 'CALLAO'})
+                                </span>
+                                <span className="text-slate-300 dark:text-slate-700">•</span>
+                                <span className="text-slate-800 dark:text-slate-100">
+                                    <strong className="text-amber-800 dark:text-amber-300 font-sans">IFO 380:</strong> {Number(ev.rob_ifo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_ifo_usd).toFixed(2)}
+                                </span>
+                                {supportsMdo && (
+                                    <>
+                                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                                        <span className="text-slate-800 dark:text-slate-100">
+                                            <strong className="text-cyan-800 dark:text-cyan-300 font-sans">MDO:</strong> {Number(ev.rob_mdo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_mdo_usd).toFixed(2)}
+                                        </span>
+                                    </>
+                                )}
+                                {ev.notes && (
+                                    <>
+                                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                                        <span className="text-slate-500 dark:text-slate-400 italic font-sans text-[11px]">{ev.notes}</span>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-emerald-700 dark:text-emerald-400 font-bold font-sans text-[11px] bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                                    ✓ Base Auditada
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm('¿Seguro que deseas eliminar este asiento de apertura?')) {
+                                            onDeleteEvent(ev.id);
+                                        }
+                                    }}
+                                    className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                    title="Eliminar asiento de apertura"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+
                 return (
                     <div 
                         key={ev.id}
-                        className={`border rounded-2xl shadow-2xs overflow-hidden transition-all ${
-                            ev.is_bootstrap 
-                                ? 'bg-amber-50/20 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/60'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
-                        }`}
+                        className="border rounded-2xl shadow-2xs overflow-hidden transition-all bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                     >
                         {/* 1. ENCABEZADO DEL ACORDEÓN */}
                         <div 
-                            className={`p-4 border-b flex flex-wrap items-center justify-between gap-3 cursor-pointer transition-colors ${
-                                ev.is_bootstrap
-                                    ? 'bg-amber-50/50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 hover:bg-amber-100/50'
-                                    : 'bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:bg-slate-100/70'
-                            }`}
+                            className="p-4 border-b flex flex-wrap items-center justify-between gap-3 cursor-pointer transition-colors bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:bg-slate-100/70"
                             onClick={() => toggleAccordion(ev.id)}
                         >
                             <div className="flex items-center gap-3">
@@ -117,38 +166,21 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                     </button>
                                 )}
 
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
-                                    ev.is_bootstrap
-                                        ? 'bg-amber-200/70 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300'
-                                        : 'bg-blue-100 dark:bg-blue-900/40 text-[#0284c7] dark:text-[#38bdf8]'
-                                }`}>
-                                    {ev.is_bootstrap ? <BookOpen size={16} /> : <Anchor size={16} />}
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold bg-blue-100 dark:bg-blue-900/40 text-[#0284c7] dark:text-[#38bdf8]">
+                                    <Anchor size={16} />
                                 </div>
 
                                 <div>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`font-mono font-black text-xs px-2 py-0.5 rounded border ${
-                                            ev.is_bootstrap
-                                                ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200'
-                                                : 'text-[#0284c7] dark:text-[#38bdf8] bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-900'
-                                        }`}>
+                                        <span className="font-mono font-black text-xs px-2 py-0.5 rounded border text-[#0284c7] dark:text-[#38bdf8] bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-900">
                                             {tanqueadaCode}
-                                        </span>
-                                        <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wide">
-                                            {fuelConfig.vessel_name}
                                         </span>
                                         <span className="text-[11px] text-slate-500 font-bold">
                                             • {ev.event_date} ({ev.port_id})
                                         </span>
-                                        {ev.is_bootstrap ? (
-                                            <span className="text-[10px] font-black px-2 py-0.5 rounded bg-amber-200 text-amber-900 border border-amber-400">
-                                                🏛️ ASIENTO DE APERTURA (GÉNESIS)
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                                {invoicesCount} {invoicesCount === 1 ? 'FACTURA' : 'FACTURAS'}
-                                            </span>
-                                        )}
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                            {invoicesCount} {invoicesCount === 1 ? 'FACTURA' : 'FACTURAS'}
+                                        </span>
                                         {!supportsMdo && (
                                             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-300">
                                                 SOLO IFO
@@ -156,36 +188,30 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                         )}
                                     </div>
                                     
-                                    {/* CAMPOS PARA STOCK ROB Y PRECIOS (ADAPTADOS SEGÚN TIPO DE NAVE) */}
+                                    {/* CAMPOS PARA STOCK ROB Y PRECIOS */}
                                     <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] font-mono">
-                                        {/* IFO: Común a todas las naves */}
+                                        {/* IFO */}
                                         <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200">
-                                            <span className="font-bold">{ev.is_bootstrap ? 'ROB Apertura IFO:' : 'ROB IFO:'}</span> 
+                                            <span className="font-bold">ROB IFO:</span> 
                                             {Number(ev.rob_ifo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_ifo_usd).toFixed(2)} 
-                                            {!ev.is_bootstrap && (
-                                                <span className="text-amber-600 font-bold ml-1">➔ Pond: ${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM</span>
-                                            )}
+                                            <span className="text-amber-600 font-bold ml-1">➔ Pond: ${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM</span>
                                         </div>
 
-                                        {/* MDO: Solo si la nave consume MDO en el Maestro de Flota */}
+                                        {/* MDO */}
                                         {supportsMdo && (
                                             <div className="flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-900 text-cyan-900 dark:text-cyan-200">
-                                                <span className="font-bold">{ev.is_bootstrap ? 'ROB Apertura MDO:' : 'ROB MDO:'}</span> 
+                                                <span className="font-bold">ROB MDO:</span> 
                                                 {Number(ev.rob_mdo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_mdo_usd).toFixed(2)} 
-                                                {!ev.is_bootstrap && (
-                                                    <span className="text-cyan-600 font-bold ml-1">➔ Pond: ${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM</span>
-                                                )}
+                                                <span className="text-cyan-600 font-bold ml-1">➔ Pond: ${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM</span>
                                             </div>
                                         )}
 
-                                        {!ev.is_bootstrap && (
-                                            <div className="flex items-center gap-1 bg-purple-50 dark:bg-purple-950/30 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-900 text-purple-900 dark:text-purple-200 font-bold">
-                                                <span>BAF Factor:</span> {bafFactor.toFixed(4)} 
-                                                <span className={bafVar <= 0 ? 'text-emerald-600' : 'text-rose-600'}>
-                                                    ({bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt)
-                                                </span>
-                                            </div>
-                                        )}
+                                        <div className="flex items-center gap-1 bg-purple-50 dark:bg-purple-950/30 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-900 text-purple-900 dark:text-purple-200 font-bold">
+                                            <span>BAF Factor:</span> {bafFactor.toFixed(4)} 
+                                            <span className={bafVar <= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                                                ({bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt)
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -194,17 +220,11 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                             <div className="flex items-center gap-3">
                                 <div className="text-right">
                                     <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                                        {ev.is_bootstrap ? 'Condición Base' : 'Importe Tanqueada'}
+                                        Importe Tanqueada
                                     </span>
-                                    {ev.is_bootstrap ? (
-                                        <span className="text-xs font-mono font-black text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800">
-                                            ASIENTO DE APERTURA
-                                        </span>
-                                    ) : (
-                                        <span className="text-sm font-mono font-black text-[#0284c7] dark:text-[#38bdf8]">
-                                            USD {totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </span>
-                                    )}
+                                    <span className="text-sm font-mono font-black text-[#0284c7] dark:text-[#38bdf8]">
+                                        USD {totalTanqueadaUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
                                 </div>
 
                                 <button
@@ -229,33 +249,7 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
 
                         {/* 2. CONTENIDO EXPANDIBLE */}
                         {isExpanded && (
-                            ev.is_bootstrap ? (
-                                <div className="px-5 py-2.5 bg-amber-50/20 dark:bg-amber-950/10 border-t border-amber-200/50 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
-                                    <div className="flex items-center gap-3 flex-wrap">
-                                        <span className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 font-sans">
-                                            <BookOpen size={14} className="text-amber-600 shrink-0" />
-                                            Asiento de Apertura:
-                                        </span>
-                                        <span className="text-slate-700 dark:text-slate-300">
-                                            <strong className="text-amber-800 dark:text-amber-300 font-sans">IFO 380:</strong> {Number(ev.rob_ifo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_ifo_usd).toFixed(2)} <span className="text-slate-400">(${(Number(ev.rob_ifo_mt) * Number(ev.price_prev_ifo_usd)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span>
-                                        </span>
-                                        {supportsMdo && (
-                                            <>
-                                                <span className="text-slate-300 dark:text-slate-700">|</span>
-                                                <span className="text-slate-700 dark:text-slate-300">
-                                                    <strong className="text-cyan-800 dark:text-cyan-300 font-sans">MDO:</strong> {Number(ev.rob_mdo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_mdo_usd).toFixed(2)} <span className="text-slate-400">(${(Number(ev.rob_mdo_mt) * Number(ev.price_prev_mdo_usd)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span>
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-slate-500 text-[11px]">
-                                        <span>{ev.port_id || 'CALLAO'} • {ev.event_date}</span>
-                                        {ev.notes && <span className="text-slate-400 italic font-sans">• {ev.notes}</span>}
-                                        <span className="text-emerald-600 font-bold font-sans">✓ Certificado SPCC</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto w-full">
+                            <div className="overflow-x-auto w-full">
                                     {invoicesList.length === 0 ? (
                                         <div className="p-4 text-center text-xs text-slate-400 font-mono">
                                             No se encontraron facturas tributarias registradas en este evento.
@@ -370,7 +364,6 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                     </table>
                                 )}
                             </div>
-                            )
                         )}
                     </div>
                 );
