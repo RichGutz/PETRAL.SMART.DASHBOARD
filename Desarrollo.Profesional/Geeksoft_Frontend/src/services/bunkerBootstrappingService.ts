@@ -149,18 +149,18 @@ export interface BunkeringEventPayload {
 }
 
 const getApiBase = (): string => {
-    if (import.meta.env.VITE_API_URL) {
-        return import.meta.env.VITE_API_URL;
+    // Si VITE_API_URL está definido (ej. '/api/v1' o 'http://localhost:8000/api/v1'), lo normalizamos
+    const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+    if (raw) {
+        return raw;
     }
     if (typeof window !== 'undefined') {
         const host = window.location.hostname;
         if (host === 'localhost' || host === '127.0.0.1') {
-            return 'http://localhost:8000';
+            return 'http://localhost:8000/api/v1';
         }
-        // En producción VPS Contabo (petral.one.geeksoft.tech), Nginx redirige /api/ directamente al backend
-        return '';
     }
-    return '';
+    return '/api/v1';
 };
 
 export const BunkerBootstrappingService = {
@@ -171,7 +171,7 @@ export const BunkerBootstrappingService = {
         const formData = new FormData();
         formData.append('file', file);
 
-        const res = await fetch(`${getApiBase()}/api/v1/bunker-bootstrapping/parse-pdf`, {
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/parse-pdf`, {
             method: 'POST',
             body: formData,
         });
@@ -189,7 +189,7 @@ export const BunkerBootstrappingService = {
      * Registra el saldo inicial o condición génesis de un buque (Bootstrapping)
      */
     async bootstrapVessel(payload: BootstrapPayload): Promise<any> {
-        const res = await fetch(`${getApiBase()}/api/v1/bunker-bootstrapping/bootstrap-vessel`, {
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/bootstrap-vessel`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -207,7 +207,7 @@ export const BunkerBootstrappingService = {
      * Registra un tanqueo completo (ROB previo + N facturas) y recalcula promedios ponderados
      */
     async recordBunkeringEvent(payload: BunkeringEventPayload): Promise<any> {
-        const res = await fetch(`${getApiBase()}/api/v1/bunker-bootstrapping/record-bunkering-event`, {
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/record-bunkering-event`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -225,7 +225,7 @@ export const BunkerBootstrappingService = {
      * Obtiene el listado histórico de eventos de tanqueo para un buque o 'TODOS'
      */
     async getVesselEvents(vesselId: string): Promise<BunkeringEventRecord[]> {
-        const res = await fetch(`${getApiBase()}/api/v1/bunker-bootstrapping/events/${encodeURIComponent(vesselId)}`);
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/events/${encodeURIComponent(vesselId)}`);
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.detail || `Error obteniendo eventos: ${res.statusText}`);
@@ -238,7 +238,7 @@ export const BunkerBootstrappingService = {
      * Obtiene el repositorio de facturas registradas
      */
     async getVesselInvoices(vesselId: string): Promise<InvoiceRecord[]> {
-        const res = await fetch(`${getApiBase()}/api/v1/bunker-bootstrapping/invoices/${encodeURIComponent(vesselId)}`);
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/invoices/${encodeURIComponent(vesselId)}`);
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.detail || `Error obteniendo facturas: ${res.statusText}`);
@@ -251,14 +251,38 @@ export const BunkerBootstrappingService = {
      * Retorna la URL directa para streaming del PDF en el visor
      */
     getInvoicePdfUrl(invoiceId: string): string {
-        return `${getApiBase()}/api/v1/bunker-bootstrapping/invoice/${encodeURIComponent(invoiceId)}/pdf`;
+        return `${getApiBase()}/bunker-bootstrapping/invoice/${encodeURIComponent(invoiceId)}/pdf`;
+    },
+
+    /**
+     * Consulta el perfil y capacidad de combustible del buque desde el Maestro de Flota
+     */
+    async getVesselFuelProfile(vesselId: string): Promise<VesselFuelConfig> {
+        try {
+            const res = await fetch(`${getApiBase()}/bunker-bootstrapping/vessel-fuel-profile/${encodeURIComponent(vesselId)}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json.data) {
+                    return {
+                        vessel_id: json.data.vessel_id,
+                        vessel_name: json.data.vessel_name,
+                        short_label: json.data.vessel_id,
+                        fuels: json.data.fuels,
+                        supportsMdo: json.data.supports_mdo
+                    };
+                }
+            }
+        } catch (e) {
+            console.warn('Fallback a configuración local de flota:', e);
+        }
+        return getVesselFuelConfig(vesselId);
     },
 
     /**
      * Elimina un evento de tanqueo y lo respalda en la papelera comercial
      */
     async deleteBunkeringEvent(eventId: string, deletedBy: string = 'admin@petral.com'): Promise<any> {
-        const res = await fetch(`${getApiBase()}/api/v1/bunker-bootstrapping/event/${encodeURIComponent(eventId)}?deleted_by=${encodeURIComponent(deletedBy)}`, {
+        const res = await fetch(`${getApiBase()}/bunker-bootstrapping/event/${encodeURIComponent(eventId)}?deleted_by=${encodeURIComponent(deletedBy)}`, {
             method: 'DELETE',
         });
         if (!res.ok) {
