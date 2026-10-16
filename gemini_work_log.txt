@@ -1,4 +1,23 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-16 (Herramienta Ex-Post: Voyage Liquidator Modular 100% & Enlace Bootstrapping)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Mapeo Celda por Celda: Obsidian '52_Voyage_Liquidator.md' formulado celda por celda (Columnas A a T) adaptando el estándar de '21_Mapeo.Debugging.Datos.Consumo.Multicotizador.md'.
+- Arquitectura Modular 100%: 
+  * 'src/types/voyageLiquidator.ts' (contratos de datos)
+  * 'src/services/voyageLiquidatorService.ts' (cálculo determinístico NVR, TCE Real $/día, enlace dinámico a BunkerBootstrappingService)
+  * 'VoyageLiquidatorHeader.tsx' (selectores buque, cliente, código viaje)
+  * 'VoyageLiquidatorBunkerBadge.tsx' (auditoría en vivo de P_pond IFO/MDO y BAF)
+  * 'VoyageLiquidatorGrid.tsx' (grilla interactiva 20 columnas con timestamps ATA/ATD, Otros Costos)
+  * 'VoyageLiquidatorSummaryBar.tsx' (ribbon de resultados, NVR y margen)
+  * 'VoyageLiquidatorHistoryModal.tsx' (historial y carga de liquidaciones pasadas)
+  * 'VoyageLiquidatorSaveModal.tsx' (modal de confirmación de persistencia)
+  * 'VoyageLiquidator_V2.tsx' (orquestador de página en '/voyage-liquidator')
+- Backend & Base de Datos: Router 'forecast.py' ampliado con POST y DELETE /voyage_liquidations. Restricción 'uq_voyage_liquidations_code' agregada en tabla PostgreSQL VPS.
+- Build & Deploy a Producción: 'npx vite build' (éxito en 12.46s). Despliegue completado a Contabo VPS ('169.58.168.107'). HTTP 200 en vivo verificado.
+================================================================================
+
+================================================================================
 GEMINI WORK LOG: 2026-10-15 (Maestro de Búnker: Bootstrapping, Multifactura, Ponderado Dinámico & Visor PDF)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
