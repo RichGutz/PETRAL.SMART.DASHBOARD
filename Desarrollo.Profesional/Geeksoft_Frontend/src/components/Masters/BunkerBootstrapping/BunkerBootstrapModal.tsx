@@ -25,28 +25,33 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
     const [eventDate, setEventDate] = useState('2026-10-01');
     const [portId, setPortId] = useState('CALLAO');
     const [voyageNumber, setVoyageNumber] = useState('SALDO-INICIAL-OCT26');
-    const [notes, setNotes] = useState('Saldo inicial auditado de corte en tanques (Génesis)');
+    const [notes, setNotes] = useState('Reporte del Puente de Mando');
 
-    // 3. Condición inicial IFO 380
-    const [robIfoMt, setRobIfoMt] = useState<number>(120.40);
-    const [pricePrevIfoUsd, setPricePrevIfoUsd] = useState<number>(967.26);
+    // 3. Condición inicial IFO 380 (Vacío por defecto para ingreso manual)
+    const [robIfoMt, setRobIfoMt] = useState<number | ''>('');
+    const [pricePrevIfoUsd, setPricePrevIfoUsd] = useState<number | ''>('');
 
-    // 4. Condición inicial MDO (Marine Gas Oil / Diesel Marino)
-    const [robMdoMt, setRobMdoMt] = useState<number>(90.30);
-    const [pricePrevMdoUsd, setPricePrevMdoUsd] = useState<number>(1528.26);
+    // 4. Condición inicial MDO (Vacío por defecto para ingreso manual)
+    const [robMdoMt, setRobMdoMt] = useState<number | ''>('');
+    const [pricePrevMdoUsd, setPricePrevMdoUsd] = useState<number | ''>('');
 
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    const numRobIfo = Number(robIfoMt) || 0;
+    const numPriceIfo = Number(pricePrevIfoUsd) || 0;
+    const numRobMdo = Number(robMdoMt) || 0;
+    const numPriceMdo = Number(pricePrevMdoUsd) || 0;
+
     // Valorizaciones en tiempo real
-    const ifoValuation = useMemo(() => (robIfoMt * pricePrevIfoUsd), [robIfoMt, pricePrevIfoUsd]);
-    const mdoValuation = useMemo(() => supportsMdo ? (robMdoMt * pricePrevMdoUsd) : 0, [robMdoMt, pricePrevMdoUsd, supportsMdo]);
+    const ifoValuation = useMemo(() => (numRobIfo * numPriceIfo), [numRobIfo, numPriceIfo]);
+    const mdoValuation = useMemo(() => supportsMdo ? (numRobMdo * numPriceMdo) : 0, [numRobMdo, numPriceMdo, supportsMdo]);
     const totalInventoryValuation = useMemo(() => ifoValuation + mdoValuation, [ifoValuation, mdoValuation]);
 
     // BAF de Referencia Inicial (Base Contrato SPCC: $967.26 IFO / $1528.26 MDO)
     const baseDenom = (967.26 * 38.40) + (supportsMdo ? (1528.26 * 9.50) : 0);
-    const currNumer = (pricePrevIfoUsd * 38.40) + (supportsMdo ? (pricePrevMdoUsd * 9.50) : 0);
-    const totalBaf = baseDenom > 0 ? (Math.ceil((currNumer / baseDenom) * 10000) / 10000) : 1.0;
+    const currNumer = (numPriceIfo * 38.40) + (supportsMdo ? (numPriceMdo * 9.50) : 0);
+    const totalBaf = (baseDenom > 0 && numPriceIfo > 0) ? (Math.ceil((currNumer / baseDenom) * 10000) / 10000) : 1.0;
     const newBaf = totalBaf * 4.17;
     const bafVar = newBaf - 4.17;
 
@@ -54,12 +59,12 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (robIfoMt <= 0 || pricePrevIfoUsd <= 0) {
-            setErrorMsg('El ROB Inicial y el Precio Base de IFO deben ser mayores a cero.');
+        if (!numRobIfo || !numPriceIfo) {
+            setErrorMsg('Por favor ingresa el ROB Inicial y el Precio Base de IFO.');
             return;
         }
-        if (supportsMdo && (robMdoMt <= 0 || pricePrevMdoUsd <= 0)) {
-            setErrorMsg('Para este buque dual-fuel, el ROB Inicial y Precio Base de MDO deben ser mayores a cero.');
+        if (supportsMdo && (!numRobMdo || !numPriceMdo)) {
+            setErrorMsg('Para este buque dual-fuel, ingresa también el ROB Inicial y Precio Base de MDO.');
             return;
         }
 
@@ -220,7 +225,8 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                                     step="0.01"
                                     className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
                                     value={robIfoMt}
-                                    onChange={(e) => setRobIfoMt(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => setRobIfoMt(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                    placeholder="0.00"
                                     required
                                 />
                             </div>
@@ -234,7 +240,8 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                                     step="0.01"
                                     className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
                                     value={pricePrevIfoUsd}
-                                    onChange={(e) => setPricePrevIfoUsd(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => setPricePrevIfoUsd(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                    placeholder="0.00"
                                     required
                                 />
                             </div>
@@ -264,7 +271,8 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                                         step="0.01"
                                         className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
                                         value={robMdoMt}
-                                        onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
+                                        onChange={(e) => setRobMdoMt(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        placeholder="0.00"
                                         required={supportsMdo}
                                     />
                                 </div>
@@ -278,7 +286,8 @@ export const BunkerBootstrapModal: React.FC<BunkerBootstrapModalProps> = ({
                                         step="0.01"
                                         className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
                                         value={pricePrevMdoUsd}
-                                        onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
+                                        onChange={(e) => setPricePrevMdoUsd(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                        placeholder="0.00"
                                         required={supportsMdo}
                                     />
                                 </div>
