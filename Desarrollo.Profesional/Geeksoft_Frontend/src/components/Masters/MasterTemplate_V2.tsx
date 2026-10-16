@@ -59,7 +59,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
     const categoryTabs: Record<string, string[]> = {
         herramientas: [
             'financial-matrix', 'multicotizador', 'graphic-analysis', 
-            'spaghetti-map', 'liquidations-graphic-analysis', 'liquidations-pdf-audit', 
+            'spaghetti-map', 'voyage-liquidator', 'liquidations-graphic-analysis', 'liquidations-pdf-audit', 
             'audit-ledger', 'audit-engine', 'audit-final'
         ],
         fisicos: ['vessels', 'ports', 'routes'],
@@ -616,6 +616,12 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                                 className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'spaghetti-map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                             >
                                                 <span className="text-xs">🗺️</span> Spaghetti Map
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/voyage-liquidator')}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'voyage-liquidator' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-xs">⚖️</span> Voyage Liquidator
                                             </button>
                                             <button 
                                                 onClick={() => navigate('/liquidations-graphic-analysis')}

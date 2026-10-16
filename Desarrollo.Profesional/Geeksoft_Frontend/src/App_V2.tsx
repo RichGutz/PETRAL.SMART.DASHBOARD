@@ -22,6 +22,7 @@ import { SystemDocumentation_V2 } from './pages/Tools/SystemDocumentation_V2';
 import { CompanyOrganigram_V2 } from './pages/Tools/CompanyOrganigram_V2';
 import { MofManual_V2 } from './pages/Tools/MofManual_V2';
 import { SotaPetralOne_V2 } from './pages/Tools/SotaPetralOne_V2';
+import { VoyageLiquidator_V2 } from './pages/Tools/VoyageLiquidator_V2';
 
 
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
@@ -128,6 +129,7 @@ function App_V2() {
                   <Route path="/liquidations-graphic-analysis" element={<LiquidationsGraphicAnalysis_V2 />} />
                   <Route path="/liquidations-pdf-audit" element={<LiquidationsAuditPdf_V2 />} />
                   <Route path="/spaghetti-map" element={<SpaghettiMap_V2 />} />
+                  <Route path="/voyage-liquidator" element={<VoyageLiquidator_V2 />} />
                   <Route path="/audit-engine" element={<AuditEngine_V2 />} />
                   <Route path="/audit-final" element={<AuditFinal_V2 />} />
                   <Route path="/system-flowchart" element={<SystemFlowchartViewer_V2 />} />

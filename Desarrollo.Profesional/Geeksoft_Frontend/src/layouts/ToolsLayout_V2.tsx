@@ -19,6 +19,7 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/liquidations-graphic-analysis')) activeTab = 'liquidations-graphic-analysis';
     else if (location.pathname.includes('/graphic-analysis')) activeTab = 'graphic-analysis';
     else if (location.pathname.includes('/spaghetti-map')) activeTab = 'spaghetti-map';
+    else if (location.pathname.includes('/voyage-liquidator')) activeTab = 'voyage-liquidator';
     else if (location.pathname.includes('/audit-ledger')) activeTab = 'audit-ledger';
     else if (location.pathname.includes('/audit-engine')) activeTab = 'audit-engine';
     else if (location.pathname.includes('/audit-final')) activeTab = 'audit-final';
@@ -36,7 +37,7 @@ export const ToolsLayout_V2: React.FC = () => {
             
             <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 print:p-0 h-full print:h-auto print:block print:overflow-visible print:w-full">
                 {/* 1. Builder Bar (Shared across interactive modeling tools) */}
-                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'company-organigram' && activeTab !== 'mof-manual' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && activeTab !== 'sota-petral-one' && (
+                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'company-organigram' && activeTab !== 'mof-manual' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && activeTab !== 'voyage-liquidator' && activeTab !== 'sota-petral-one' && (
                     <div className="print:hidden">
                     <ForecastBuilder 
                         currentStartDate={context.startDate}

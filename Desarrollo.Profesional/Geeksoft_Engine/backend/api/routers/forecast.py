@@ -1843,6 +1843,29 @@ def get_voyage_liquidations():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post('/voyage_liquidations')
+def save_voyage_liquidation(payload: dict = Body(...)):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        # Upsert por clave única voyage_code
+        res = sb.table('voyage_liquidations').upsert(payload, on_conflict='voyage_code').execute()
+        return {'status': 'success', 'data': res.data}
+    except Exception as e:
+        print(f"Error saving voyage liquidation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete('/voyage_liquidations/{voyage_code}')
+def delete_voyage_liquidation(voyage_code: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('voyage_liquidations').delete().eq('voyage_code', voyage_code).execute()
+        return {'status': 'success', 'deleted': voyage_code}
+    except Exception as e:
+        print(f"Error deleting voyage liquidation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get('/demurrage_records')
 def get_demurrage_records():
     try:
