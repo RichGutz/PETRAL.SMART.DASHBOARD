@@ -84,11 +84,28 @@ export const BunkerPdfViewerModal: React.FC<BunkerPdfViewerModalProps> = ({
 
                 {/* PDF Viewer Container */}
                 <div className="flex-1 bg-slate-100 dark:bg-slate-900 w-full h-full relative">
-                    <iframe
-                        src={pdfUrl}
-                        title={title}
-                        className="w-full h-full border-none"
-                    />
+                    <object
+                        data={`${pdfUrl}#toolbar=1&navpanes=0`}
+                        type="application/pdf"
+                        className="w-full h-full"
+                    >
+                        <iframe
+                            src={`${pdfUrl}#toolbar=1&navpanes=0`}
+                            title={title}
+                            className="w-full h-full border-none"
+                        >
+                            <div className="p-8 text-center text-slate-500 font-sans flex flex-col items-center justify-center h-full gap-3">
+                                <p className="text-sm">El visor embebido no se pudo inicializar en este navegador.</p>
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="px-4 py-2 rounded-lg bg-[#0284c7] text-white text-xs font-bold shadow-sm hover:bg-[#0369a1]"
+                                >
+                                    Descargar {filename}
+                                </button>
+                            </div>
+                        </iframe>
+                    </object>
                 </div>
             </div>
         </div>

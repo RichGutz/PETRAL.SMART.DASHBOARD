@@ -230,46 +230,28 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                         {/* 2. CONTENIDO EXPANDIBLE */}
                         {isExpanded && (
                             ev.is_bootstrap ? (
-                                <div className="p-6 bg-amber-50/30 dark:bg-amber-950/20 border-t border-amber-200/60 flex flex-col gap-3 font-mono">
-                                    <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-bold text-xs uppercase tracking-wide">
-                                        <BookOpen size={16} className="text-amber-600" />
-                                        <span>Condición Inicial Auditada en Tanques • Asiento de Apertura</span>
-                                    </div>
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 font-sans">
-                                        Este registro establece el inventario físico inicial en tanques (<span className="font-mono font-bold">$ROB_0$</span>) y el precio base contable de corte (<span className="font-mono font-bold">$P_0$</span>) que da origen al encadenamiento cronológico de bootstrapping para la nave <span className="font-bold text-[#0284c7]">{fuelConfig.vessel_name}</span>. No registra facturas de compra física porque corresponde al saldo inicial auditado de corte.
-                                    </p>
-                                    <div className="flex items-center gap-4 mt-1 flex-wrap text-xs">
-                                        <div className="bg-white dark:bg-slate-900 px-4 py-2.5 rounded-xl border border-amber-300 dark:border-amber-800 shadow-2xs">
-                                            <span className="text-amber-700 dark:text-amber-400 block text-[10px] font-bold uppercase">IFO 380 • Condición Apertura:</span>
-                                            <span className="font-black text-slate-900 dark:text-white text-sm">
-                                                {Number(ev.rob_ifo_mt).toFixed(2)} TM <span className="text-slate-400 text-xs">@</span> ${Number(ev.price_prev_ifo_usd).toFixed(2)}/TM
-                                            </span>
-                                            <span className="text-[10px] text-slate-400 block mt-0.5">
-                                                Valorizado: ${(Number(ev.rob_ifo_mt) * Number(ev.price_prev_ifo_usd)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                                            </span>
-                                        </div>
-
+                                <div className="px-5 py-2.5 bg-amber-50/20 dark:bg-amber-950/10 border-t border-amber-200/50 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <span className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 font-sans">
+                                            <BookOpen size={14} className="text-amber-600 shrink-0" />
+                                            Asiento de Apertura:
+                                        </span>
+                                        <span className="text-slate-700 dark:text-slate-300">
+                                            <strong className="text-amber-800 dark:text-amber-300 font-sans">IFO 380:</strong> {Number(ev.rob_ifo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_ifo_usd).toFixed(2)} <span className="text-slate-400">(${(Number(ev.rob_ifo_mt) * Number(ev.price_prev_ifo_usd)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span>
+                                        </span>
                                         {supportsMdo && (
-                                            <div className="bg-white dark:bg-slate-900 px-4 py-2.5 rounded-xl border border-cyan-300 dark:border-cyan-800 shadow-2xs">
-                                                <span className="text-cyan-700 dark:text-cyan-400 block text-[10px] font-bold uppercase">MDO • Condición Apertura:</span>
-                                                <span className="font-black text-slate-900 dark:text-white text-sm">
-                                                    {Number(ev.rob_mdo_mt).toFixed(2)} TM <span className="text-slate-400 text-xs">@</span> ${Number(ev.price_prev_mdo_usd).toFixed(2)}/TM
+                                            <>
+                                                <span className="text-slate-300 dark:text-slate-700">|</span>
+                                                <span className="text-slate-700 dark:text-slate-300">
+                                                    <strong className="text-cyan-800 dark:text-cyan-300 font-sans">MDO:</strong> {Number(ev.rob_mdo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_mdo_usd).toFixed(2)} <span className="text-slate-400">(${(Number(ev.rob_mdo_mt) * Number(ev.price_prev_mdo_usd)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span>
                                                 </span>
-                                                <span className="text-[10px] text-slate-400 block mt-0.5">
-                                                    Valorizado: ${(Number(ev.rob_mdo_mt) * Number(ev.price_prev_mdo_usd)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                                                </span>
-                                            </div>
+                                            </>
                                         )}
-
-                                        <div className="bg-white dark:bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-                                            <span className="text-slate-400 block text-[10px] font-bold uppercase">Puerto y Fecha de Corte:</span>
-                                            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                                                {ev.port_id} • {ev.event_date}
-                                            </span>
-                                            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
-                                                ✓ Base Certificada SPCC
-                                            </span>
-                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-500 text-[11px]">
+                                        <span>{ev.port_id || 'CALLAO'} • {ev.event_date}</span>
+                                        {ev.notes && <span className="text-slate-400 italic font-sans">• {ev.notes}</span>}
+                                        <span className="text-emerald-600 font-bold font-sans">✓ Certificado SPCC</span>
                                     </div>
                                 </div>
                             ) : (

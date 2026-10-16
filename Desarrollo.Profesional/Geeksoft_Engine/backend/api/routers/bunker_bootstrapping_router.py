@@ -14,7 +14,7 @@ import uuid
 import datetime
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, Response
 from pydantic import BaseModel
 
 try:
@@ -518,7 +518,12 @@ def stream_invoice_pdf(invoice_id: str):
             return FileResponse(
                 path=pdf_storage_path,
                 media_type="application/pdf",
-                filename=out_filename
+                content_disposition_type="inline",
+                filename=out_filename,
+                headers={
+                    "Content-Disposition": f'inline; filename="{out_filename}"',
+                    "Accept-Ranges": "bytes"
+                }
             )
 
         # 2. Respaldo desde base64 en base de datos
@@ -532,10 +537,13 @@ def stream_invoice_pdf(invoice_id: str):
                         f_reconstruct.write(pdf_bytes)
                 except Exception:
                     pass
-            return StreamingResponse(
-                io.BytesIO(pdf_bytes),
+            return Response(
+                content=pdf_bytes,
                 media_type="application/pdf",
-                headers={"Content-Disposition": f'inline; filename="{out_filename}"'}
+                headers={
+                    "Content-Disposition": f'inline; filename="{out_filename}"',
+                    "Accept-Ranges": "bytes"
+                }
             )
 
         raise HTTPException(status_code=404, detail="El archivo PDF no está disponible en disco ni en base de datos")
