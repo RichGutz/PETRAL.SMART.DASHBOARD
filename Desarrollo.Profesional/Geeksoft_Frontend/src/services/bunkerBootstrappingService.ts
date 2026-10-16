@@ -122,7 +122,18 @@ export interface BunkeringEventPayload {
 }
 
 const getApiBase = (): string => {
-    return import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+    }
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:8000';
+        }
+        // En producción VPS Contabo (petral.one.geeksoft.tech), Nginx redirige /api/ directamente al backend
+        return '';
+    }
+    return '';
 };
 
 export const BunkerBootstrappingService = {
