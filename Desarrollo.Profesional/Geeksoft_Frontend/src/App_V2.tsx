@@ -37,6 +37,7 @@ import { DemurrageMaster_V2 } from './pages/Masters/DemurrageMaster_V2';
 import { PortTariffsMaster } from './pages/Masters/PortTariffsMaster';
 import { SourcesSinksMaster_V2 } from './pages/Masters/SourcesSinksMaster_V2';
 import { BunkerMaster } from './pages/Masters/BunkerMaster';
+import { BunkerMasterBootstrapping } from './pages/Masters/BunkerMasterBootstrapping';
 import { Login } from './pages/Auth/Login';
 import { UsersPermissions } from './pages/Auth/UsersPermissions';
 import { DeviceVaultMaster } from './pages/Masters/DeviceVaultMaster';
@@ -116,6 +117,7 @@ function App_V2() {
               <Route path="/port-tariffs" element={<ProtectedRoute module="maestro_costos_agencia"><PortTariffsMaster /></ProtectedRoute>} />
               <Route path="/sources-sinks" element={<ProtectedRoute module="maestro_rutas"><SourcesSinksMaster_V2 /></ProtectedRoute>} />
               <Route path="/bunker-prices" element={<ProtectedRoute module="maestro_bunker"><BunkerMaster /></ProtectedRoute>} />
+              <Route path="/bunker-bootstrapping" element={<ProtectedRoute module="maestro_bunker"><BunkerMasterBootstrapping /></ProtectedRoute>} />
               <Route path="/commercial-trash" element={<ProtectedRoute><CommercialTrashMaster_V2 /></ProtectedRoute>} />
               
               {/* Herramientas Protegidas (Ribbon via ToolsLayout) */}

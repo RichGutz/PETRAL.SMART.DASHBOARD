@@ -73,7 +73,9 @@ KNOWN_PRIMARY_KEYS = {
     "user_permissions": ["user_id"],
     "clients": ["client_id"],
     "commercial_forecasts": ["id"],
-    "commercial_trash_bin": ["id"]
+    "commercial_trash_bin": ["id"],
+    "bunker_bunkering_events": ["id"],
+    "bunker_invoices": ["id"]
 }
 
 def get_table_primary_key(cur, table_name: str) -> list:

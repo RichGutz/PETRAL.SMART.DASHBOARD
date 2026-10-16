@@ -1,4 +1,17 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-15 (Maestro de Búnker: Bootstrapping, Multifactura, Ponderado Dinámico & Visor PDF)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Safe Point Git: Rama 'feature/maestro-bunker-bootstrapping', Tag 'TAG.PRE.MAESTRO.BUNKER.BOOTSTRAPPING'.
+- Arquitectura No-Regresión: 'BunkerMaster.tsx' legacy preservado 100% intacto en '/bunker-prices'. Nueva ruta '/bunker-bootstrapping' para suite moderna.
+- Base de Datos: Migración '20261016000001_create_bunker_events_and_invoices.sql' aplicada en Supabase PostgreSQL ('bunker_bunkering_events' y 'bunker_invoices').
+- Backend Engine: Servicio 'bunker_pdf_parser_service.py' (pdfplumber) y router 'bunker_bootstrapping_router.py' con 7 endpoints. Doble persistencia de PDFs (disco '/opt/petral_stack/storage/bunker_invoices/' y base64 en PostgreSQL).
+- Frontend Modular: 'BunkerMasterBootstrapping.tsx', 'BunkerKpis.tsx', 'BunkerFleetTabs.tsx', 'BunkerBootstrapModal.tsx', 'BunkerBunkeringWizardModal.tsx' (Split-screen PDF), 'BunkerEventsHistoryTable.tsx', 'BunkerInvoicesTable.tsx', 'BunkerPdfViewerModal.tsx', 'bunkerBootstrappingService.ts'.
+- Build Frontend: 'npx vite build' (SUCCESS, 0 ERRORS, 29.48s).
+- Verificación Empírica: 'verify_bunker_end_to_end.py' (100% PASSED). Facturas reales de Oil Trading y SPCC validadas: IFO $911.9007 USD/TM, MDO $1,571.6456 USD/TM, BAF 0.9669, Var -0.1380 USD/pmt.
+================================================================================
+
+================================================================================
 GEMINI WORK LOG: 2026-10-15 (Papelera de Reciclaje Comercial Transversal & Restitución Forense Jorge Neyra)
 ================================================================================
 CONCURRENCY & QC SUMMARY:

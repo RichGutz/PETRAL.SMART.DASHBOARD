@@ -65,7 +65,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         fisicos: ['vessels', 'ports', 'routes'],
         comerciales: ['clients', 'contracts', 'quotes', 'budgets', 'financial-projections', 'commercial-trash'],
         costos: ['port-tariffs', 'port-costs', 'demurrage'],
-        mercado: ['bunker', 'sources-sinks'],
+        mercado: ['bunker', 'bunker-bootstrapping', 'sources-sinks'],
         documentacion: ['system-documentation', 'system-flowchart', 'company-organigram', 'mof-manual', 'sota-petral-one'],
         admin: ['users', 'device-vault', 'audit-ledger', 'settings']
     };
@@ -537,7 +537,20 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                             onClick={() => navigate('/bunker-prices')}
                                             className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'bunker' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                         >
-                                            <span className="text-xs">⛽</span> Maestro de Búnker
+                                            <span className="text-xs">⛽</span> Maestro Búnker (Legacy)
+                                        </button>
+                                    )}
+                                    {hasPermission('maestro_bunker', 'Visor') && (
+                                        <button 
+                                            onClick={() => navigate('/bunker-bootstrapping')}
+                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between gap-1 transition-all ${activeTab === 'bunker-bootstrapping' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="text-xs">⚡</span> Búnker (Bootstrapping)
+                                            </span>
+                                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 border border-amber-500/30">
+                                                V2
+                                            </span>
                                         </button>
                                     )}
                                     {hasPermission('maestro_rutas', 'Visor') && (

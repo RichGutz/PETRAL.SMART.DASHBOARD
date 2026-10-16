@@ -1,4 +1,39 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-15 (Maestro de Búnker: Bootstrapping, Multifactura, Ponderado Dinámico & Visor PDF)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Transcripción de Audio y Auditoría de Facturas Reales:
+   - Procesamiento de audio 'audio_transcrip/Refactorizacion.Mudulo.BUNKER.ogg' mediante Whisper.
+   - Auditoría pericial de 'Desarrollo.Profesional/Facturas.Bunker.MEC.15.10.26' (Facturas F001-3123, F001-3124, F001-3125 de Oil Trading, F006-00000840 de Fuel Logistics y Excel SPCC).
+   - Verificación de la matemática determinística contractual: IFO $911.9007 USD/TM, MDO $1,571.6456 USD/TM, Factor BAF SPCC 0.9669, Variación Tarifa -0.1380 USD/pmt.
+
+2. Control de Versiones & Garantía de No Regresión:
+   - Branch: 'feature/maestro-bunker-bootstrapping'.
+   - Tag inmutable: 'TAG.PRE.MAESTRO.BUNKER.BOOTSTRAPPING'.
+   - 'BunkerMaster.tsx' legacy preservado 100% intacto en '/bunker-prices'.
+   - Nuevo módulo 'BunkerMasterBootstrapping.tsx' registrado en '/bunker-bootstrapping'.
+
+3. Base de Datos & Migración SQL:
+   - Migración '20261016000001_create_bunker_events_and_invoices.sql' aplicada exitosamente en Supabase PostgreSQL.
+   - Tablas 'bunker_bunkering_events' (padre) y 'bunker_invoices' (hija) con claves foráneas, índices y soporte JSONB.
+   - Registro de primary keys en 'database.py' ('KNOWN_PRIMARY_KEYS').
+
+4. Backend FastAPI & Servicio de Parseo:
+   - 'bunker_pdf_parser_service.py' con motor 'pdfplumber', extractores específicos para Oil Trading y Fuel Logistics, y homologación estricta MGO -> MDO.
+   - Router 'bunker_bootstrapping_router.py' con 7 endpoints: parseo en memoria, bootstrapping, tanqueo multifactura, historial, repositorio, streaming PDF y borrado seguro a papelera.
+   - Respaldo doble de almacenamiento PDF: persistencia en disco ('storage/bunker_invoices/') y en base de datos ('pdf_raw_base64').
+
+5. Frontend Modular (React 19 + TypeScript + Vite):
+   - Servicio 'bunkerBootstrappingService.ts'.
+   - Suite 'src/components/Masters/BunkerBootstrapping/': 'BunkerKpis', 'BunkerFleetTabs', 'BunkerBootstrapModal', 'BunkerBunkeringWizardModal' (Split-screen PDF), 'BunkerEventsHistoryTable', 'BunkerInvoicesTable', 'BunkerPdfViewerModal'.
+   - Integración en 'MasterTemplate_V2.tsx' bajo menú MERCADO y en 'App_V2.tsx'.
+   - Compilación exitosa: 'npx vite build' en 29.48s (0 errores).
+
+6. Verificación Empírica End-to-End:
+   - Ejecución de 'scratch/verify_bunker_end_to_end.py' con código de salida 0: 100% de tests aprobados.
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-15 (Papelera de Reciclaje Comercial Transversal & Restitución Forense de Cierres de Jorge Neyra)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
