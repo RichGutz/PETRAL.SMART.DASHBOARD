@@ -1,4 +1,43 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-16 (Ribbon BAF Compacto, Edición Rápida Búnker & Voyage Liquidator 100% Modular)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Maestro de Búnker & Bootstrapping (Optimizaciones UI & Polinomio BAF):
+   - Ribbon compacto de una sola fila para importe de tanqueada y desglose.
+   - Ícono de edición rápida (lapicito) habilitado en cada asiento de apertura y tanqueada para campos no provenientes de la factura.
+   - Verificación de la matemática y desglose del polinomio BAF de SPCC en la segunda línea del ribbon.
+
+2. Mapeo y Arquitectura de Voyage Liquidator (Herramienta Ex-Post):
+   - Transcripción y análisis del audio gerencial 'audio_transcrip/VOYAGE_Liquodator.ogg' con Whisper.
+   - Documentación exhaustiva en Obsidian: '52_Voyage_Liquidator.md' con matriz de correspondencia celda por celda (Columnas A a T) adaptando el estándar de '21_Mapeo.Debugging.Datos.Consumo.Multicotizador.md'.
+   - Definición de capturas de tiempo exacto de recalada: inputs datetime ATA (Arrival) y ATD (Departure) para cálculo determinístico de horas de puerto.
+   - Rubro de "Otros Costos" (Columnas S y T) para registrar gastos directos imprevistos con glosa descriptiva.
+   - Enlace dinámico con Bunker Bootstrapping: consumo real en TM valorizado con el precio ponderado vigente (P_pond IFO y P_pond MDO) del buque auditado.
+
+3. Modularización 100% en Frontend (React 19 + TypeScript + Vite):
+   - 'src/types/voyageLiquidator.ts': Contratos de datos.
+   - 'src/services/voyageLiquidatorService.ts': Motor determinístico de cálculo.
+   - 'src/components/VoyageLiquidator/VoyageLiquidatorHeader.tsx': Selector de buques, clientes y código.
+   - 'src/components/VoyageLiquidator/VoyageLiquidatorBunkerBadge.tsx': Badge de enlace con búnker y factor BAF.
+   - 'src/components/VoyageLiquidator/VoyageLiquidatorGrid.tsx': Grilla de 20 columnas con timestamps y otros costos.
+   - 'src/components/VoyageLiquidator/VoyageLiquidatorSummaryBar.tsx': Ribbon inferior de totales, NVR y margen.
+   - 'src/components/VoyageLiquidator/VoyageLiquidatorHistoryModal.tsx': Visor y carga de liquidaciones históricas.
+   - 'src/components/VoyageLiquidator/VoyageLiquidatorSaveModal.tsx': Modal de confirmación para persistencia.
+   - 'src/pages/Tools/VoyageLiquidator_V2.tsx': Ensamblador de página en la ruta '/voyage-liquidator'.
+   - Integración de menú en 'MasterTemplate_V2.tsx' y layout en 'ToolsLayout_V2.tsx'.
+
+4. Backend FastAPI & Base de Datos:
+   - Endpoints 'POST /voyage_liquidations' (upsert atómico) y 'DELETE /voyage_liquidations/{voyage_code}' en 'forecast.py'.
+   - Adición de restricción única 'uq_voyage_liquidations_code' en la tabla PostgreSQL 'voyage_liquidations' del VPS.
+
+5. Verificación Empírica y Despliegue Oficial (VPS Contabo 169.58.168.107):
+   - Compilación frontend: 'npx vite build' (éxito en 12.46s).
+   - Despliegue con 'deploy_petral_one_contabo.py' vía SFTP/SSH.
+   - Verificación en vivo: HTTP 200 en 'https://petral.one.geeksoft.tech/voyage-liquidator'.
+   - Pruebas de API en producción: POST, UPSERT y DELETE validados exitosamente con código 200.
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-15 (Maestro de Búnker: Bootstrapping, Multifactura, Ponderado Dinámico & Visor PDF)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:

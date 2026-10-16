@@ -261,3 +261,23 @@ Siguiendo el mandato de gerencia (*"partamos con la idea de que va a ser prácti
 * Conectar con el endpoint `POST /api/v1/forecast/voyage_liquidations` para guardar o actualizar liquidaciones auditadas.
 * Compilar con `npx vite build` y desplegar a producción en `https://petral.one.geeksoft.tech`.
 
+---
+
+## 10. 🏁 Estado de Entrega & Cierre de Sesión (16 de Octubre de 2026)
+
+* **Estado**: **100% OPERATIVO EN PRODUCCIÓN**
+* **URL Oficial en Vivo**: `https://petral.one.geeksoft.tech/voyage-liquidator`
+* **Arquitectura**: 100% Modular (`src/components/VoyageLiquidator/`)
+  * `VoyageLiquidatorHeader.tsx` (Selectores de nave y filtros)
+  * `VoyageLiquidatorBunkerBadge.tsx` (Enlace a búnker ponderado)
+  * `VoyageLiquidatorGrid.tsx` (Grilla interactiva 20 columnas con timestamps y otros costos)
+  * `VoyageLiquidatorSummaryBar.tsx` (Ribbon de resumen y KPIs)
+  * `VoyageLiquidatorHistoryModal.tsx` (Historial de liquidaciones)
+  * `VoyageLiquidatorSaveModal.tsx` (Confirmación de persistencia)
+  * `VoyageLiquidator_V2.tsx` (Orquestador principal)
+  * `voyageLiquidatorService.ts` (Motor determinístico)
+* **Base de Datos VPS**:
+  * Constraint única `uq_voyage_liquidations_code` creada en PostgreSQL para upsert atómico por código de viaje.
+  * Pruebas de API: `GET`, `POST`, `DELETE` con código HTTP 200 en producción.
+
+
