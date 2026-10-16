@@ -159,20 +159,11 @@ def bootstrap_vessel(payload: BootstrapPayload):
         row = cur.fetchone()
 
         # Actualizar tabla bunker_prices para que los multicotizadores tomen este precio de inmediato
-        upsert_bunker = """
-            INSERT INTO bunker_prices (fuel_type, market_price_usd, date)
-            VALUES 
-                ('IFO', %s, %s),
-                ('MDO', %s, %s)
-            ON CONFLICT (fuel_type) 
-            DO UPDATE SET 
-                market_price_usd = EXCLUDED.market_price_usd,
-                date = EXCLUDED.date;
-        """
-        cur.execute(upsert_bunker, (
-            payload.price_prev_ifo_usd, payload.event_date,
-            payload.price_prev_mdo_usd, payload.event_date
-        ))
+        cur.execute("DELETE FROM bunker_prices WHERE fuel_type IN ('IFO', 'MDO');")
+        cur.execute(
+            "INSERT INTO bunker_prices (fuel_type, market_price_usd, date) VALUES ('IFO', %s, %s), ('MDO', %s, %s);",
+            (payload.price_prev_ifo_usd, payload.event_date, payload.price_prev_mdo_usd, payload.event_date)
+        )
 
         conn.commit()
         return {"status": "success", "event_id": event_id, "message": f"Buque {payload.vessel_id} inicializado con éxito"}
@@ -285,20 +276,11 @@ def record_bunkering_event(payload: BunkeringEventPayload):
             ))
 
         # 9. Actualizar bunker_prices con los nuevos promedios ponderados
-        upsert_bunker = """
-            INSERT INTO bunker_prices (fuel_type, market_price_usd, date)
-            VALUES 
-                ('IFO', %s, %s),
-                ('MDO', %s, %s)
-            ON CONFLICT (fuel_type) 
-            DO UPDATE SET 
-                market_price_usd = EXCLUDED.market_price_usd,
-                date = EXCLUDED.date;
-        """
-        cur.execute(upsert_bunker, (
-            weighted_avg_ifo, payload.event_date,
-            weighted_avg_mdo, payload.event_date
-        ))
+        cur.execute("DELETE FROM bunker_prices WHERE fuel_type IN ('IFO', 'MDO');")
+        cur.execute(
+            "INSERT INTO bunker_prices (fuel_type, market_price_usd, date) VALUES ('IFO', %s, %s), ('MDO', %s, %s);",
+            (weighted_avg_ifo, payload.event_date, weighted_avg_mdo, payload.event_date)
+        )
 
         conn.commit()
         return {
