@@ -526,8 +526,26 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                                                 <td className="p-2 text-right font-black text-slate-900 dark:text-white">
                                                     ${Number(inv.total_amount_usd).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                 </td>
-                                                <td className="p-2 text-center text-slate-400">
-                                                    {inv.pdf_filename ? '📎 ' + inv.pdf_filename : 'Sin archivo'}
+                                                <td className="p-2 text-center">
+                                                    {inv.pdf_raw_base64 ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const win = window.open();
+                                                                if (win) {
+                                                                    win.document.title = inv.pdf_filename || `Factura ${inv.invoice_number}`;
+                                                                    win.document.write(`<iframe src="data:application/pdf;base64,${inv.pdf_raw_base64}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                                                                }
+                                                            }}
+                                                            className="text-xs font-bold text-[#0284c7] hover:text-[#0369a1] hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                                                            title="Previsualizar documento PDF subido"
+                                                        >
+                                                            <Eye size={13} />
+                                                            <span className="truncate max-w-[120px]">{inv.pdf_filename || 'Ver PDF'}</span>
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-slate-400 text-[11px]">Sin archivo</span>
+                                                    )}
                                                 </td>
                                                 <td className="p-2 text-center">
                                                     <button
