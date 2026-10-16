@@ -281,18 +281,11 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Buque</label>
-                                <select
-                                    className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg p-2 font-bold text-slate-800 dark:text-white"
-                                    value={vesselId}
-                                    onChange={(e) => setVesselId(e.target.value)}
-                                >
-                                    <option value="MOQUEGUA">BT MOQUEGUA</option>
-                                    <option value="TABLONES">BT TABLONES</option>
-                                    <option value="HUEMUL">BT HUEMUL</option>
-                                    <option value="CONCON_TRADER">CONCON TRADER</option>
-                                    <option value="BOW_CONDOR">BOW CONDOR</option>
-                                </select>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Buque (Fijo)</label>
+                                <div className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2 font-black text-slate-800 dark:text-white flex items-center gap-1.5">
+                                    <Anchor size={14} className="text-[#0284c7] shrink-0" />
+                                    <span>{fuelConfig.vessel_name}</span>
+                                </div>
                             </div>
 
                             <div>
@@ -328,63 +321,83 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                         </div>
                     </div>
 
-                    {/* SECCIÓN B: CAMPOS PARA STOCK ROB Y PRECIO PREVIO */}
+                    {/* SECCIÓN B: SALDO ROB EN TANQUES Y PRECIO CONTABLE PREVIO (ESTÁTICO) */}
                     <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
                             <span className="font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                                 <ShieldCheck size={14} className="text-amber-500" />
-                                2. Stock Previo (ROB) & Precio Base Anterior de Tanques
+                                2. Saldo Físico en Tanques (ROB) & Precios Base Contables Anteriores
                             </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                                Precargado desde el último tanqueo registrado
+                            <span className="text-[10px] text-emerald-600 font-mono font-bold">
+                                ✓ Precios Previos Inmutables (Corte Anterior)
                             </span>
                         </div>
 
                         <div className={`grid grid-cols-1 ${supportsMdo ? 'md:grid-cols-4' : 'md:grid-cols-2'} gap-3 font-mono`}>
-                            <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-amber-200 dark:border-amber-900/50">
-                                <label className="text-[10px] font-bold text-amber-800 dark:text-amber-300 block mb-1">Stock ROB Previo IFO (TM)</label>
+                            {/* Saldo ROB IFO (Editable) */}
+                            <div className="p-3 rounded-xl bg-white dark:bg-slate-950 border-2 border-amber-300 dark:border-amber-700 shadow-2xs">
+                                <label className="text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase block mb-1">
+                                    Saldo Físico ROB IFO (TM)
+                                </label>
                                 <input
                                     type="number"
                                     step="0.01"
-                                    className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
-                                    value={robIfoMt}
+                                    className="w-full bg-transparent font-black text-slate-900 dark:text-white text-base outline-none border-b border-amber-200 dark:border-amber-800 focus:border-amber-500 pb-0.5"
+                                    value={robIfoMt || ''}
                                     onChange={(e) => setRobIfoMt(parseFloat(e.target.value) || 0)}
+                                    placeholder="0.00"
                                 />
+                                <span className="text-[10px] text-slate-400 block mt-1 font-sans">
+                                    Inventario remanente en tanques
+                                </span>
                             </div>
 
-                            <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-amber-200 dark:border-amber-900/50">
-                                <label className="text-[10px] font-bold text-amber-800 dark:text-amber-300 block mb-1">Precio Previo IFO ($ USD/TM)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
-                                    value={pricePrevIfoUsd}
-                                    onChange={(e) => setPricePrevIfoUsd(parseFloat(e.target.value) || 0)}
-                                />
+                            {/* Precio Previo IFO (ESTÁTICO / BLOQUEADO) */}
+                            <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1 flex items-center justify-between">
+                                    <span>Precio Previo IFO</span>
+                                    <span className="text-[9px] bg-amber-200/70 text-amber-900 dark:bg-amber-900 dark:text-amber-200 px-1 py-0.2 rounded font-sans font-bold">ESTÁTICO</span>
+                                </span>
+                                <div className="font-black text-amber-800 dark:text-amber-300 text-base py-0.5">
+                                    ${Number(pricePrevIfoUsd).toFixed(2)} <span className="text-xs font-normal text-slate-400">USD/TM</span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 block mt-1 font-sans">
+                                    Heredado del corte contable
+                                </span>
                             </div>
 
                             {supportsMdo && (
                                 <>
-                                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-cyan-200 dark:border-cyan-900/50">
-                                        <label className="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 block mb-1">Stock ROB Previo MDO (TM)</label>
+                                    {/* Saldo ROB MDO (Editable) */}
+                                    <div className="p-3 rounded-xl bg-white dark:bg-slate-950 border-2 border-cyan-300 dark:border-cyan-700 shadow-2xs">
+                                        <label className="text-[10px] font-black text-cyan-800 dark:text-cyan-300 uppercase block mb-1">
+                                            Saldo Físico ROB MDO (TM)
+                                        </label>
                                         <input
                                             type="number"
                                             step="0.01"
-                                            className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
-                                            value={robMdoMt}
+                                            className="w-full bg-transparent font-black text-slate-900 dark:text-white text-base outline-none border-b border-cyan-200 dark:border-cyan-800 focus:border-cyan-500 pb-0.5"
+                                            value={robMdoMt || ''}
                                             onChange={(e) => setRobMdoMt(parseFloat(e.target.value) || 0)}
+                                            placeholder="0.00"
                                         />
+                                        <span className="text-[10px] text-slate-400 block mt-1 font-sans">
+                                            Inventario remanente en tanques
+                                        </span>
                                     </div>
 
-                                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-cyan-200 dark:border-cyan-900/50">
-                                        <label className="text-[10px] font-bold text-cyan-800 dark:text-cyan-300 block mb-1">Precio Previo MDO ($ USD/TM)</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            className="w-full bg-transparent font-black text-slate-900 dark:text-white text-sm outline-none"
-                                            value={pricePrevMdoUsd}
-                                            onChange={(e) => setPricePrevMdoUsd(parseFloat(e.target.value) || 0)}
-                                        />
+                                    {/* Precio Previo MDO (ESTÁTICO / BLOQUEADO) */}
+                                    <div className="p-3 rounded-xl bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-900/50">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1 flex items-center justify-between">
+                                            <span>Precio Previo MDO</span>
+                                            <span className="text-[9px] bg-cyan-200/70 text-cyan-900 dark:bg-cyan-900 dark:text-cyan-200 px-1 py-0.2 rounded font-sans font-bold">ESTÁTICO</span>
+                                        </span>
+                                        <div className="font-black text-cyan-800 dark:text-cyan-300 text-base py-0.5">
+                                            ${Number(pricePrevMdoUsd).toFixed(2)} <span className="text-xs font-normal text-slate-400">USD/TM</span>
+                                        </div>
+                                        <span className="text-[10px] text-slate-400 block mt-1 font-sans">
+                                            Heredado del corte contable
+                                        </span>
                                     </div>
                                 </>
                             )}
@@ -531,10 +544,18 @@ export const BunkerBunkeringWizardModal: React.FC<BunkerBunkeringWizardModalProp
                                                         <button
                                                             type="button"
                                                             onClick={() => {
-                                                                const win = window.open();
-                                                                if (win) {
-                                                                    win.document.title = inv.pdf_filename || `Factura ${inv.invoice_number}`;
-                                                                    win.document.write(`<iframe src="data:application/pdf;base64,${inv.pdf_raw_base64}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                                                                try {
+                                                                    const byteCharacters = atob(inv.pdf_raw_base64 || '');
+                                                                    const byteNumbers = new Array(byteCharacters.length);
+                                                                    for (let i = 0; i < byteCharacters.length; i++) {
+                                                                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                                                    }
+                                                                    const byteArray = new Uint8Array(byteNumbers);
+                                                                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+                                                                    const blobUrl = URL.createObjectURL(blob);
+                                                                    window.open(blobUrl, '_blank');
+                                                                } catch {
+                                                                    alert('No se pudo previsualizar el PDF');
                                                                 }
                                                             }}
                                                             className="text-xs font-bold text-[#0284c7] hover:text-[#0369a1] hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"

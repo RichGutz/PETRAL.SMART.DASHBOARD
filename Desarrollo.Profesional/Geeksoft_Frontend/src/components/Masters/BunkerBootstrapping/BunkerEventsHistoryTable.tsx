@@ -188,30 +188,26 @@ export const BunkerEventsHistoryTable: React.FC<BunkerEventsHistoryTableProps> =
                                         )}
                                     </div>
                                     
-                                    {/* CAMPOS PARA STOCK ROB Y PRECIOS */}
-                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] font-mono">
-                                        {/* IFO */}
-                                        <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200">
-                                            <span className="font-bold">ROB IFO:</span> 
-                                            {Number(ev.rob_ifo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_ifo_usd).toFixed(2)} 
-                                            <span className="text-amber-600 font-bold ml-1">➔ Pond: ${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM</span>
-                                        </div>
-
-                                        {/* MDO */}
+                                    {/* RESULTADO COMERCIAL: PRECIOS PROMEDIO PONDERADOS RESULTANTES Y BAF EN UNA SOLA LÍNEA */}
+                                    <div className="flex items-center gap-3 mt-1.5 flex-wrap text-xs font-mono">
+                                        <span className="text-slate-700 dark:text-slate-300">
+                                            <strong className="text-amber-800 dark:text-amber-300 font-sans">Pond. IFO:</strong> ${Number(ev.weighted_avg_ifo_usd).toFixed(2)}/TM
+                                        </span>
                                         {supportsMdo && (
-                                            <div className="flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-900 text-cyan-900 dark:text-cyan-200">
-                                                <span className="font-bold">ROB MDO:</span> 
-                                                {Number(ev.rob_mdo_mt).toFixed(2)} TM @ ${Number(ev.price_prev_mdo_usd).toFixed(2)} 
-                                                <span className="text-cyan-600 font-bold ml-1">➔ Pond: ${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM</span>
-                                            </div>
+                                            <>
+                                                <span className="text-slate-300 dark:text-slate-700 font-sans">•</span>
+                                                <span className="text-slate-700 dark:text-slate-300">
+                                                    <strong className="text-cyan-800 dark:text-cyan-300 font-sans">Pond. MDO:</strong> ${Number(ev.weighted_avg_mdo_usd).toFixed(2)}/TM
+                                                </span>
+                                            </>
                                         )}
-
-                                        <div className="flex items-center gap-1 bg-purple-50 dark:bg-purple-950/30 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-900 text-purple-900 dark:text-purple-200 font-bold">
-                                            <span>BAF Factor:</span> {bafFactor.toFixed(4)} 
-                                            <span className={bafVar <= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                                        <span className="text-slate-300 dark:text-slate-700 font-sans">•</span>
+                                        <span className="text-purple-900 dark:text-purple-200 font-bold">
+                                            <span className="font-sans">BAF SPCC:</span> {bafFactor.toFixed(4)} 
+                                            <span className={`ml-1 font-sans text-[11px] ${bafVar <= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                 ({bafVar > 0 ? '+' : ''}{bafVar.toFixed(4)} USD/pmt)
                                             </span>
-                                        </div>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
