@@ -47,9 +47,9 @@ class BootstrapPayload(BaseModel):
     voyage_number: Optional[str] = None
     rob_ifo_mt: float
     price_prev_ifo_usd: float
-    rob_mdo_mt: float
-    price_prev_mdo_usd: float
-    notes: Optional[str] = "Saldo inicial de buque (Bootstrapping)"
+    rob_mdo_mt: Optional[float] = 0.0
+    price_prev_mdo_usd: Optional[float] = 0.0
+    notes: Optional[str] = "Asiento de apertura de buque (Bootstrapping)"
     created_by: Optional[str] = "admin@petral.com"
 
 
@@ -75,26 +75,77 @@ class BunkeringEventPayload(BaseModel):
     voyage_number: Optional[str] = None
     rob_ifo_mt: float
     price_prev_ifo_usd: float
-    rob_mdo_mt: float
-    price_prev_mdo_usd: float
+    rob_mdo_mt: Optional[float] = 0.0
+    price_prev_mdo_usd: Optional[float] = 0.0
     notes: Optional[str] = None
     created_by: Optional[str] = "admin@petral.com"
     invoices: List[InvoiceItemPayload] = []
 
 
-def calculate_baf_spcc(ifo_avg: float, mdo_avg: float, ifo_prev: float = 967.26, mdo_prev: float = 1528.26) -> dict:
+def get_vessel_fuel_capability(cur, vessel_id: str) -> dict:
+    """
+    Consulta en la tabla 'vessels' de PostgreSQL para saber qué consume el buque
+    según su ficha técnica de flota.
+    """
+    clean_id = (vessel_id or "").upper().strip()
+    cur.execute("""
+        SELECT vessel_id, vessel_name, max_capacity_ifo, max_capacity_mdo, 
+               consumption_sea_ifo, consumption_sea_mdo
+        FROM vessels 
+        WHERE UPPER(vessel_id) = %s
+    """, (clean_id,))
+    row = cur.fetchone()
+    if not row:
+        # Si no se encuentra exactamente, buscar por LIKE
+        cur.execute("""
+            SELECT vessel_id, vessel_name, max_capacity_ifo, max_capacity_mdo, 
+                   consumption_sea_ifo, consumption_sea_mdo
+            FROM vessels 
+            WHERE UPPER(vessel_name) LIKE %s OR UPPER(vessel_id) LIKE %s
+            LIMIT 1
+        """, (f"%{clean_id}%", f"%{clean_id}%"))
+        row = cur.fetchone()
+
+    if not row:
+        return {
+            "vessel_id": clean_id,
+            "vessel_name": clean_id,
+            "supports_ifo": True,
+            "supports_mdo": False,
+            "fuels": ["IFO"]
+        }
+
+    mdo_cap = float(row[3] or 0)
+    mdo_cons = float(row[5] or 0)
+    supports_mdo = (mdo_cap > 0 or mdo_cons > 0)
+    return {
+        "vessel_id": row[0],
+        "vessel_name": row[1],
+        "max_capacity_ifo": float(row[2] or 0),
+        "max_capacity_mdo": mdo_cap,
+        "supports_ifo": True,
+        "supports_mdo": supports_mdo,
+        "fuels": ["IFO", "MDO"] if supports_mdo else ["IFO"]
+    }
+
+
+def calculate_baf_spcc(ifo_avg: float, mdo_avg: float, ifo_prev: float = 967.26, mdo_prev: float = 1528.26, supports_mdo: bool = True) -> dict:
     """
     Fórmula Contractual SPCC STM-PET-001-2025:
-    Rotación redonda BT MOQUEGUA: 38.40 TM IFO + 9.50 TM MDO
-    BAF = ROUNDUP( (IFO_N * 38.40 + MDO_N * 9.50) / (IFO_N-1 * 38.40 + MDO_N-1 * 9.50), 4)
-    Nuevo BAF = 4.1700 * BAF
-    Variación = Nuevo BAF - 4.1700
+    Rotación redonda BT MOQUEGUA: 38.40 TM IFO + 9.50 TM MDO (si dual-fuel)
+    Si la nave es solo IFO (como HUEMUL o CONCON TRADER), se pondera solo IFO.
     """
     import math
     c10 = ifo_prev if ifo_prev > 0 else 967.26
     c11 = mdo_prev if mdo_prev > 0 else 1528.26
-    denom = (c10 * 38.40) + (c11 * 9.50)
-    numer = (ifo_avg * 38.40) + (mdo_avg * 9.50)
+
+    if supports_mdo:
+        denom = (c10 * 38.40) + (c11 * 9.50)
+        numer = (ifo_avg * 38.40) + (mdo_avg * 9.50)
+    else:
+        denom = (c10 * 38.40)
+        numer = (ifo_avg * 38.40)
+
     raw_factor = numer / denom if denom > 0 else 1.0
 
     factor_baf = math.ceil(raw_factor * 10000.0) / 10000.0
@@ -123,16 +174,41 @@ async def parse_bunker_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error parseando factura PDF: {str(e)}")
 
 
+@router.get("/vessel-fuel-profile/{vessel_id}")
+def get_vessel_fuel_profile(vessel_id: str):
+    """Consulta la ficha técnica de la flota en PostgreSQL para retornar capacidades y consumos reales"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        profile = get_vessel_fuel_capability(cur, vessel_id)
+        return {"status": "success", "data": profile}
+    finally:
+        cur.close()
+        conn.close()
+
+
 @router.post("/bootstrap-vessel")
 def bootstrap_vessel(payload: BootstrapPayload):
-    """Establece la Condición Inicial (Génesis) para un buque nuevo en el sistema"""
+    """Establece la Condición Inicial (Génesis) para un buque correlacionado con su ficha de flota"""
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         event_id = str(uuid.uuid4())
         
-        # Calcular BAF contractual de referencia
-        baf = calculate_baf_spcc(payload.price_prev_ifo_usd, payload.price_prev_mdo_usd)
+        # 1. Consultar ficha de flota en PostgreSQL
+        fuel_cap = get_vessel_fuel_capability(cur, payload.vessel_id)
+        supports_mdo = fuel_cap["supports_mdo"]
+
+        # Si el buque solo consume IFO, forzar MDO a 0.0 contable
+        rob_mdo = float(payload.rob_mdo_mt or 0.0) if supports_mdo else 0.0
+        price_mdo = float(payload.price_prev_mdo_usd or 0.0) if supports_mdo else 0.0
+
+        # Calcular BAF contractual de referencia adaptado
+        baf = calculate_baf_spcc(
+            payload.price_prev_ifo_usd, 
+            price_mdo, 
+            supports_mdo=supports_mdo
+        )
 
         insert_sql = """
             INSERT INTO bunker_bunkering_events (
@@ -150,23 +226,30 @@ def bootstrap_vessel(payload: BootstrapPayload):
             ) RETURNING *;
         """
         cur.execute(insert_sql, (
-            event_id, payload.event_date, payload.vessel_id, payload.port_id, payload.voyage_number,
+            event_id, payload.event_date, fuel_cap["vessel_id"], payload.port_id, payload.voyage_number,
             payload.rob_ifo_mt, payload.price_prev_ifo_usd, payload.price_prev_ifo_usd,
-            payload.rob_mdo_mt, payload.price_prev_mdo_usd, payload.price_prev_mdo_usd,
+            rob_mdo, price_mdo, price_mdo,
             baf["spcc_baf_factor"], baf["spcc_initial_fuel_value"], baf["spcc_new_baf"], baf["spcc_baf_variation"],
             payload.notes, payload.created_by
         ))
         row = cur.fetchone()
 
         # Actualizar tabla bunker_prices para que los multicotizadores tomen este precio de inmediato
-        cur.execute("DELETE FROM bunker_prices WHERE fuel_type IN ('IFO', 'MDO');")
-        cur.execute(
-            "INSERT INTO bunker_prices (fuel_type, market_price_usd, date) VALUES ('IFO', %s, %s), ('MDO', %s, %s);",
-            (payload.price_prev_ifo_usd, payload.event_date, payload.price_prev_mdo_usd, payload.event_date)
-        )
+        if supports_mdo:
+            cur.execute("DELETE FROM bunker_prices WHERE fuel_type IN ('IFO', 'MDO');")
+            cur.execute(
+                "INSERT INTO bunker_prices (fuel_type, market_price_usd, date) VALUES ('IFO', %s, %s), ('MDO', %s, %s);",
+                (payload.price_prev_ifo_usd, payload.event_date, price_mdo, payload.event_date)
+            )
+        else:
+            cur.execute("DELETE FROM bunker_prices WHERE fuel_type = 'IFO';")
+            cur.execute(
+                "INSERT INTO bunker_prices (fuel_type, market_price_usd, date) VALUES ('IFO', %s, %s);",
+                (payload.price_prev_ifo_usd, payload.event_date)
+            )
 
         conn.commit()
-        return {"status": "success", "event_id": event_id, "message": f"Buque {payload.vessel_id} inicializado con éxito"}
+        return {"status": "success", "event_id": event_id, "message": f"Buque {fuel_cap['vessel_name']} inicializado con éxito (Perfil: {', '.join(fuel_cap['fuels'])})"}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Error en bootstrap: {str(e)}")
@@ -179,23 +262,28 @@ def bootstrap_vessel(payload: BootstrapPayload):
 def record_bunkering_event(payload: BunkeringEventPayload):
     """
     Registra un tanqueo completo (ROB previo + N facturas) y calcula el precio promedio ponderado
+    respetando la ficha de flota del buque.
     """
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         event_id = str(uuid.uuid4())
 
+        # Consultar ficha de flota para saber qué consume el buque
+        fuel_cap = get_vessel_fuel_capability(cur, payload.vessel_id)
+        supports_mdo = fuel_cap["supports_mdo"]
+
         # 1. Agrupar facturas por combustible
         ifo_invoices = [inv for inv in payload.invoices if inv.fuel_type.upper() == "IFO"]
-        mdo_invoices = [inv for inv in payload.invoices if inv.fuel_type.upper() in ["MDO", "MGO"]]
+        mdo_invoices = [inv for inv in payload.invoices if inv.fuel_type.upper() in ["MDO", "MGO"]] if supports_mdo else []
 
         # 2. Sumatoria compras IFO
         purchased_ifo_mt = sum(inv.quantity_mt for inv in ifo_invoices)
         purchased_ifo_total_usd = sum(inv.total_amount_usd for inv in ifo_invoices)
 
         # 3. Sumatoria compras MDO
-        purchased_mdo_mt = sum(inv.quantity_mt for inv in mdo_invoices)
-        purchased_mdo_total_usd = sum(inv.total_amount_usd for inv in mdo_invoices)
+        purchased_mdo_mt = sum(inv.quantity_mt for inv in mdo_invoices) if supports_mdo else 0.0
+        purchased_mdo_total_usd = sum(inv.total_amount_usd for inv in mdo_invoices) if supports_mdo else 0.0
 
         # 4. Cálculo Ponderado IFO
         total_ifo_mt = payload.rob_ifo_mt + purchased_ifo_mt
@@ -204,13 +292,20 @@ def record_bunkering_event(payload: BunkeringEventPayload):
         weighted_avg_ifo = round(total_cost_ifo / total_ifo_mt, 4) if total_ifo_mt > 0 else payload.price_prev_ifo_usd
 
         # 5. Cálculo Ponderado MDO
-        total_mdo_mt = payload.rob_mdo_mt + purchased_mdo_mt
-        cost_prev_mdo = payload.rob_mdo_mt * payload.price_prev_mdo_usd
-        total_cost_mdo = cost_prev_mdo + purchased_mdo_total_usd
-        weighted_avg_mdo = round(total_cost_mdo / total_mdo_mt, 4) if total_mdo_mt > 0 else payload.price_prev_mdo_usd
+        if supports_mdo:
+            rob_mdo = payload.rob_mdo_mt or 0.0
+            price_prev_mdo = payload.price_prev_mdo_usd or 0.0
+            total_mdo_mt = rob_mdo + purchased_mdo_mt
+            cost_prev_mdo = rob_mdo * price_prev_mdo
+            total_cost_mdo = cost_prev_mdo + purchased_mdo_total_usd
+            weighted_avg_mdo = round(total_cost_mdo / total_mdo_mt, 4) if total_mdo_mt > 0 else price_prev_mdo
+        else:
+            rob_mdo = 0.0
+            price_prev_mdo = 0.0
+            weighted_avg_mdo = 0.0
 
         # 6. Cálculo BAF SPCC
-        baf = calculate_baf_spcc(weighted_avg_ifo, weighted_avg_mdo, payload.price_prev_ifo_usd, payload.price_prev_mdo_usd)
+        baf = calculate_baf_spcc(weighted_avg_ifo, weighted_avg_mdo, payload.price_prev_ifo_usd, price_prev_mdo, supports_mdo=supports_mdo)
 
         # 7. Insertar Evento en BD
         insert_event_sql = """
@@ -229,9 +324,9 @@ def record_bunkering_event(payload: BunkeringEventPayload):
             );
         """
         cur.execute(insert_event_sql, (
-            event_id, payload.event_date, payload.vessel_id, payload.port_id, payload.voyage_number,
+            event_id, payload.event_date, fuel_cap["vessel_id"], payload.port_id, payload.voyage_number,
             payload.rob_ifo_mt, payload.price_prev_ifo_usd, purchased_ifo_mt, purchased_ifo_total_usd, weighted_avg_ifo,
-            payload.rob_mdo_mt, payload.price_prev_mdo_usd, purchased_mdo_mt, purchased_mdo_total_usd, weighted_avg_mdo,
+            rob_mdo, price_prev_mdo, purchased_mdo_mt, purchased_mdo_total_usd, weighted_avg_mdo,
             baf["spcc_baf_factor"], baf["spcc_initial_fuel_value"], baf["spcc_new_baf"], baf["spcc_baf_variation"],
             payload.notes, payload.created_by
         ))
