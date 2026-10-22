@@ -139,18 +139,18 @@ class ContractMaster(BaseModel):
     is_active: bool = True
     valid_from: Optional[str] = None
     valid_to: Optional[str] = None
-    load_rate: float = 0.0
-    discharge_rate: float = 0.0
-    address_commission: float = 0.0
-    broker_commission: float = 0.0
-    bunker_baseline_price_ifo: float = 0.0
-    bunker_baseline_price_mdo: float = 0.0
+    load_rate: Optional[float] = 0.0
+    discharge_rate: Optional[float] = 0.0
+    address_commission: Optional[float] = 0.0
+    broker_commission: Optional[float] = 0.0
+    bunker_baseline_price_ifo: Optional[float] = 0.0
+    bunker_baseline_price_mdo: Optional[float] = 0.0
     baf_rules: Optional[str] = None
     comments: Optional[list] = []
-    time_to_count_carga_hrs: float = 6.0
-    maneuver_carga_hrs: float = 0.0
-    time_to_count_descarga_hrs: float = 6.0
-    maneuver_descarga_hrs: float = 0.0
+    time_to_count_carga_hrs: Optional[float] = 6.0
+    maneuver_carga_hrs: Optional[float] = 0.0
+    time_to_count_descarga_hrs: Optional[float] = 6.0
+    maneuver_descarga_hrs: Optional[float] = 0.0
     tariffs: List[ContractTariffMaster] = []
     demurrage_rates: Optional[Dict[str, float]] = Field(default_factory=dict)
 

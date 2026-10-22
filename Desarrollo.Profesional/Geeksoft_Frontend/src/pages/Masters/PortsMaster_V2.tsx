@@ -14,6 +14,10 @@ const getCountryInfo = (countryStr: string) => {
     if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return { code: 'pe', name: 'Perú' };
     if (c === 'CL' || c === 'CHILE') return { code: 'cl', name: 'Chile' };
     if (c === 'EC' || c === 'ECUADOR') return { code: 'ec', name: 'Ecuador' };
+    if (c === 'BR' || c === 'BRA' || c === 'BRASIL' || c === 'BRAZIL') return { code: 'br', name: 'Brasil' };
+    if (c === 'CO' || c === 'COL' || c === 'COLOMBIA') return { code: 'co', name: 'Colombia' };
+    if (c === 'AR' || c === 'ARG' || c === 'ARGENTINA') return { code: 'ar', name: 'Argentina' };
+    if (c === 'PA' || c === 'PAN' || c === 'PANAMA' || c === 'PANAMÁ') return { code: 'pa', name: 'Panamá' };
     const fallbackCode = countryStr.slice(0, 2).toLowerCase();
     return { code: fallbackCode, name: countryStr };
 };
@@ -104,7 +108,7 @@ export const PortsMaster_V2: React.FC = () => {
     // Port Actions
     const handleNewPortClick = () => {
         setEditingPortId('NUEVO');
-        setEditPortData({ port_id: '', port_name: '', country: activeCountry, lat: 0, lon: 0 });
+        setEditPortData({ port_id: '', port_name: '', country: activeCountry || 'PE', lat: '', lon: '' });
     };
     const handleSavePort = async () => {
         if (!editPortData.port_id || !editPortData.port_name) {
@@ -113,13 +117,25 @@ export const PortsMaster_V2: React.FC = () => {
         }
         try {
             setIsSaving(true);
-            const payload = { ...editPortData, port_id: editPortData.port_id.toUpperCase() };
+            const rawLat = parseFloat(String(editPortData.lat).replace(',', '.')) || 0;
+            const rawLon = parseFloat(String(editPortData.lon).replace(',', '.')) || 0;
+            const targetCountry = (editPortData.country || activeCountry || 'PE').trim().toUpperCase();
+            const payload = { 
+                ...editPortData, 
+                port_id: editPortData.port_id.trim().toUpperCase(),
+                port_name: editPortData.port_name.trim(),
+                country: targetCountry,
+                lat: rawLat,
+                lon: rawLon
+            };
             await ForecastService.savePorts(payload);
             setEditingPortId(null);
             await fetchData();
+            setActiveCountry(targetCountry);
             setActivePortId(payload.port_id);
-        } catch(e) {
-            alert("Error al guardar puerto");
+        } catch(e: any) {
+            const detail = e?.response?.data?.detail || e?.message || "Error desconocido";
+            alert(`Error al guardar puerto: ${detail}`);
         } finally {
             setIsSaving(false);
         }
@@ -280,6 +296,22 @@ export const PortsMaster_V2: React.FC = () => {
                                 </div>
                                 <div className="flex gap-4 items-end flex-wrap">
                                     <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-500">País</label>
+                                        <select 
+                                            className="border border-slate-300 p-2 rounded-lg text-sm uppercase font-bold focus:ring-2 focus:ring-blue-500 outline-none w-36 bg-white"
+                                            value={editPortData.country || activeCountry || 'PE'}
+                                            onChange={e => setEditPortData({...editPortData, country: e.target.value})}
+                                        >
+                                            <option value="PE">🇵🇪 PERÚ</option>
+                                            <option value="CL">🇨🇱 CHILE</option>
+                                            <option value="EC">🇪🇨 ECUADOR</option>
+                                            <option value="BR">🇧🇷 BRASIL</option>
+                                            <option value="CO">🇨🇴 COLOMBIA</option>
+                                            <option value="AR">🇦🇷 ARGENTINA</option>
+                                            <option value="PA">🇵🇦 PANAMÁ</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
                                         <label className="text-[10px] font-black uppercase text-slate-500">ID Corto</label>
                                         <input placeholder="Ej. CALLAO" className="border border-slate-300 p-2 rounded-lg text-sm uppercase font-bold focus:ring-2 focus:ring-blue-500 outline-none w-36" value={editPortData.port_id} onChange={e=>setEditPortData({...editPortData, port_id: e.target.value})} />
                                     </div>
@@ -345,6 +377,22 @@ export const PortsMaster_V2: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className="flex gap-4 items-end flex-wrap">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-500">País</label>
+                                                <select 
+                                                    className="border border-slate-300 p-2 rounded-lg text-sm uppercase font-bold focus:ring-2 focus:ring-blue-500 outline-none w-36 bg-white"
+                                                    value={editPortData.country || activeCountry || 'PE'}
+                                                    onChange={e => setEditPortData({...editPortData, country: e.target.value})}
+                                                >
+                                                    <option value="PE">🇵🇪 PERÚ</option>
+                                                    <option value="CL">🇨🇱 CHILE</option>
+                                                    <option value="EC">🇪🇨 ECUADOR</option>
+                                                    <option value="BR">🇧🇷 BRASIL</option>
+                                                    <option value="CO">🇨🇴 COLOMBIA</option>
+                                                    <option value="AR">🇦🇷 ARGENTINA</option>
+                                                    <option value="PA">🇵🇦 PANAMÁ</option>
+                                                </select>
+                                            </div>
                                             <div className="flex flex-col gap-1">
                                                 <label className="text-[10px] font-black uppercase text-slate-500">ID Corto</label>
                                                 <input disabled className="border border-slate-200 p-2 rounded-lg text-sm uppercase font-bold bg-slate-100 text-slate-400 w-36" value={editPortData.port_id} />

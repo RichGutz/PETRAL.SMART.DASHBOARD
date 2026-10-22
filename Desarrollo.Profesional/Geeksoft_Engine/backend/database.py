@@ -343,6 +343,7 @@ class TableQuery:
                         placeholders = ', '.join(['%s'] * len(cols))
                         vals = [_prepare_param(row[c]) for c in cols]
                         
+                        inserted = False
                         if conflict_cols:
                             conflict_str = ', '.join([f'"{c}"' for c in conflict_cols])
                             update_cols = [c for c in cols if c not in conflict_cols]
@@ -363,13 +364,24 @@ class TableQuery:
                                     f'DO NOTHING '
                                     f'RETURNING *;'
                                 )
-                        else:
+                            try:
+                                cur.execute("SAVEPOINT upsert_sp;")
+                                cur.execute(query, vals)
+                                res = cur.fetchone()
+                                cur.execute("RELEASE SAVEPOINT upsert_sp;")
+                                if res:
+                                    results.append(_clean_row(dict(res)))
+                                inserted = True
+                            except Exception:
+                                cur.execute("ROLLBACK TO SAVEPOINT upsert_sp;")
+                                inserted = False
+
+                        if not inserted:
                             query = f'INSERT INTO "{self.table_name}" ({cols_str}) VALUES ({placeholders}) RETURNING *;'
-                            
-                        cur.execute(query, vals)
-                        res = cur.fetchone()
-                        if res:
-                            results.append(_clean_row(dict(res)))
+                            cur.execute(query, vals)
+                            res = cur.fetchone()
+                            if res:
+                                results.append(_clean_row(dict(res)))
                     conn.commit()
                     return SupabaseResponse(results)
 

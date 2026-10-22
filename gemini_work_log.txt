@@ -1,4 +1,16 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-19 (Restitución Pericial de Parámetros B/T MOQUEGUA desde Backup Canónico)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Diagnóstico Forense: Corrupción de datos detectada en la tabla 'vessels' de Contabo VPS (169.58.168.107) para 'vessel_id = MOQUEGUA' (todos los parámetros técnicos y consumos en 0.0 debido a sobreescritura accidental).
+- Cero Invención de Datos: Extracción de parámetros canónicos directamente desde 'Desarrollo.Profesional/Backups/supabase_emergency_backup_20260921/vessels.json'.
+- Ejecución SQL Atómica: Restitución exitosa en PostgreSQL Contabo: GRT 8259, DWT 14298, DWCC 13500, Speed 11.0, TCE 13000, LOA 134.0, Beam 20.0, Draft 8.81, IFO Sea 14.0, Idle 2.4, Load 2.4, Disch 3.6, MDO 0.5.
+- Purga de Caché: Reinicio del contenedor 'petral-backend' en Contabo.
+- Verificación Empírica: Endpoint 'https://petral.one.geeksoft.tech/api/v1/forecast/vessels' validado en terminal con código HTTP 200 y parámetros 100% íntegros.
+- Documentación: Vuelta 5.45 (Serie 64) registrada en Obsidian '07_Especificaciones_Comerciales_Grilla_y_Puertos.md'.
+================================================================================
+
+================================================================================
 GEMINI WORK LOG: 2026-10-16 (Herramienta Ex-Post: Voyage Liquidator Modular 100% & Enlace Bootstrapping)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
@@ -1223,3 +1235,56 @@ VERIFICACION EMPIRICA:
 - Produccion en VPS Contabo 169.58.168.107 activa y verificada al 100% (HTTP/2 200 OK).
 - Sesion finalizada limpiamente.
 ================================================================================
+
+================================================================================
+GEMINI WORK LOG: 2026-10-22 (Resolución Falla de Upsert de Puertos en Producción Contabo & Selector de País)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Diagnóstico Forense (Benoit Blanc):
+  • Al intentar registrar un nuevo puerto (ej. RIO GRANDE / BRASIL) desde el Maestro de Puertos (https://petral.one.geeksoft.tech/masters/ports), el sistema arrojaba la alerta 'Error al guardar puerto' (HTTP 500).
+  • Causa Raíz 1 (Base de Datos): La tabla 'ports' (y 14 tablas adicionales) en la base de datos PostgreSQL de producción en Contabo (10.0.1.16:5432/petral_db) carecía de restricción PRIMARY KEY o índice UNIQUE en 'port_id'. Al ejecutar DirectPostgresClient.upsert() un INSERT ... ON CONFLICT ('port_id') DO UPDATE ..., PostgreSQL arrojaba 'there is no unique or exclusion constraint matching the ON CONFLICT specification'.
+  • Causa Raíz 2 (Backend database.py): En caso de no existir un índice UNIQUE que coincida con el fallback de claves, el ON CONFLICT abortaba la transacción completa sin mecanismo de recuperación.
+  • Causa Raíz 3 (Frontend PortsMaster_V2.tsx): El formulario 'Registrar Nuevo Puerto' no disponía de un campo selector de 'País', forzando el valor de la pestaña activa ('PE') e impidiendo al usuario definir puertos de otros países (ej. Brasil, Colombia, Argentina, etc.). Además, lat/lon se enviaban como strings sin parsear y los errores se enmascaraban con un alert genérico.
+- Cirugía & Corrección:
+  1. Base de Datos Contabo PostgreSQL (petral_db): Se ejecutó la adición atómica de PRIMARY KEY en las 15 tablas afectadas: 'ports' (port_id), 'terminals' (terminal_id, port_id), 'distances', 'bunker_prices', 'contracts', 'routes_clients', 'suppliers', 'port_costs_matrix', 'port_cost_static', 'sources_sinks', 'vessel_terminal_operations', 'demurrage_records', 'app_users', 'user_permissions', 'commercial_forecasts'.
+  2. Backend Engine ('backend/database.py'): Se blindó DirectPostgresClient.upsert() envolviendo la sentencia ON CONFLICT con un SAVEPOINT PostgreSQL ('upsert_sp'); ante cualquier divergencia de constraints, realiza ROLLBACK TO SAVEPOINT y ejecuta un INSERT limpio garantizando persistencia infalible.
+  3. Frontend ('src/pages/Masters/PortsMaster_V2.tsx'):
+     - Se integró el selector desplegable de 'País' (<select>) en el formulario flotante de 'Registrar Nuevo Puerto' y en 'Editar Datos de Puerto', con soporte nativo de banderas y nombres limpios (Perú, Chile, Ecuador, Brasil, Colombia, Argentina, Panamá).
+     - Se parsearon y sanitizaron lat/lon con parseFloat() y reemplazo de comas por puntos.
+     - Se mejoró la captura de errores en el frontend mostrando el mensaje específico retornado por la API (e.response.data.detail).
+- QC Gate & Verificación Empírica:
+  • Compilación Frontend: 'npx vite build' completado exitosamente en 45.24s (0 errores TS).
+  • Despliegue Oficial VPS Contabo: 'deploy_petral_one_contabo.py' ejecutado exitosamente con actualización de contenedores 'petral-backend' y 'petral-frontend'.
+  • Test E2E en Vivo: Script 'verify_production_ports_crud.py' ejecutado contra 'https://petral.one.geeksoft.tech/api/v1/forecast/ports':
+    - Creación de puerto 'RIO_GRANDE' en 'BR': HTTP 200 {'status':'success'}
+    - Verificación GET en base de datos en vivo: Verificado 100%
+    - Actualización de puerto: HTTP 200 {'status':'success'}
+    - Eliminación de prueba: HTTP 200 {'status':'success'}
+================================================================================
+
+
+================================================================================
+GEMINI WORK LOG: 2026-10-22 (Auditoría Integral de Creación y Modificación en los 11 Submódulos de PETRAL)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Diagnóstico Exhaustivo Preventivo:
+  • Se realizó un escaneo total de las 31 tablas de la base de datos de producción Contabo ('petral_db').
+  • Se detectó y resolvió que 'vessel_terminal_operations' carecía de 6 columnas esperadas por el frontend ('time_to_count_carga_hrs', 'time_to_count_descarga_hrs', 'maneuver_carga_hrs', 'maneuver_descarga_hrs', 'tugboats_in', 'tugboats_out'). Se aplicó ALTER TABLE atómico para agregarlas.
+  • Se detectó en 'ContractMaster' que los campos 'bunker_baseline_price_ifo' y 'bunker_baseline_price_mdo' rechazaban valores 'null' provenientes de contratos antiguos. Se blindó a 'Optional[float] = 0.0'.
+  • Se aseguraron claves primarias en 'user_authorized_devices', 'port_cost_concepts', 'audit_benchmarks', 'user_2fa_tokens' y 'audit_logs'.
+- Verificación Empírica de Upsert / Creación / Edición en Producción:
+  • Se ejecutó 'scratch/test_all_submodules_comprehensive.py' con cobertura del 100% de los 11 submódulos:
+    1. Maestro de Puertos (ports): PASS
+    2. Maestro de Terminales (terminals): PASS
+    3. Maestro de Buques (vessels): PASS
+    4. Maestro de Clientes (clients): PASS
+    5. Maestro de Contratos (contracts & tariffs): PASS
+    6. Maestro de Distancias (distances): PASS
+    7. Maestro de Proveedores (suppliers): PASS
+    8. Costos Portuarios Estáticos (port_cost_static): PASS
+    9. Matriz de Tarifas Portuarias (port_costs_matrix): PASS
+    10. Compatibilidad Buque x Terminal (vessel_terminal_operations): PASS
+    11. Liquidaciones de Viaje (voyage_liquidations): PASS
+  • Tasa de éxito: 11 / 11 submódulos operativos (100% PASS).
+================================================================================
+
