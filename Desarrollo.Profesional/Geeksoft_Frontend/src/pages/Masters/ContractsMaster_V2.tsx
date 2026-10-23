@@ -110,7 +110,7 @@ export const ContractsMaster: React.FC = () => {
         const identifier = route.name || route.contract_id || route.route_id;
         if (!identifier) return;
 
-        if (!window.confirm(`¿Estás seguro de que deseas eliminar la ruta de contrato "${route.name}"? Esta acción eliminará el registro de la base de datos.`)) {
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar la ruta de contrato "${route.name}"?\n(Se guardará un respaldo en la Papelera de Reciclaje).`)) {
             return;
         }
 
@@ -118,10 +118,11 @@ export const ContractsMaster: React.FC = () => {
             setLoading(true);
             await ForecastService.deleteSpot(identifier);
             await loadData();
-            alert(`Ruta "${route.name}" eliminada exitosamente.`);
-        } catch (err) {
+            alert(`Ruta "${route.name}" enviada exitosamente a la Papelera de Reciclaje.`);
+        } catch (err: any) {
             console.error("Error al eliminar la ruta:", err);
-            alert("Ocurrió un error al eliminar la ruta.");
+            const msg = err?.response?.data?.detail || err?.message || "Ocurrió un error al eliminar la ruta.";
+            alert(`Error al eliminar: ${msg}`);
             setLoading(false);
         }
     };

@@ -40,7 +40,7 @@ class TrashService:
                         document_name,
                         client_name,
                         vessel_id,
-                        json.dumps(payload),
+                        json.dumps(payload, default=str),
                         deleted_by or "Sistema / Usuario"
                     )
                 )

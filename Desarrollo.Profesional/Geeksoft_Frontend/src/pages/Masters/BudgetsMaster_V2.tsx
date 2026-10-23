@@ -79,7 +79,7 @@ export const BudgetsMaster: React.FC = () => {
         const identifier = route.name || route.route_id;
         if (!identifier) return;
 
-        if (!window.confirm(`¿Estás seguro de que deseas eliminar la ruta de presupuesto "${route.name}"? Esta acción eliminará el registro de la base de datos.`)) {
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar la ruta de presupuesto "${route.name}"?\n(Se guardará un respaldo en la Papelera de Reciclaje).`)) {
             return;
         }
 
@@ -87,10 +87,11 @@ export const BudgetsMaster: React.FC = () => {
             setLoading(true);
             await ForecastService.deleteSpot(identifier);
             await loadData();
-            alert(`Presupuesto "${route.name}" eliminado exitosamente.`);
-        } catch (err) {
+            alert(`Presupuesto "${route.name}" enviado exitosamente a la Papelera de Reciclaje.`);
+        } catch (err: any) {
             console.error("Error al eliminar el presupuesto:", err);
-            alert("Ocurrió un error al eliminar el presupuesto.");
+            const msg = err?.response?.data?.detail || err?.message || "Ocurrió un error al eliminar el presupuesto.";
+            alert(`Error al eliminar: ${msg}`);
             setLoading(false);
         }
     };

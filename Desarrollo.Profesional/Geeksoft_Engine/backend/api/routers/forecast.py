@@ -20,8 +20,12 @@ from backend.services.forecast_service import run_forecast_simulation, run_forec
 
 router = APIRouter(tags=["Commercial Forecast"])
 
+import logging
+import urllib.parse
 import os
 from datetime import datetime
+
+logger = logging.getLogger("forecast_router")
 
 LOG_FILE_PATH = "/opt/geeksoft_engine/frontend_runtime_errors.log"
 
@@ -798,109 +802,102 @@ def save_spot_voyage(request: SpotSaveRequest):
         print(f"Error in save_spot_voyage: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/spot/delete/{spot_id}")
+@router.delete("/spot/delete/{spot_id:path}")
 def delete_spot_route(spot_id: str, is_prospect: bool = False, deleted_by: str = "Usuario Comercial"):
+    clean_id = urllib.parse.unquote(spot_id).strip()
+    logger.info(f"Iniciando borrado seguro para spot_id: '{clean_id}' (raw: '{spot_id}') por '{deleted_by}'")
     try:
-        from backend.database import get_supabase
+        from backend.database import get_db_connection
         from backend.services.forecast_service import clear_forecast_cache
         from backend.services.trash_service import TrashService
-        sb = get_supabase()
         
-        # Interceptor seguro: respaldar snapshot en commercial_trash_bin
+        conn = get_db_connection()
+        deleted_count = 0
+        target_name = clean_id
+
         try:
-            # 1. Buscar en routes_quotes
-            rq_res = sb.table("routes_quotes").select("*").eq("name", spot_id).execute()
-            if not rq_res.data and spot_id.isdigit():
-                rq_res = sb.table("routes_quotes").select("*").eq("id", int(spot_id)).execute()
-            
-            if rq_res.data:
-                for item in rq_res.data:
+            with conn.cursor() as cur:
+                # 1. Buscar en routes_quotes (por name exacto o ILIKE)
+                cur.execute(
+                    "SELECT * FROM routes_quotes WHERE name = %s OR name ILIKE %s LIMIT 1;",
+                    (clean_id, clean_id)
+                )
+                cols = [d[0] for d in cur.description] if cur.description else []
+                rq_row = cur.fetchone()
+
+                if rq_row:
+                    item = dict(zip(cols, rq_row))
+                    target_name = item.get("name") or clean_id
                     desc = str(item.get("description") or "").upper()
-                    name_u = str(item.get("name") or "").upper()
+                    name_u = str(target_name).upper()
+                    
                     if "COA" in desc or "COA" in name_u or "CIERRE" in desc or "CIERRE" in name_u:
                         e_type = "CIERRE"
                     elif "PRESUPUESTO" in desc or "PPTO" in desc or item.get("is_budget"):
                         e_type = "PRESUPUESTO"
                     else:
                         e_type = "COTIZACION"
-                    
-                    TrashService.move_to_trash(
-                        entity_type=e_type,
-                        entity_id=str(item.get("name") or spot_id),
-                        source_table="routes_quotes",
-                        document_name=item.get("name") or spot_id,
-                        client_name=item.get("client_id") or item.get("client_name"),
-                        vessel_id=item.get("vessel_id"),
-                        payload=item,
-                        deleted_by=deleted_by
+
+                    try:
+                        TrashService.move_to_trash(
+                            entity_type=e_type,
+                            entity_id=target_name,
+                            source_table="routes_quotes",
+                            document_name=target_name,
+                            client_name=item.get("client_id"),
+                            vessel_id=item.get("vessel_id"),
+                            payload=item,
+                            deleted_by=deleted_by
+                        )
+                        logger.info(f"Registro '{target_name}' respaldado exitosamente en commercial_trash_bin ({e_type})")
+                    except Exception as trash_err:
+                        logger.warning(f"Aviso al respaldar en papelera '{target_name}': {trash_err}")
+
+                    # Borrado físico en routes_quotes
+                    cur.execute("DELETE FROM routes_quotes WHERE name = %s;", (target_name,))
+                    deleted_count += cur.rowcount
+                else:
+                    # 2. Si no estaba en routes_quotes, buscar en routes_clients por name
+                    cur.execute(
+                        "SELECT * FROM routes_clients WHERE name = %s OR name ILIKE %s LIMIT 1;",
+                        (clean_id, clean_id)
                     )
-            else:
-                # 2. Si no estaba en routes_quotes, buscar en routes_clients
-                rc_res = sb.table("routes_clients").select("*").or_(f"route_id.eq.{spot_id},name.eq.{spot_id}").execute()
-                if rc_res.data:
-                    for item in rc_res.data:
-                        TrashService.move_to_trash(
-                            entity_type="COTIZACION",
-                            entity_id=str(item.get("name") or spot_id),
-                            source_table="routes_clients",
-                            document_name=item.get("name") or spot_id,
-                            client_name=item.get("client_id") or item.get("client_name"),
-                            vessel_id=item.get("vessel_id"),
-                            payload=item,
-                            deleted_by=deleted_by
-                        )
-                # 3. Buscar en contracts
-                ct_res = sb.table("contracts").select("*").or_(f"contract_id.eq.{spot_id},name.eq.{spot_id}").execute()
-                if ct_res.data:
-                    for item in ct_res.data:
-                        TrashService.move_to_trash(
-                            entity_type="CIERRE",
-                            entity_id=str(item.get("contract_id") or item.get("name") or spot_id),
-                            source_table="contracts",
-                            document_name=item.get("name") or spot_id,
-                            client_name=item.get("client_name") or item.get("client_id"),
-                            vessel_id=item.get("vessel_id"),
-                            payload=item,
-                            deleted_by=deleted_by
-                        )
-        except Exception as trash_err:
-            logger.warning(f"No se pudo respaldar en papelera antes de borrar {spot_id}: {trash_err}")
+                    rc_cols = [d[0] for d in cur.description] if cur.description else []
+                    rc_row = cur.fetchone()
+                    if rc_row:
+                        item = dict(zip(rc_cols, rc_row))
+                        target_name = item.get("name") or clean_id
+                        try:
+                            TrashService.move_to_trash(
+                                entity_type="COTIZACION",
+                                entity_id=target_name,
+                                source_table="routes_clients",
+                                document_name=target_name,
+                                client_name=item.get("client_id") or item.get("client"),
+                                vessel_id=item.get("vessel_id"),
+                                payload=item,
+                                deleted_by=deleted_by
+                            )
+                        except Exception as trash_err:
+                            logger.warning(f"Aviso al respaldar routes_clients en papelera: {trash_err}")
 
-        # 1. Intentar borrar en routes_quotes por name o id
-        try:
-            sb.table("routes_quotes").delete().eq("name", spot_id).execute()
-        except Exception as eq_err:
-            logger.warning(f"Error al borrar routes_quotes por name={spot_id}: {eq_err}")
+                        cur.execute("DELETE FROM routes_clients WHERE name = %s;", (target_name,))
+                        deleted_count += cur.rowcount
 
-        try:
-            if spot_id.isdigit():
-                sb.table("routes_quotes").delete().eq("id", int(spot_id)).execute()
-        except Exception:
-            pass
-
-        # 2. Intentar borrar en routes_clients por name o route_id
-        try:
-            sb.table("routes_clients").delete().or_(f"route_id.eq.{spot_id},name.eq.{spot_id}").execute()
-        except Exception:
-            try:
-                sb.table("routes_clients").delete().eq("name", spot_id).execute()
-            except Exception:
-                pass
-
-        # 3. Intentar borrar en contracts por name o contract_id
-        try:
-            sb.table("contracts").delete().or_(f"contract_id.eq.{spot_id},name.eq.{spot_id}").execute()
-        except Exception:
-            try:
-                sb.table("contracts").delete().eq("name", spot_id).execute()
-            except Exception:
-                pass
+            conn.commit()
+        except Exception as db_err:
+            conn.rollback()
+            logger.error(f"Error en base de datos al borrar '{clean_id}': {db_err}")
+            raise db_err
+        finally:
+            conn.close()
 
         clear_forecast_cache()
-        return {"status": "success", "deleted_id": spot_id}
+        logger.info(f"Borrado completado para '{target_name}'. Filas eliminadas: {deleted_count}")
+        return {"status": "success", "deleted_id": target_name, "deleted_count": deleted_count}
     except Exception as e:
-        logger.error(f"Error en delete_spot_route para spot_id={spot_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error en delete_spot_route para spot_id='{clean_id}': {e}")
+        raise HTTPException(status_code=500, detail=f"Error al eliminar la cotización: {str(e)}")
 
 @router.get("/vessels")
 def get_vessels(include_images: bool = False):

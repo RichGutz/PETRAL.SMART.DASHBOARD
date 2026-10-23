@@ -91,17 +91,18 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'quotes' }) 
         const name = routeName || (typeof spotIdOrName === 'object' ? spotIdOrName.name : identifier);
         if (!identifier) return;
 
-        const confirmDelete = window.confirm(`¿Está seguro de que desea eliminar la cotización "${name}"?`);
+        const confirmDelete = window.confirm(`¿Está seguro de que desea eliminar la cotización "${name}"?\n(Se guardará un respaldo en la Papelera de Reciclaje).`);
         if (!confirmDelete) return;
 
         try {
             setIsLoading(true);
             await ForecastService.deleteSpot(identifier);
-            alert(`Cotización "${name}" eliminada exitosamente.`);
+            alert(`Cotización "${name}" enviada exitosamente a la Papelera de Reciclaje.`);
             await loadRoutes();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error al eliminar cotización:", error);
-            alert("Ocurrió un error al intentar borrar la cotización.");
+            const msg = error?.response?.data?.detail || error?.message || "Ocurrió un error al intentar borrar la cotización.";
+            alert(`Error al eliminar: ${msg}`);
             setIsLoading(false);
         }
     };

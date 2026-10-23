@@ -266,11 +266,13 @@ export const ForecastService = {
         return response.data;
     },
     deleteSpotVoyage: async (spotId: string) => {
-        const response = await api.delete(`/forecast/spot/delete/${spotId}`);
+        const encoded = encodeURIComponent(spotId);
+        const response = await api.delete(`/forecast/spot/delete/${encoded}`);
         return response.data;
     },
     deleteSpot: async (spotId: string) => {
-        const response = await api.delete(`/forecast/spot/delete/${spotId}`);
+        const encoded = encodeURIComponent(spotId);
+        const response = await api.delete(`/forecast/spot/delete/${encoded}`);
         return response.data;
     },
     getDemurrageRecords: async () => {
