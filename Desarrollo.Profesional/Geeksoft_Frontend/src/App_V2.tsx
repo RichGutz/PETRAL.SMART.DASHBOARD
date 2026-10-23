@@ -82,6 +82,19 @@ const ProtectedRoute = ({
     return <>{children}</>;
 };
 
+// Componente público de redirección inmediata a la presentación Handshake (Sin 2FA)
+const HandshakeRedirect: React.FC = () => {
+    useEffect(() => {
+        window.location.replace('/handshake/index.html');
+    }, []);
+    return (
+        <div className="min-h-screen w-screen flex items-center justify-center bg-slate-950 text-white font-mono text-sm">
+            <div className="animate-spin h-6 w-6 border-2 border-sky-400 border-t-transparent rounded-full mr-3"></div>
+            <span>Cargando Protocolo Handshake...</span>
+        </div>
+    );
+};
+
 function App_V2() {
   useEffect(() => {
     const cleanup = activateWebSecurityShield({
@@ -99,8 +112,9 @@ function App_V2() {
         <AuthProvider>
           <ForecastProvider_V2>
             <Routes>
-              {/* Ruta Pública de Login */}
+              {/* Rutas Públicas Sin 2FA */}
               <Route path="/login" element={<Login />} />
+              <Route path="/handshake" element={<HandshakeRedirect />} />
               
               {/* Maestros Protegidos */}
               <Route path="/vessels" element={<ProtectedRoute module="maestro_buques"><VesselsMaster /></ProtectedRoute>} />

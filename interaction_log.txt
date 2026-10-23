@@ -1487,3 +1487,9 @@ CONCURRENCY & QC SUMMARY:
   • Tasa de éxito: 11 / 11 submódulos operativos (100% PASS).
 ================================================================================
 
+[2026-10-23 15:42:22]
+- Módulo Handshake Petral • Agencias Marítimas • Navitranso SAP.
+- Creación de Presentación Ejecutiva Web interactiva: index.handshake.petral.html y public/presentacion_handshake.html.
+- Hero Slide (01): Réplica idéntica pixel por pixel del Login de petral.one.geeksoft.tech con imagen panorámica PORTADA.ANCHA.jpg, tarjeta flotante glassmorphism en esquina inferior izquierda, formulario con Correo Corporativo, Contraseña, Iniciar Sesión y footer Geeksoft SIN 2FA.
+- Slides 02 al 09: Adopción rigurosa del sistema de diseño, tokens, tipografía (Inter y JetBrains Mono), grillas, tarjetas (.card, .card-header, .card-icon, .card-title, .card-p), tablas (.matrix-table), flujo de pasos (.step-flow) y controles de navegación de index.lpa.geeksoft.tech.html.
+
