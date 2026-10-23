@@ -265,15 +265,15 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     .badge-tag {
-      font-size: 0.72rem;
+      font-size: 0.84rem;
       font-weight: 800;
       font-family: var(--font-mono);
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
     }
     .badge-sky { background: var(--sky-dim); color: var(--sky); border: 1px solid var(--sky-brd); }
@@ -283,25 +283,25 @@
     .badge-rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-brd); }
 
     .slide-subtitle-top {
-      font-size: 0.75rem;
+      font-size: 0.90rem;
       font-weight: 700;
       color: var(--navy-light);
       text-transform: uppercase;
       letter-spacing: 0.6px;
     }
     .slide-h1 {
-      font-size: 1.95rem;
+      font-size: 2.35rem;
       font-weight: 900;
       color: var(--navy);
       letter-spacing: -0.6px;
       line-height: 1.15;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     .slide-lead {
-      font-size: 0.98rem;
+      font-size: 1.14rem;
       color: var(--navy-mid);
-      line-height: 1.45;
-      max-width: 1100px;
+      line-height: 1.52;
+      max-width: 1250px;
     }
 
     /* Grillas que llenan el 100% del alto vertical sin dejar vacíos */
@@ -322,7 +322,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
-      padding: 20px 22px;
+      padding: 22px 24px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
@@ -344,17 +344,17 @@
     .card-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 10px;
     }
     .card-icon {
-      width: 32px;
-      height: 32px;
+      width: 38px;
+      height: 38px;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.05rem;
+      font-size: 1.25rem;
       font-weight: 800;
       flex-shrink: 0;
     }
@@ -365,30 +365,34 @@
     .card-icon.rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-brd); }
 
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1.28rem;
       font-weight: 800;
       color: var(--navy);
       letter-spacing: -0.2px;
     }
     .card-p {
-      font-size: 0.90rem;
+      font-size: 1.04rem;
       color: var(--navy-mid);
-      line-height: 1.5;
+      line-height: 1.54;
       margin-bottom: 8px;
     }
 
     /* Caja de KPI / Métrica destacada dentro de la tarjeta */
     .card-metric-box {
       margin: 10px 0;
-      padding: 8px 12px;
+      padding: 9px 14px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       font-family: var(--font-mono);
-      font-size: 0.74rem;
+      font-size: 0.86rem;
       font-weight: 700;
       flex-shrink: 0;
+    }
+    .card-metric-box strong {
+      font-size: 0.98rem;
+      font-weight: 800;
     }
     .card-metric-box.rose { background: var(--rose-dim); border: 1px solid var(--rose-brd); color: var(--rose); }
     .card-metric-box.amber { background: var(--amber-dim); border: 1px solid var(--amber-brd); color: var(--amber); }
@@ -400,7 +404,7 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 9px;
       margin-top: 6px;
       flex: 1;
       justify-content: space-evenly;
@@ -408,21 +412,21 @@
     .card-bullets li {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      font-size: 0.86rem;
+      gap: 10px;
+      font-size: 0.98rem;
       color: var(--navy-mid);
-      line-height: 1.45;
+      line-height: 1.50;
     }
     .card-bullets li strong {
       color: var(--navy);
       font-weight: 700;
     }
     .card-bullet-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--navy-light);
-      margin-top: 6px;
+      margin-top: 7px;
       flex-shrink: 0;
     }
     .card-bullet-dot.rose { background: var(--rose); }
@@ -433,9 +437,9 @@
 
     .card-bottom-pill {
       margin-top: auto;
-      padding-top: 10px;
+      padding-top: 12px;
       border-top: 1px solid var(--border-subtle);
-      font-size: 0.74rem;
+      font-size: 0.84rem;
       font-family: var(--font-mono);
       font-weight: 700;
       color: var(--navy-light);
@@ -444,16 +448,27 @@
       justify-content: space-between;
       flex-shrink: 0;
     }
+    .card-bottom-pill strong {
+      font-size: 0.92rem;
+    }
 
     /* Franja Inferior LPA (Premisa de Alianza / Banner) */
     .lpa-bottom-banner {
       flex-shrink: 0;
       border-radius: 8px;
-      padding: 12px 20px;
+      padding: 14px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      min-height: 48px;
+      min-height: 52px;
+    }
+    .lpa-bottom-banner span {
+      font-size: 0.98rem !important;
+    }
+    .lpa-bottom-banner > span:last-child {
+      font-size: 1.20rem !important;
+      font-weight: 900 !important;
+      font-family: var(--font-mono) !important;
     }
 
     /* Tabla Matriz LPA que llena el alto */
@@ -472,17 +487,17 @@
       width: 100%;
       height: 100%;
       border-collapse: collapse;
-      font-size: 0.9rem;
+      font-size: 1.04rem;
     }
     .matrix-table th {
       background: #F1F5F9;
       color: var(--navy);
       font-weight: 800;
       text-align: left;
-      padding: 14px 20px;
+      padding: 16px 22px;
       border-bottom: 1px solid var(--border-subtle);
       font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.90rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
