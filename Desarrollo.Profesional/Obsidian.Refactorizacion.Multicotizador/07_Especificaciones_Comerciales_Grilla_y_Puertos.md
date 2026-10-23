@@ -1019,6 +1019,39 @@ A partir de la instrucción pericial del usuario (15.10.2026), se auditó y erra
 * **Ciclo de Estados:** `BORRADOR` (edición por analista) ➔ `APROBADO / VIGENTE` (ratificado por Dirección General).
 * **Condiciones Legales:** Términos FIOST, flete base por MT inmutable, búnker base indexado y laytime/demurrage pactado.
 
+### 🕵️‍♂️ 5.45. Cuadragésima Quinta Vuelta (Serie 64: Auditoría Forense y Restitución de Parámetros Navales de B/T MOQUEGUA en Voyage Calculator)
+
+A partir del reporte de discrepancia en el Voyage Calculator (19.10.2026), donde al seleccionar el buque `MOQUEGUA` todos sus parámetros de eslora, calado, capacidades y consumos figuraban en cero (`0.0`), a diferencia de `TABLONES`, se ejecutó una auditoría pericial identificando la corrupción de datos y restituyéndolos desde el backup oficial:
+
+| # | Objeto / Componente Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :--- |
+| **64.1** | **`vessels` (PostgreSQL VPS Contabo `169.58.168.107`)** | Registro `vessel_id = 'MOQUEGUA'` corrupto con todos los campos numéricos en `0.0` (`grt: 0`, `dwt: 0`, `dwcc: 0`, `speed: 0`, `loa: 0`, `beam: 0`, `draft: 0`, `consumos IFO: 0`). | **Restitución Atómica desde Backup Oficial:** Ingesta de los valores canónicos auditados desde `Desarrollo.Profesional/Backups/supabase_emergency_backup_20260921/vessels.json`: `grt: 8259.0`, `dwt: 14298.0`, `dwcc: 13500.0`, `speed: 11.0`, `tce: 13000.0`, `loa: 134.0`, `beam: 20.0`, `draft: 8.81`, `IFO sea: 14.0`, `IFO idle: 2.4`, `IFO disch: 3.6`. | **Sobreescritura Accidental por Deduplicación:** Un guardado con payload en blanco sobre el ID `MOQUEGUA` pisó la fila en base de datos. | ✅ RESUELTO |
+| **64.2** | **Caché Backend & API en Vivo (`GET /api/v1/forecast/vessels`)** | El endpoint retornaba el objeto con ceros y la memoria RAM de FastAPI lo mantenía por 300 segundos. | **Reinicio de Worker & Validación Terminal:** Reinicio del contenedor `petral-backend` y comprobación HTTP directa certificando que la API pública devuelve los datos íntegros en milisegundos. | **Desincronización de Memoria:** Al reiniciar el servicio, `get_cached_masters()` refrescó inmediatamente la caché con los valores restaurados. | ✅ RESUELTO |
+
+#### 📊 Resumen Canónico de la Ficha B/T MOQUEGUA Certificada:
+* **Dimensiones:** LOA `134.00 m` | Manga `20.00 m` | Calado `8.81 m`
+* **Capacidades:** GRT `8,259.0 t` | DWT `14,298.0 t` | DWCC `13,500.0 t`
+* **Operación:** Velocidad `11.0 kn` | TCE Req `$13,000 /día`
+* **Consumos IFO (t/d):** Sea `14.0` | Idle `2.4` | Load `2.4` | Disch `3.6`
+* **Consumos MDO (t/d):** Sea `0.0` | Idle `0.0` | Load `0.5` | Disch `0.5`
+
+---
+
+### 🕵️‍♂️ 5.46. Cuadragésima Sexta Vuelta (Serie 65: Auditoría Forense y Resolución del Servicio de Borrado Seguro de Cotizaciones a la Papelera de Reciclaje)
+
+A partir de la alerta modal reportada en producción (`https://petral.one.geeksoft.tech`):
+> `petral.one.geeksoft.tech dice: Ocurrió un error al intentar borrar la cotización.`
+
+Se ejecutó el protocolo forense **BEN / LEG / DIFF / NOTA** para inspeccionar los contenedores `petral-backend` y `petral-frontend` en Contabo VPS (`169.58.168.107`), aislando las causas raíz y blindando el flujo completo:
+
+| # | Objeto / Módulo Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **65.1** | **Backend Router (`forecast.py`)** | Invocación de `logger.warning(...)` y `logger.error(...)` sin haber definido ni importado la variable `logger`. | Inicialización formal de `logger = logging.getLogger("forecast_router")` y captura jerárquica de excepciones. | **NameError Fatal:** Al capturar cualquier advertencia previa en `delete_spot_route`, estallaba `NameError: name 'logger' is not defined`, elevando un HTTP 500 unhandled a Starlette. | ✅ RESUELTO |
+| **65.2** | **Consultas SQL a Tablas Relacionales** | Consultas a `routes_clients` con columna ficticia `route_id` y a `contracts` con columnas inexistentes `name` / `contract_id`. | Refactorización de queries a SQL parametrizado buscando estrictamente por `name` (PK de `routes_quotes` y `routes_clients`). | **UndefinedColumn en Postgres:** PostgreSQL abortaba la transacción con `column "route_id" does not exist`. | ✅ RESUELTO |
+| **65.3** | **Enrutamiento FastAPI & Codificación URL** | Endpoint `@router.delete("/spot/delete/{spot_id}")` no admitía nombres con barras, y frontend llamaba sin `encodeURIComponent`. | Declaración con `@router.delete("/spot/delete/{spot_id:path}")`, decodificación defensiva `urllib.parse.unquote()` y `encodeURIComponent(spotId)` en `api.ts`. | **Truncamiento de Ruta HTTP:** Cotizaciones con espacios, barras (`/`), signos `+` o caracteres especiales fragmentaban el path de la petición. | ✅ RESUELTO |
+| **65.4** | **Serialización en Papelera (`trash_service.py`)** | `json.dumps(payload)` fallaba ante fechas u objetos nativos de PostgreSQL. | Implementado `json.dumps(payload, default=str)`. | **TypeError de JSON:** Si la cotización contenía campos `datetime` (`created_at`), fallaba la serialización antes de insertar en `commercial_trash_bin`. | ✅ RESUELTO |
+| **65.5** | **Feedback UI en Maestros Comerciales** | Alerta estática opaca: `alert("Ocurrió un error...")`. | Actualizados `RouteMaster_V2.tsx`, `ContractsMaster_V2.tsx` y `BudgetsMaster_V2.tsx` con notificación explícita de respaldo en la Papelera y captura del error real. | **Transparencia Operativa:** El usuario recibe confirmación inmediata de que el documento se movió a la Papelera con opción de restauración. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados

@@ -1,4 +1,21 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-23 (Resolución Forense Servicio Borrado Seguro de Cotizaciones a Papelera de Reciclaje)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Diagnóstico Forense: Error HTTP 500 ("Ocurrió un error al intentar borrar la cotización") reportado en producción (https://petral.one.geeksoft.tech).
+- Causa Raíz Detectada: 
+  1. 'NameError: name 'logger' is not defined' en 'forecast.py' al capturar advertencias en delete_spot_route.
+  2. Búsquedas SQL por columnas ficticias ('route_id' en routes_clients y 'name'/'contract_id' en contracts) disparaban excepciones psycopg2.UndefinedColumn.
+  3. Ausencia de parámetro :path en '@router.delete("/spot/delete/{spot_id:path}")' y falta de 'encodeURIComponent(spotId)' en frontend causaban colapso con nombres de cotizaciones con espacios, barras o caracteres especiales.
+  4. 'json.dumps(payload)' en TrashService sin 'default=str' provocaba fallos con datetimes.
+- Cirugía Aplicada:
+  * Backend: Inicialización formal de 'logger = logging.getLogger("forecast_router")', soporte ':path' en router FastAPI, decodificación URL defensiva, búsqueda precisa por 'name' en routes_quotes/routes_clients, y serialización robusta 'json.dumps(..., default=str)'.
+  * Frontend: 'encodeURIComponent' en 'ForecastService.deleteSpot/deleteSpotVoyage', y alertas descriptivas informando el traslado a la Papelera de Reciclaje en 'RouteMaster_V2.tsx', 'ContractsMaster_V2.tsx' y 'BudgetsMaster_V2.tsx'.
+- Verificación Empírica: Script 'verify_production_delete.py' ejecutado contra producción VPS Contabo (169.58.168.107): creación, borrado vía HTTPS, incremento de badge de papelera (8 -> 9), respaldo completo en 'commercial_trash_bin' y purga de prueba 100% exitosa.
+- Despliegue: Compilación exitosa Vite (25.55s) y deploy oficial por SFTP/SSH a Contabo VPS.
+================================================================================
+
+================================================================================
 GEMINI WORK LOG: 2026-10-19 (Restitución Pericial de Parámetros B/T MOQUEGUA desde Backup Canónico)
 ================================================================================
 CONCURRENCY & QC SUMMARY:

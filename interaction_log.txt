@@ -1,4 +1,32 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-23 (Resolución Pericial Error en Borrado Seguro de Cotizaciones y Papelera de Reciclaje)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Auditoría Pericial y Diagnóstico Forense (Benoit Blanc):
+   - Alerta reportada por el usuario en 'https://petral.one.geeksoft.tech': "Ocurrió un error al intentar borrar la cotización."
+   - Copia y respaldo reglamentario inmediato de la captura de pantalla:
+     * 'Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/PNGs/error_borrar_cotizacion_20261023.png'
+     * 'Exceles.Petral/PORT.COSTS.PATRICIA/error_borrar_cotizacion_20261023.png'
+   - Inspección directa en los contenedores de Contabo VPS (169.58.168.107):
+     * Excepción 1 (Causa Raíz Directa): 'NameError: name 'logger' is not defined' en 'backend/api/routers/forecast.py'. Al saltar cualquier advertencia en el borrado, el intento de registrarla con 'logger.warning' tumbaba el servidor con HTTP 500 no capturado.
+     * Excepción 2: Búsqueda en 'routes_clients' con la columna inexistente 'route_id' ('psycopg2.errors.UndefinedColumn: column "route_id" does not exist') y en 'contracts' con columnas inexistentes 'name'/'contract_id'.
+     * Excepción 3: Falta de codificación 'encodeURIComponent(spotId)' en frontend y ausencia de parámetro path en '@router.delete("/spot/delete/{spot_id:path}")', lo que provocaba que nombres con espacios o caracteres especiales rompieran la URL o fueran truncados por el proxy.
+     * Excepción 4: 'json.dumps(payload)' en 'TrashService.move_to_trash' sin 'default=str', provocando fallos de serialización con datetimes.
+
+2. Cirugía Quirúrgica en Código:
+   - 'backend/api/routers/forecast.py': Definición formal de 'logger = logging.getLogger("forecast_router")', uso de decorador '@router.delete("/spot/delete/{spot_id:path}")', decodificación 'urllib.parse.unquote(spot_id).strip()', y ejecución SQL parametrizada limpia buscando por 'name' en 'routes_quotes' y 'routes_clients' sin referenciar columnas ficticias.
+   - 'backend/services/trash_service.py': Uso de 'json.dumps(payload, default=str)' para serialización JSON infalible.
+   - 'Geeksoft_Frontend/src/services/api.ts': 'encodeURIComponent(spotId)' en 'deleteSpot' y 'deleteSpotVoyage'.
+   - 'RouteMaster_V2.tsx', 'ContractsMaster_V2.tsx', 'BudgetsMaster_V2.tsx': Alertas amigables confirmando el respaldo en la Papelera de Reciclaje y captura del mensaje real de error en caso de fallo.
+
+3. Calidad & Despliegue Oficial Contabo VPS (169.58.168.107):
+   - Git Commit & Push a origin main: commit 4ed32fe.
+   - Compilación exitosa Vite Frontend: 1154 módulos transformados en 25.55s sin errores.
+   - Despliegue SFTP/SSH automatizado vía 'deploy_petral_one_contabo.py'.
+   - Prueba Empírica en Vivo: 'scratch/verify_production_delete.py' ejecutó creación, borrado vía HTTPS en 'petral.one.geeksoft.tech', incremento del conteo de papelera (8 -> 9), validación de snapshot en 'commercial_trash_bin' y purga de prueba exitosa (100% OK).
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-19 (Restitución Pericial de Parámetros de B/T MOQUEGUA desde Backup Oficial)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
