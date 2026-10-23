@@ -63,7 +63,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* OCULTAR COMPLETAMENTE HEADER Y FOOTER EN SLIDE 01 (HERO EXACTO PETRAL ONE) */
+    /* OCULTAR COMPLETAMENTE HEADER Y FOOTER EN SLIDE 01 (HERO PETRAL ONE) */
     body.is-hero-slide header.deck-header,
     body.is-hero-slide footer.deck-footer,
     body.is-hero-slide .progress-bar-container {
@@ -99,7 +99,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 42px;
+      padding: 0 48px;
       border-bottom: 1px solid var(--border-subtle);
       background: #FFFFFF;
       z-index: 50;
@@ -109,42 +109,31 @@
     .brand-cluster {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
     .header-logo-img {
-      height: 28px;
+      height: 30px;
       width: auto;
       object-fit: contain;
     }
     .brand-title {
       font-weight: 900;
-      font-size: 1.02rem;
+      font-size: 1.05rem;
       color: var(--navy);
       letter-spacing: -0.3px;
     }
-    .brand-founders {
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
-      color: var(--navy-mid);
-      font-weight: 700;
-      letter-spacing: 0.4px;
-    }
-    .brand-founders strong {
-      color: var(--navy);
-      font-weight: 800;
-    }
 
     .section-pill {
-      font-size: 0.74rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
       font-family: var(--font-mono);
-      padding: 5px 14px;
+      padding: 6px 16px;
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       background: var(--sky-dim);
       color: var(--sky);
       border: 1px solid var(--sky-brd);
@@ -152,7 +141,7 @@
     }
 
     .client-badge {
-      font-size: 0.74rem;
+      font-size: 0.78rem;
       font-family: var(--font-mono);
       color: var(--navy-light);
       font-weight: 700;
@@ -170,15 +159,15 @@
       background: var(--bg);
     }
 
-    /* SLIDES CON ESPACIO Y RESPIRO (ESTILO EXACTO LPA) */
+    /* SLIDES CON MÁXIMO ESPACIO Y RESPIRO VERTICAL (OCUPAN 100% DEL VIEWPORT) */
     .slide {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(6px);
+      transform: translateY(8px);
       transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
-      padding: 38px 52px 34px 52px;
+      padding: 36px 56px 28px 56px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -191,230 +180,249 @@
     }
 
     /* ========================================================
-       SLIDE 01: HERO EXACTO DE PETRAL.ONE.GEEKSOFT.TECH (SIN 2FA)
-       Copiado pixel por pixel de src/pages/Auth/Login.tsx
+       SLIDE 01: HERO LIMPIO PETRAL ONE (CERO 2FA, CERO LOGIN)
+       Portada panorámica imponente, tipografía gigante y CTA directo
        ======================================================== */
-    .slide-hero-petral-exact {
+    .slide-hero-petral-clean {
       position: absolute;
-      top: 0; left: 0; width: 100vw; height: 100vh;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      align-items: flex-start;
-      padding: 2rem !important;
-      margin: 0 !important;
-      overflow: hidden;
+      padding: 64px 80px !important;
       background-color: #020617;
+      overflow: hidden;
       user-select: none;
     }
-    @media (max-width: 768px) {
-      .slide-hero-petral-exact {
-        justify-content: center;
-        align-items: center;
-        padding: 1rem !important;
+    @media (max-width: 900px) {
+      .slide-hero-petral-clean {
+        padding: 32px 24px !important;
       }
     }
 
-    /* Fondo con la imagen panorámica de portada ancha */
-    .petral-login-bg {
+    .hero-vessel-bg {
       position: absolute;
       inset: 0;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       z-index: 0;
-      background-image: url('PORTADA.ANCHA.jpg');
+      background-image: url('PORTADA.ANCHA.jpg'), url('/PORTADA.ANCHA.jpg');
+      filter: brightness(0.96) contrast(1.04);
     }
 
-    /* Tarjeta Flotante Inferior Izquierda (Glassmorphism Compacto Exacto) */
-    .petral-login-card {
+    .hero-dark-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(2,6,23,0.10) 0%, rgba(2,6,23,0.40) 40%, rgba(2,6,23,0.85) 80%, rgba(2,6,23,0.97) 100%);
+      z-index: 1;
+    }
+
+    .hero-container-flex {
       position: relative;
-      width: 100%;
-      max-width: 290px;
-      background: rgba(2, 6, 23, 0.20);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 1rem;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-      padding: 1rem;
       z-index: 10;
       display: flex;
-      flex-direction: column;
       justify-content: space-between;
-      transition: all 0.3s ease;
-      animation: petralFadeIn 0.25s ease-out;
+      align-items: flex-end;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      gap: 56px;
+    }
+
+    .hero-left-editorial {
+      max-width: 980px;
+      color: #FFFFFF;
+    }
+
+    .hero-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 18px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #38BDF8;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+    }
+
+    .hero-title-giant {
+      font-size: 3.8rem;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.05;
+      color: #FFFFFF;
+      margin-bottom: 18px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero-lead-text {
+      font-size: 1.3rem;
+      line-height: 1.6;
+      color: #E2E8F0;
+      max-width: 880px;
+      margin-bottom: 28px;
+      font-weight: 400;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero-alliance-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .hero-alliance-pill {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #FFFFFF;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tarjeta Flotante Derecha: Lanzador Ejecutivo Directo (Sin 2FA, Sin Formulario) */
+    .hero-launcher-card {
+      width: 360px;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: 20px;
+      padding: 28px 26px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex-shrink: 0;
+      animation: petralFadeIn 0.3s ease-out;
     }
 
     @keyframes petralFadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .login-header-block {
-      text-align: center;
-      margin-bottom: 0.625rem;
-    }
-    .login-title-h2 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #FFFFFF;
-      letter-spacing: -0.025em;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    .hero-launcher-badge {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.375rem;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 12px;
     }
-    .login-subtitle-p {
-      font-size: 10px;
-      color: #E2E8F0;
-      font-weight: 500;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-      line-height: 1.25;
-      margin-top: 0.125rem;
-    }
-
-    .login-form-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .login-field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .login-label {
-      display: block;
-      font-size: 9px;
-      font-weight: 700;
-      color: #FFFFFF;
+    .hero-launcher-badge span {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      color: #38BDF8;
     }
-    .login-input-relative {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    .login-input-field {
-      width: 100%;
-      border-radius: 0.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding-left: 2rem;
-      padding-right: 0.625rem;
-      padding-top: 0.375rem;
-      padding-bottom: 0.375rem;
-      font-size: 0.75rem;
-      color: #FFFFFF;
-      background: rgba(2, 6, 23, 0.5);
-      font-weight: 500;
-      outline: none;
-      transition: all 0.15s ease;
-      font-family: var(--font-sans);
-    }
-    .login-input-field:focus {
-      border-color: #60A5FA;
-      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
-    }
-    .login-icon-prefix {
-      position: absolute;
-      left: 0.625rem;
-      display: flex;
-      align-items: center;
-      pointer-events: none;
-      color: #CBD5E1;
-    }
-    .login-toggle-eye {
-      position: absolute;
-      right: 0.625rem;
-      display: flex;
-      align-items: center;
-      background: transparent;
-      border: none;
-      color: #CBD5E1;
-      cursor: pointer;
-      padding: 0;
-    }
-    .login-toggle-eye:hover {
-      color: #FFFFFF;
+    .hero-status-pill {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #34D399;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 3px 8px;
+      border-radius: 4px;
     }
 
-    .login-btn-submit {
+    .hero-launcher-info {
+      font-size: 0.88rem;
+      color: #CBD5E1;
+      line-height: 1.5;
+    }
+
+    .hero-btn-action-big {
       width: 100%;
-      margin-top: 0.25rem;
-      background: rgba(37, 99, 235, 0.9);
-      border: none;
+      height: 52px;
+      background: linear-gradient(135deg, #0284C7, #0369A1);
+      border: 1px solid #38BDF8;
+      border-radius: 12px;
       color: #FFFFFF;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
-      font-weight: 700;
-      font-size: 0.75rem;
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.375rem;
-      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+      gap: 10px;
       transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45);
     }
-    .login-btn-submit:hover {
-      background: #3B82F6;
-      box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.45);
+    .hero-btn-action-big:hover {
+      background: linear-gradient(135deg, #0369A1, #075985);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(2, 132, 199, 0.65);
     }
-    .login-btn-submit:active {
-      background: #1D4ED8;
+    .hero-btn-action-big:active {
+      transform: translateY(0);
     }
 
-    /* Footer Geeksoft con logo (Exacto Petral One) */
-    .login-geeksoft-footer {
+    .hero-keyboard-hint {
+      text-align: center;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: #94A3B8;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-geeksoft-credit {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 0.625rem;
-      margin-top: 0.625rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
     }
-    .login-geeksoft-text {
+    .hero-credit-text {
       font-size: 8.5px;
       font-weight: 800;
       color: #F1F5F9;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.375rem;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-      text-align: center;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
+      margin-bottom: 6px;
     }
-    .login-geeksoft-img {
-      height: 3.5rem;
+    .hero-geeksoft-logo-img {
+      height: 38px;
       object-fit: contain;
       opacity: 0.95;
-      transition: opacity 0.2s ease;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-    }
-    .login-geeksoft-img:hover {
-      opacity: 1;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
     }
 
     /* ========================================================
-       COMPONENTES ESTÁNDAR EXACTOS DE LPA (SLIDES 02+)
+       COMPONENTES ESTÁNDAR LPA: TIPOGRAFÍA GRANDE & MÁXIMO RESPIRO
        ======================================================== */
     .slide-eyebrow {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
+      gap: 12px;
+      margin-bottom: 4px;
     }
     .badge-tag {
-      font-size: 0.68rem;
+      font-size: 0.8rem;
       font-weight: 800;
       font-family: var(--font-mono);
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      padding: 2px 7px;
-      border-radius: 4px;
+      padding: 4px 10px;
+      border-radius: 5px;
     }
     .badge-sky { background: var(--sky-dim); color: var(--sky); border: 1px solid var(--sky-brd); }
     .badge-emerald { background: var(--emerald-dim); color: var(--emerald); border: 1px solid var(--emerald-brd); }
@@ -423,58 +431,59 @@
     .badge-rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-brd); }
 
     .slide-subtitle-top {
-      font-size: 0.72rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--navy-light);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
     .slide-h1 {
-      font-size: 1.75rem;
+      font-size: 2.35rem;
       font-weight: 900;
       color: var(--navy);
-      letter-spacing: -0.5px;
-      line-height: 1.15;
-      margin-bottom: 6px;
+      letter-spacing: -0.8px;
+      line-height: 1.12;
+      margin-bottom: 4px;
     }
     .slide-lead {
-      font-size: 0.92rem;
+      font-size: 1.12rem;
       color: var(--navy-mid);
-      line-height: 1.45;
-      max-width: 980px;
-      margin-bottom: 18px;
+      line-height: 1.5;
+      max-width: 1200px;
+      margin-bottom: 16px;
     }
 
-    /* Grillas Estilo LPA */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; min-height: 0; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; min-height: 0; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    /* Grillas que expanden todo el alto disponible */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; min-height: 0; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; flex: 1; min-height: 0; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; flex: 1; min-height: 0; }
 
-    /* Tarjetas Estilo LPA */
+    /* Tarjetas Ejecutivas Estilo LPA con Respiro Generoso */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 18px 20px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      border-radius: 14px;
+      padding: 26px 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
-      position: relative;
+      justify-content: flex-start;
+      height: 100%;
     }
     .card-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 14px;
+      margin-bottom: 14px;
     }
     .card-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.95rem;
+      font-size: 1.35rem;
       font-weight: 800;
       flex-shrink: 0;
     }
@@ -485,116 +494,119 @@
     .card-icon.rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-brd); }
 
     .card-title {
-      font-size: 0.95rem;
+      font-size: 1.25rem;
       font-weight: 800;
       color: var(--navy);
-      letter-spacing: -0.2px;
+      letter-spacing: -0.3px;
     }
     .card-p {
-      font-size: 0.83rem;
+      font-size: 1.05rem;
       color: var(--navy-mid);
-      line-height: 1.45;
+      line-height: 1.6;
+      margin-bottom: 14px;
     }
 
-    /* Listas con Bullet Táctico */
+    /* Listas con Bullet Táctico Grande */
     .bullet-list {
       list-style: none;
-      margin-top: 10px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      margin-top: 6px;
     }
     .bullet-list li {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      font-size: 0.82rem;
+      gap: 10px;
+      font-size: 1.02rem;
       color: var(--navy-mid);
-      line-height: 1.4;
+      line-height: 1.5;
     }
     .bullet-list li strong {
       color: var(--navy);
+      font-weight: 800;
     }
     .bullet-dot {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--sky);
-      margin-top: 6px;
+      margin-top: 7px;
       flex-shrink: 0;
     }
     .bullet-dot.rose { background: var(--rose); }
     .bullet-dot.emerald { background: var(--emerald); }
     .bullet-dot.amber { background: var(--amber); }
 
-    /* Cajas de Estadísticas / Impacto */
+    /* Franjas y Cajas de Estadísticas Grandes */
     .stat-strip {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 16px;
       margin-top: auto;
-      padding-top: 14px;
+      padding-top: 18px;
     }
     .stat-box {
       background: #F8FAFC;
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 10px 14px;
+      border-radius: 10px;
+      padding: 14px 18px;
     }
     .stat-label {
-      font-size: 0.68rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
       color: var(--navy-light);
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
     }
     .stat-num {
-      font-size: 1.4rem;
+      font-size: 2.2rem;
       font-weight: 900;
       color: var(--navy);
       font-family: var(--font-mono);
-      margin: 2px 0;
+      margin: 4px 0;
+      line-height: 1.1;
     }
     .stat-sub {
-      font-size: 0.72rem;
+      font-size: 0.84rem;
       color: var(--navy-mid);
     }
 
-    /* Steps Flow LPA */
+    /* Steps Flow LPA Grande */
     .step-flow {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
+      gap: 20px;
       flex: 1;
       min-height: 0;
     }
     .step-card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 18px;
+      border-radius: 14px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      position: relative;
+      height: 100%;
     }
     .step-card.active-step {
       border-color: var(--emerald-brd);
       background: #FAFCFF;
-      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.06);
+      box-shadow: 0 4px 16px rgba(5, 150, 105, 0.08);
     }
     .step-num {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
       background: var(--navy);
       color: #FFFFFF;
       font-family: var(--font-mono);
-      font-size: 0.82rem;
+      font-size: 1.05rem;
       font-weight: 900;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
     .step-num.sky { background: var(--sky); }
     .step-num.amber { background: var(--amber); }
@@ -602,49 +614,51 @@
     .step-num.purple { background: var(--purple); }
 
     .step-title {
-      font-size: 0.92rem;
+      font-size: 1.18rem;
       font-weight: 800;
       color: var(--navy);
-      margin-bottom: 6px;
+      margin-bottom: 10px;
     }
     .step-desc {
-      font-size: 0.8rem;
+      font-size: 0.96rem;
       color: var(--navy-mid);
-      line-height: 1.45;
+      line-height: 1.55;
     }
 
-    /* Tabla Matriz LPA */
+    /* Tabla Matriz LPA Grande */
     .matrix-wrapper {
       background: #FFFFFF;
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       flex: 1;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     }
     .matrix-table {
       width: 100%;
+      height: 100%;
       border-collapse: collapse;
-      font-size: 0.82rem;
     }
     .matrix-table th {
       background: #F1F5F9;
       color: var(--navy);
       font-weight: 800;
       text-align: left;
-      padding: 12px 16px;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--border-subtle);
       font-family: var(--font-mono);
-      font-size: 0.74rem;
+      font-size: 0.88rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
     .matrix-table td {
-      padding: 12px 16px;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--border-subtle);
       color: var(--navy-mid);
-      line-height: 1.4;
+      font-size: 1.02rem;
+      line-height: 1.5;
     }
     .matrix-table tr:last-child td {
       border-bottom: none;
@@ -653,13 +667,13 @@
       background: #F8FAFC;
     }
 
-    /* Callout Box LPA */
+    /* Callout Box LPA Grande */
     .callout-box {
-      border-radius: 8px;
-      padding: 14px 18px;
+      border-radius: 12px;
+      padding: 18px 24px;
       display: flex;
-      gap: 12px;
-      align-items: flex-start;
+      gap: 16px;
+      align-items: center;
       margin-top: 14px;
     }
     .callout-sky {
@@ -673,15 +687,15 @@
       color: var(--navy);
     }
     .callout-title {
-      font-size: 0.85rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: var(--navy);
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
     .callout-text {
-      font-size: 0.8rem;
+      font-size: 0.98rem;
       color: var(--navy-mid);
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
     /* FOOTER DE CONTROL Y NAVEGACIÓN (ESTILO EXACTO LPA) */
@@ -692,11 +706,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 42px;
+      padding: 0 48px;
       border-top: 1px solid var(--border-subtle);
       background: #FFFFFF;
       z-index: 50;
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-family: var(--font-mono);
       color: var(--navy-mid);
     }
@@ -704,36 +718,36 @@
     .footer-left {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 18px;
     }
     .keyboard-hint {
-      font-size: 0.7rem;
+      font-size: 0.74rem;
       color: var(--navy-light);
       background: #F1F5F9;
       border: 1px solid var(--border-subtle);
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
     }
 
     .footer-nav {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .nav-btn {
-      height: 32px;
-      padding: 0 14px;
+      height: 34px;
+      padding: 0 16px;
       border: 1px solid var(--border-subtle);
       background: #FFFFFF;
       border-radius: 6px;
-      font-size: 0.76rem;
+      font-size: 0.8rem;
       font-weight: 700;
       font-family: var(--font-mono);
       color: var(--navy);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       transition: all 0.15s ease;
     }
     .nav-btn:hover:not(:disabled) {
@@ -749,18 +763,18 @@
     .nav-dots {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .dot {
-      width: 7px;
-      height: 7px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--border-active);
       cursor: pointer;
       transition: all 0.2s ease;
     }
     .dot.active {
-      width: 20px;
+      width: 24px;
       border-radius: 10px;
       background: var(--sky);
     }
@@ -778,12 +792,12 @@
     <div class="brand-cluster">
       <img src="Logo.Petral.png" alt="Petral" class="header-logo-img" onerror="this.src='/Logo.Petral.png'; this.onerror=null;">
       <div>
-        <div class="brand-title">PETRAL ONE <span style="font-weight:400; color:var(--navy-light);">• ETAPA 2</span></div>
+        <div class="brand-title">PETRAL ONE <span style="font-weight:400; color:var(--navy-light);">• PROTOCOLO HANDSHAKE</span></div>
       </div>
     </div>
 
     <div>
-      <span class="section-pill" id="sectionPill">01 • ACCESO PETRAL</span>
+      <span class="section-pill" id="sectionPill">01 • PORTADA EJECUTIVA</span>
     </div>
 
     <div class="brand-cluster">
@@ -798,96 +812,63 @@
   <main class="deck-viewport">
 
     <!-- ========================================================
-         SLIDE 01: HERO EXACTO DE PETRAL.ONE.GEEKSOFT.TECH (SIN 2FA)
+         SLIDE 01: HERO LIMPIO PETRAL ONE (CERO 2FA, CERO LOGIN)
          ======================================================== -->
-    <section class="slide active slide-hero-petral-exact" data-title="Acceso Petral" data-section="01 • ACCESO PETRAL">
-      <!-- Fondo con la imagen panorámica de portada ancha -->
-      <div class="petral-login-bg"></div>
+    <section class="slide active slide-hero-petral-clean" data-title="Portada Ejecutiva" data-section="01 • PORTADA EJECUTIVA">
+      <div class="hero-vessel-bg"></div>
+      <div class="hero-dark-overlay"></div>
 
-      <!-- Tarjeta Flotante Inferior Izquierda (Glassmorphism Compacto Exacto) -->
-      <div class="petral-login-card">
-        <div>
-          <!-- MODO INGRESO DIRECTO CON CONTRASEÑA (SIN 2FA) -->
-          <div class="login-header-block">
-            <h2 class="login-title-h2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              <span>Acceso Petral</span>
-            </h2>
-            <p class="login-subtitle-p">Ingresa con tu correo y contraseña</p>
+      <div class="hero-container-flex">
+        <!-- Izquierda Editorial Gigante -->
+        <div class="hero-left-editorial">
+          <div class="hero-tag-pill">
+            <span>🚢</span>
+            <span>PETRAL ONE • GASTOS PORTUARIOS &amp; LIQUIDACIONES</span>
           </div>
 
-          <form id="heroLoginForm" onsubmit="event.preventDefault(); goToSlide(1);" class="login-form-stack">
-            <div class="login-field-group">
-              <label for="email" class="login-label">Correo Corporativo</label>
-              <div class="login-input-relative">
-                <input
-                  type="email"
-                  id="email"
-                  value="operaciones@petral.com.pe"
-                  placeholder="nombre@petral.com.pe"
-                  class="login-input-field"
-                  required
-                />
-                <div class="login-icon-prefix">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                </div>
-              </div>
-            </div>
+          <h1 class="hero-title-giant">Protocolo Handshake: Consenso Pre-Facturación</h1>
 
-            <div class="login-field-group">
-              <label for="password" class="login-label">Contraseña</label>
-              <div class="login-input-relative">
-                <input
-                  type="password"
-                  id="password"
-                  value="••••••••••••"
-                  placeholder="••••••••"
-                  class="login-input-field"
-                  required
-                />
-                <div class="login-icon-prefix">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="7.5" cy="15.5" r="5.5"></circle>
-                    <path d="m21 2-9.6 9.6"></path>
-                    <path d="m15.5 7.5 3 3L22 7l-3-3"></path>
-                  </svg>
-                </div>
-                <button type="button" class="login-toggle-eye" onclick="togglePasswordVisibility()" tabindex="-1">
-                  <svg id="eyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-            </div>
+          <p class="hero-lead-text">
+            El estándar digital de liquidación vinculante entre Petral S.A.C., Agencias Marítimas y Navitranso SAP. Elimina el 100% de las notas de crédito y acelera el ciclo de cobranza de 90 a 15 días.
+          </p>
 
-            <button type="submit" class="login-btn-submit">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              <span>Iniciar Sesión</span>
-            </button>
-          </form>
+          <div class="hero-alliance-strip">
+            <span class="hero-alliance-pill">PETRAL S.A.C.</span>
+            <span class="hero-alliance-pill">AGENCIAS MARÍTIMAS</span>
+            <span class="hero-alliance-pill">NAVITRANSO (50% SAP)</span>
+            <span class="hero-alliance-pill">GEEKSOFT TECH</span>
+          </div>
         </div>
 
-        <!-- Footer Geeksoft con logo (Exacto Petral One) -->
-        <div class="login-geeksoft-footer">
-          <span class="login-geeksoft-text">DESARROLLADO POR GEEKSOFT</span>
-          <a href="https://geeksoft.tech" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center;">
+        <!-- Derecha: Tarjeta Ejecutiva de Inicio Limpia (Sin 2FA, Sin Inputs) -->
+        <div class="hero-launcher-card">
+          <div class="hero-launcher-badge">
+            <span>Presentación Ejecutiva</span>
+            <span class="hero-status-pill">Acceso Abierto</span>
+          </div>
+
+          <p class="hero-launcher-info">
+            Estrategia de modernización del flujo de liquidaciones portuarias para buques quimiqueros y cabotaje minero.
+          </p>
+
+          <button class="hero-btn-action-big" onclick="nextSlide()">
+            <span>INICIAR PRESENTACIÓN</span>
+            <span>➔</span>
+          </button>
+
+          <div class="hero-keyboard-hint">
+            Presiona [ESPACIO] o la tecla [➔] para avanzar
+          </div>
+
+          <div class="hero-geeksoft-credit">
+            <span class="hero-credit-text">DESARROLLADO POR GEEKSOFT</span>
             <img 
               src="Logo.Geeksoft.png" 
               alt="Geeksoft" 
-              class="login-geeksoft-img"
+              class="hero-geeksoft-logo-img"
               onerror="this.src='/Logo.Geeksoft.png'; this.onerror=null;"
             />
-          </a>
+          </div>
         </div>
       </div>
     </section>
@@ -897,10 +878,10 @@
          ======================================================== -->
     <section class="slide" data-title="Escena del Crimen" data-section="02 • DIAGNÓSTICO AS-IS">
       <div class="slide-eyebrow">
-        <span class="badge-tag badge-rose">DIAGNÓSTICO OPERATIVO & FINANCIERO</span>
+        <span class="badge-tag badge-rose">DIAGNÓSTICO OPERATIVO &amp; FINANCIERO</span>
         <span class="slide-subtitle-top">ESTADO ACTUAL • FRICCIÓN COMERCIAL</span>
       </div>
-      <h1 class="slide-h1">La Escena del Crimen: Cobranza Tardía & Notas de Crédito</h1>
+      <h1 class="slide-h1">La Escena del Crimen: Cobranza Tardía &amp; Notas de Crédito</h1>
       <p class="slide-lead">
         Actualmente, las agencias marítimas cobran en el doble o triple del periodo acordado debido al ciclo vicioso de facturación a ciegas y auditorías reactivas.
       </p>
@@ -918,15 +899,15 @@
           <ul class="bullet-list">
             <li>
               <div class="bullet-dot rose"></div>
-              <span><strong>Facturación a Ciegas:</strong> La agencia envía la factura antes de que Petral haya validado las horas de pernocte, remolcaje o prácticos.</span>
+              <span><strong>Facturación a Ciegas:</strong> La agencia envía la factura fiscal SUNAT antes de que Petral haya validado las horas reales de pernocte, remolcaje o practicaje.</span>
             </li>
             <li>
               <div class="bullet-dot rose"></div>
-              <span><strong>Rechazo Contable Tardío:</strong> Navitranso detecta discrepancias semanas después al ingresar el comprobante en su ERP SAP.</span>
+              <span><strong>Rechazo Contable Tardío:</strong> Navitranso detecta discrepancias tarifarias semanas después al ingresar el comprobante en su ERP SAP.</span>
             </li>
             <li>
               <div class="bullet-dot rose"></div>
-              <span><strong>El Bucle de Notas de Crédito:</strong> Anulación, emisión de notas de crédito SUNAT y reemisión, dilatando la cobranza 60 a 90 días.</span>
+              <span><strong>El Bucle de Notas de Crédito:</strong> Anulación forzosa, emisión de notas de crédito SUNAT y refacturación, dilatando el pago 60 a 90 días.</span>
             </li>
           </ul>
         </div>
@@ -959,7 +940,7 @@
             <div class="stat-box">
               <div class="stat-label">Plazo de Cobro</div>
               <div class="stat-num" style="color:var(--rose);">60-90d</div>
-              <div class="stat-sub">Retraso actual</div>
+              <div class="stat-sub">Retraso actual promedio</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Notas de Crédito</div>
@@ -969,7 +950,7 @@
             <div class="stat-box">
               <div class="stat-label">Horas Conciliación</div>
               <div class="stat-num" style="color:var(--navy);">18 hrs</div>
-              <div class="stat-sub">Por recalada/mes</div>
+              <div class="stat-sub">Por recalada mensual</div>
             </div>
           </div>
         </div>
@@ -1002,11 +983,15 @@
           <ul class="bullet-list">
             <li>
               <div class="bullet-dot"></div>
-              <span>Contrastación de horas y tarifas contractualmente pactadas.</span>
+              <span>Contrastación de horas y tarifas contractualmente pactadas en plataforma.</span>
             </li>
             <li>
               <div class="bullet-dot"></div>
               <span>Identificación instantánea de recargos extraordinarios u horas standby.</span>
+            </li>
+            <li>
+              <div class="bullet-dot"></div>
+              <span>Aprobación matemática compartida ítem por ítem.</span>
             </li>
           </ul>
         </div>
@@ -1023,11 +1008,15 @@
           <ul class="bullet-list">
             <li>
               <div class="bullet-dot emerald"></div>
-              <span>Monto final sellado y respaldado con bitácora de auditoría.</span>
+              <span>Monto final sellado y respaldado con bitácora de auditoría digital.</span>
             </li>
             <li>
               <div class="bullet-dot emerald"></div>
-              <span>La agencia emite su factura fiscal por el monto exacto pactado.</span>
+              <span>La agencia emite su factura fiscal por el monto exacto pactado al centavo.</span>
+            </li>
+            <li>
+              <div class="bullet-dot emerald"></div>
+              <span>Cero discrepancias posibles ante el área de cuentas por pagar.</span>
             </li>
           </ul>
         </div>
@@ -1048,14 +1037,18 @@
             </li>
             <li>
               <div class="bullet-dot"></div>
-              <span>Cero notas de crédito y cero reprocesos tributarios.</span>
+              <span>Cero notas de crédito y cero reprocesos tributarios ante SUNAT.</span>
+            </li>
+            <li>
+              <div class="bullet-dot"></div>
+              <span>Flujo de caja predecible y saludable para la agencia.</span>
             </li>
           </ul>
         </div>
       </div>
 
       <div class="callout-box callout-emerald">
-        <span style="font-size: 1.4rem;">💡</span>
+        <span style="font-size: 1.6rem;">💡</span>
         <div>
           <div class="callout-title">Regla de Oro del Protocolo Handshake</div>
           <div class="callout-text">
@@ -1082,11 +1075,11 @@
         <!-- Paso 1 -->
         <div class="step-card">
           <div class="step-num sky">1</div>
-          <div class="step-title">Zarpe & Cierre SOF</div>
+          <div class="step-title">Zarpe &amp; Cierre SOF</div>
           <div class="step-desc">
             Al terminar la operación de la nave y zarpar del puerto, se consolida el <strong>Statement of Facts (SOF)</strong> con los sellos y firmas del Capitán y la Agencia.
           </div>
-          <ul class="bullet-list" style="margin-top: 12px;">
+          <ul class="bullet-list" style="margin-top: 14px;">
             <li><div class="bullet-dot"></div><span>Cierre de maniobras de atraque y desatraque.</span></li>
             <li><div class="bullet-dot"></div><span>Registro de horas de practicaje y uso de remolcadores.</span></li>
           </ul>
@@ -1099,7 +1092,7 @@
           <div class="step-desc">
             La agencia marítima sube su <strong>Pre-Liquidación (Proforma)</strong> al módulo PETRAL ONE, desglosando los gastos portuarios y servicios de terceros.
           </div>
-          <ul class="bullet-list" style="margin-top: 12px;">
+          <ul class="bullet-list" style="margin-top: 14px;">
             <li><div class="bullet-dot amber"></div><span>Carga en línea sin emitir aún factura SUNAT.</span></li>
             <li><div class="bullet-dot amber"></div><span>Adjuntos digitales: tickets de remolcador y recibos.</span></li>
           </ul>
@@ -1108,11 +1101,11 @@
         <!-- Paso 3 -->
         <div class="step-card active-step">
           <div class="step-num emerald">3</div>
-          <div class="step-title">Auditoría & Handshake</div>
+          <div class="step-title">Auditoría &amp; Handshake</div>
           <div class="step-desc">
             El equipo de Petral revisa la liquidación con el motor de reglas automáticas. Si hay discrepancias se ajustan en línea; si coincide, se otorga el <strong>Handshake Digital</strong>.
           </div>
-          <ul class="bullet-list" style="margin-top: 12px;">
+          <ul class="bullet-list" style="margin-top: 14px;">
             <li><div class="bullet-dot emerald"></div><span>Conciliación transparente en tiempo real.</span></li>
             <li><div class="bullet-dot emerald"></div><span>Aprobación vinculante firmada digitalmente.</span></li>
           </ul>
@@ -1121,11 +1114,11 @@
         <!-- Paso 4 -->
         <div class="step-card">
           <div class="step-num purple">4</div>
-          <div class="step-title">Factura & SAP Navitranso</div>
+          <div class="step-title">Factura &amp; SAP Navitranso</div>
           <div class="step-desc">
             La agencia emite la factura formal asociada al código de Handshake. Navitranso recibe el comprobante que ingresa limpio al ERP SAP para pago programado.
           </div>
-          <ul class="bullet-list" style="margin-top: 12px;">
+          <ul class="bullet-list" style="margin-top: 14px;">
             <li><div class="bullet-dot"></div><span>Registro automático y programación de desembolso.</span></li>
             <li><div class="bullet-dot"></div><span>Cierre formal del viaje en Petral y Navitranso.</span></li>
           </ul>
@@ -1133,7 +1126,7 @@
       </div>
 
       <div class="callout-box callout-sky">
-        <span style="font-size: 1.4rem;">🎯</span>
+        <span style="font-size: 1.6rem;">🎯</span>
         <div>
           <div class="callout-title">Claridad Contractual Garantizada</div>
           <div class="callout-text">
@@ -1151,7 +1144,7 @@
         <span class="badge-tag badge-purple">ESTRUCTURA DE GOBERNANZA</span>
         <span class="slide-subtitle-top">SOCIO ESTRATÉGICO 50% • CONTABILIDAD SAP</span>
       </div>
-      <h1 class="slide-h1">El Rol Clave de Navitranso: Dueño del 50% & Liquidador Formal</h1>
+      <h1 class="slide-h1">El Rol Clave de Navitranso: Dueño del 50% &amp; Liquidador Formal</h1>
       <p class="slide-lead">
         Comprender a Navitranso es fundamental para asegurar el éxito del proceso: ellos no son un tercero ajeno, son socios y el corazón contable del negocio.
       </p>
@@ -1169,6 +1162,7 @@
           <ul class="bullet-list">
             <li><div class="bullet-dot"></div><span>Interés directo en la exactitud y transparencia del gasto.</span></li>
             <li><div class="bullet-dot"></div><span>Exigencia de auditoría pericial en cada recalada.</span></li>
+            <li><div class="bullet-dot"></div><span>Alineamiento total con la rentabilidad compartida.</span></li>
           </ul>
         </div>
 
@@ -1176,7 +1170,7 @@
         <div class="card">
           <div class="card-header">
             <div class="card-icon sky">💼</div>
-            <span class="card-title">Backoffice Contable & Pagador</span>
+            <span class="card-title">Backoffice Contable &amp; Pagador</span>
           </div>
           <div class="card-p">
             El equipo contable y la tesorería residen en Navitranso. Son ellos quienes reciben los comprobantes, gestionan las detracciones y ejecutan las transferencias bancarias.
@@ -1184,6 +1178,7 @@
           <ul class="bullet-list">
             <li><div class="bullet-dot"></div><span>Entorno de control rígido y estricto cumplimiento tributario.</span></li>
             <li><div class="bullet-dot"></div><span>Políticas de pago automáticas para facturas con Handshake.</span></li>
+            <li><div class="bullet-dot"></div><span>Eliminación de fricciones interdepartamentales.</span></li>
           </ul>
         </div>
 
@@ -1199,12 +1194,13 @@
           <ul class="bullet-list">
             <li><div class="bullet-dot emerald"></div><span>Centro de costos asignado por viaje y buque.</span></li>
             <li><div class="bullet-dot emerald"></div><span>Conciliación inmediata de órdenes de compra vs facturas.</span></li>
+            <li><div class="bullet-dot emerald"></div><span>Trazabilidad para auditorías externas y SUNAT.</span></li>
           </ul>
         </div>
       </div>
 
       <div class="callout-box callout-sky">
-        <span style="font-size: 1.4rem;">🤝</span>
+        <span style="font-size: 1.6rem;">🤝</span>
         <div>
           <div class="callout-title">La Alianza Tripartita: Petral • Agencias • Navitranso</div>
           <div class="callout-text">
@@ -1245,7 +1241,7 @@
             <tr>
               <td><strong>Manejo de Discrepancias</strong></td>
               <td>Por correos electrónicos tras semanas de espera, con tensión entre áreas contables.</td>
-              <td>Conciliación en plataforma en menos de 48 horas tras el zarpe.</td>
+              <td style="color: var(--emerald); font-weight:700;">Conciliación en plataforma en menos de 48 horas tras el zarpe.</td>
             </tr>
             <tr>
               <td><strong>Notas de Crédito SUNAT</strong></td>
@@ -1255,7 +1251,7 @@
             <tr>
               <td><strong>Tiempo de Cobranza (DSO)</strong></td>
               <td style="font-family:var(--font-mono); font-weight:800; color:var(--rose);">60 a 90 días calendario</td>
-              <td style="font-family:var(--font-mono); font-weight:800; color:var(--emerald);">15 a 20 días calendario (-70% de tiempo)</td>
+              <td style="font-family:var(--font-mono); font-weight:800; color:var(--emerald);">15 a 20 días calendario (-70% de reducción)</td>
             </tr>
             <tr>
               <td><strong>Integración SAP Navitranso</strong></td>
@@ -1336,7 +1332,7 @@
       </div>
 
       <div class="callout-box callout-sky">
-        <span style="font-size: 1.4rem;">🔒</span>
+        <span style="font-size: 1.6rem;">🔒</span>
         <div>
           <div class="callout-title">Seguridad y Gobernanza de Datos</div>
           <div class="callout-text">
@@ -1361,12 +1357,12 @@
 
       <div class="grid-2">
         <!-- Fase 1 -->
-        <div class="card" style="border-top: 3px solid var(--sky);">
+        <div class="card" style="border-top: 4px solid var(--sky);">
           <div class="card-header">
             <div class="card-icon sky">🚀</div>
             <div>
               <span class="card-title">Fase 1: Protocolo Handshake Asistido</span>
-              <span style="font-family:var(--font-mono); font-size:0.7rem; font-weight:800; color:var(--sky); display:block;">DESPLIEGUE INMEDIATO (EN CURSO)</span>
+              <span style="font-family:var(--font-mono); font-size:0.75rem; font-weight:800; color:var(--sky); display:block; margin-top:2px;">DESPLIEGUE INMEDIATO (EN CURSO)</span>
             </div>
           </div>
           <div class="card-p">
@@ -1393,12 +1389,12 @@
         </div>
 
         <!-- Fase 2 -->
-        <div class="card" style="border-top: 3px solid var(--purple);">
+        <div class="card" style="border-top: 4px solid var(--purple);">
           <div class="card-header">
             <div class="card-icon purple">🛰️</div>
             <div>
               <span class="card-title">Fase 2: Liquidación Automática Puente de Mando</span>
-              <span style="font-family:var(--font-mono); font-size:0.7rem; font-weight:800; color:var(--purple); display:block;">SIGUIENTE NIVEL (TELEMETRÍA & AIS)</span>
+              <span style="font-family:var(--font-mono); font-size:0.75rem; font-weight:800; color:var(--purple); display:block; margin-top:2px;">SIGUIENTE NIVEL (TELEMETRÍA &amp; AIS)</span>
             </div>
           </div>
           <div class="card-p">
@@ -1426,7 +1422,7 @@
       </div>
 
       <div class="callout-box callout-emerald">
-        <span style="font-size: 1.4rem;">🏁</span>
+        <span style="font-size: 1.6rem;">🏁</span>
         <div>
           <div class="callout-title">Estrategia Pragmática y Segura</div>
           <div class="callout-text">
@@ -1473,7 +1469,7 @@
           <ul class="bullet-list">
             <li><div class="bullet-dot emerald"></div><span><strong>Control Pericial del Gasto:</strong> Cero pagos indebidos por conceptos no autorizados.</span></li>
             <li><div class="bullet-dot emerald"></div><span><strong>Ahorro en Horas Hombre:</strong> Liquidación ágil asistida por sistema.</span></li>
-            <li><div class="bullet-dot emerald"></div><span><strong>Cierre de Viaje Inmediato:</strong> P&L exacto en el momento del zarpe.</span></li>
+            <li><div class="bullet-dot emerald"></div><span><strong>Cierre de Viaje Inmediato:</strong> P&amp;L exacto en el momento del zarpe.</span></li>
             <li><div class="bullet-dot emerald"></div><span><strong>Madurez Tecnológica:</strong> Plataforma líder en transporte marítimo.</span></li>
           </ul>
         </div>
@@ -1494,7 +1490,7 @@
       </div>
 
       <div class="callout-box callout-emerald" style="margin-top: auto;">
-        <span style="font-size: 1.5rem;">🤝</span>
+        <span style="font-size: 1.6rem;">🤝</span>
         <div>
           <div class="callout-title">Siguiente Paso: Lanzamiento de la Mesa de Trabajo Digital</div>
           <div class="callout-text">
@@ -1619,17 +1615,6 @@
       updateSlide(index);
     }
 
-    // Toggle de visibilidad de contraseña
-    function togglePasswordVisibility() {
-      const pwd = document.getElementById('password');
-      if (!pwd) return;
-      if (pwd.type === 'password') {
-        pwd.type = 'text';
-      } else {
-        pwd.type = 'password';
-      }
-    }
-
     // Modo Pantalla Completa [F]
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
@@ -1645,15 +1630,6 @@
 
     // Atajos de teclado idénticos a LPA
     document.addEventListener('keydown', (e) => {
-      // Si está en el login y presiona Enter o ArrowRight, avanza
-      if (currentSlide === 0 && e.target && (e.target.tagName === 'INPUT')) {
-        if (e.key === 'Enter' || e.key === 'ArrowRight') {
-          e.preventDefault();
-          nextSlide();
-        }
-        return;
-      }
-
       if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
         e.preventDefault();
         nextSlide();
@@ -1673,7 +1649,7 @@
     let isWheelScrolling = false;
     window.addEventListener('wheel', (e) => {
       if (isWheelScrolling) return;
-      if (Math.abs(e.deltaY) > 40) {
+      if (Math.abs(e.deltaY) > 30) {
         isWheelScrolling = true;
         if (e.deltaY > 0) {
           nextSlide();
@@ -1682,7 +1658,7 @@
         }
         setTimeout(() => {
           isWheelScrolling = false;
-        }, 400);
+        }, 350);
       }
     }, { passive: true });
 
