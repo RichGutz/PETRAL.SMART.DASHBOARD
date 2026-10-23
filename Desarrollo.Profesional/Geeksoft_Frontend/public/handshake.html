@@ -99,7 +99,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 42px;
+      padding: 0 46px;
       border-bottom: 1px solid var(--border-subtle);
       background: #FFFFFF;
       z-index: 50;
@@ -118,12 +118,12 @@
     }
     .brand-title {
       font-weight: 900;
-      font-size: 1.02rem;
+      font-size: 1.05rem;
       color: var(--navy);
       letter-spacing: -0.3px;
     }
     .brand-founders {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-family: var(--font-mono);
       color: var(--navy-mid);
       font-weight: 700;
@@ -135,12 +135,12 @@
     }
 
     .section-pill {
-      font-size: 0.74rem;
+      font-size: 0.76rem;
       font-weight: 800;
       letter-spacing: 0.5px;
       text-transform: uppercase;
       font-family: var(--font-mono);
-      padding: 5px 14px;
+      padding: 6px 16px;
       border-radius: 999px;
       display: inline-flex;
       align-items: center;
@@ -152,7 +152,7 @@
     }
 
     .client-badge {
-      font-size: 0.74rem;
+      font-size: 0.76rem;
       font-family: var(--font-mono);
       color: var(--navy-light);
       font-weight: 700;
@@ -168,9 +168,10 @@
       position: relative;
       overflow: hidden;
       background: var(--bg);
+      height: calc(100vh - 112px);
     }
 
-    /* SLIDES CON ESPACIO Y RESPIRO (ESTILO EXACTO LPA) */
+    /* SLIDES CON MÁXIMO APROVECHAMIENTO VERTICAL (ESTILO EXACTO LPA) */
     .slide {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -178,10 +179,12 @@
       visibility: hidden;
       transform: translateY(6px);
       transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
-      padding: 38px 52px 34px 52px;
+      padding: 22px 42px 18px 42px;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       overflow: hidden;
+      box-sizing: border-box;
     }
     .slide.active {
       opacity: 1;
@@ -227,23 +230,23 @@
       position: relative;
       z-index: 3;
       color: #FFFFFF;
-      padding: 0 56px 42px 56px;
+      padding: 0 56px 48px 56px;
       width: 100%;
     }
     .hero-flat-left {
-      max-width: 1100px;
+      max-width: 1200px;
     }
     .hero-flat-title {
-      font-size: 3.2rem;
+      font-size: 3.4rem;
       font-weight: 900;
-      letter-spacing: -1px;
+      letter-spacing: -1.2px;
       color: #FFFFFF;
       line-height: 1.05;
       margin-bottom: 8px;
       text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
     }
     .hero-flat-subtitle {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       color: #E2E8F0;
       line-height: 1.45;
       max-width: 950px;
@@ -254,19 +257,23 @@
     /* ========================================================
        COMPONENTES REGULARES ESTÁNDAR EXACTOS DE LPA
        ======================================================== */
+    .slide-header-block {
+      flex-shrink: 0;
+      margin-bottom: 12px;
+    }
     .slide-eyebrow {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .badge-tag {
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       font-weight: 800;
       font-family: var(--font-mono);
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 4px;
     }
     .badge-sky { background: var(--sky-dim); color: var(--sky); border: 1px solid var(--sky-brd); }
@@ -276,57 +283,78 @@
     .badge-rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-brd); }
 
     .slide-subtitle-top {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: var(--navy-light);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
     .slide-h1 {
-      font-size: 1.75rem;
+      font-size: 1.95rem;
       font-weight: 900;
       color: var(--navy);
-      letter-spacing: -0.5px;
+      letter-spacing: -0.6px;
       line-height: 1.15;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .slide-lead {
-      font-size: 0.92rem;
+      font-size: 0.98rem;
       color: var(--navy-mid);
       line-height: 1.45;
-      max-width: 980px;
-      margin-bottom: 16px;
+      max-width: 1100px;
     }
 
-    /* Grillas y Tarjetas (Light) Exactas a LPA */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; min-height: 0; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; min-height: 0; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; flex: 1; min-height: 0; }
+    /* Grillas que llenan el 100% del alto vertical sin dejar vacíos */
+    .slide-body-grid {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      margin-bottom: 12px;
+      justify-content: stretch;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex: 1; height: 100%; min-height: 0; align-items: stretch; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; flex: 1; height: 100%; min-height: 0; align-items: stretch; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; flex: 1; height: 100%; min-height: 0; align-items: stretch; }
 
+    /* Tarjetas que se estiran verticalmente para llenar el 100% del slide */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 18px 20px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      border-radius: 12px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
-      position: relative;
+      justify-content: space-between;
+      height: 100%;
+      min-height: 0;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+    .card:hover {
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+    .card-top {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
     .card-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
     .card-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.9rem;
+      font-size: 1.05rem;
       font-weight: 800;
       flex-shrink: 0;
     }
@@ -337,28 +365,98 @@
     .card-icon.rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-brd); }
 
     .card-title {
-      font-size: 0.95rem;
+      font-size: 1.1rem;
       font-weight: 800;
       color: var(--navy);
       letter-spacing: -0.2px;
     }
     .card-p {
-      font-size: 0.83rem;
+      font-size: 0.90rem;
       color: var(--navy-mid);
-      line-height: 1.42;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    /* Caja de KPI / Métrica destacada dentro de la tarjeta */
+    .card-metric-box {
+      margin: 10px 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .card-metric-box.rose { background: var(--rose-dim); border: 1px solid var(--rose-brd); color: var(--rose); }
+    .card-metric-box.amber { background: var(--amber-dim); border: 1px solid var(--amber-brd); color: var(--amber); }
+    .card-metric-box.purple { background: var(--purple-dim); border: 1px solid var(--purple-brd); color: var(--purple); }
+    .card-metric-box.sky { background: var(--sky-dim); border: 1px solid var(--sky-brd); color: var(--sky); }
+    .card-metric-box.emerald { background: var(--emerald-dim); border: 1px solid var(--emerald-brd); color: var(--emerald); }
+
+    .card-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
+      flex: 1;
+      justify-content: space-evenly;
+    }
+    .card-bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: var(--navy-mid);
+      line-height: 1.45;
+    }
+    .card-bullets li strong {
+      color: var(--navy);
+      font-weight: 700;
+    }
+    .card-bullet-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--navy-light);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .card-bullet-dot.rose { background: var(--rose); }
+    .card-bullet-dot.emerald { background: var(--emerald); }
+    .card-bullet-dot.amber { background: var(--amber); }
+    .card-bullet-dot.sky { background: var(--sky); }
+    .card-bullet-dot.purple { background: var(--purple); }
+
+    .card-bottom-pill {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.74rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--navy-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
     }
 
     /* Franja Inferior LPA (Premisa de Alianza / Banner) */
     .lpa-bottom-banner {
-      margin-top: 14px;
+      flex-shrink: 0;
       border-radius: 8px;
-      padding: 12px 18px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      min-height: 48px;
     }
 
-    /* Tabla Matriz LPA */
+    /* Tabla Matriz LPA que llena el alto */
     .matrix-wrapper {
       background: #FFFFFF;
       border: 1px solid var(--border-subtle);
@@ -368,30 +466,31 @@
       display: flex;
       flex-direction: column;
       box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      min-height: 0;
     }
     .matrix-table {
       width: 100%;
       height: 100%;
       border-collapse: collapse;
-      font-size: 0.82rem;
+      font-size: 0.9rem;
     }
     .matrix-table th {
       background: #F1F5F9;
       color: var(--navy);
       font-weight: 800;
       text-align: left;
-      padding: 12px 16px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border-subtle);
       font-family: var(--font-mono);
-      font-size: 0.74rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     .matrix-table td {
-      padding: 12px 16px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border-subtle);
       color: var(--navy-mid);
-      line-height: 1.4;
+      line-height: 1.45;
     }
     .matrix-table tr:last-child td {
       border-bottom: none;
@@ -405,7 +504,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 42px;
+      padding: 0 46px;
       border-top: 1px solid var(--border-subtle);
       background: #FFFFFF;
       z-index: 50;
@@ -420,7 +519,7 @@
       gap: 16px;
     }
     .keyboard-hint {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       color: var(--navy-light);
       background: #F1F5F9;
       border: 1px solid var(--border-subtle);
@@ -531,64 +630,128 @@
          SLIDE 02: LA ESCENA DEL CRIMEN (PROBLEMA AS-IS)
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-rose">01 // DIAGNÓSTICO OPERATIVO</span>
-        <span class="slide-subtitle-top">ESTADO ACTUAL • FRICCIÓN COMERCIAL</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-rose">01 // DIAGNÓSTICO OPERATIVO</span>
+          <span class="slide-subtitle-top">ESTADO ACTUAL • FRICCIÓN COMERCIAL</span>
+        </div>
+        <h2 class="slide-h1">La Escena del Crimen: Cobranza Tardía &amp; Notas de Crédito</h2>
+        <p class="slide-lead">
+          Actualmente las agencias marítimas cobran en el doble o triple del periodo acordado debido a la facturación a ciegas y auditorías reactivas.
+        </p>
       </div>
-      <h2 class="slide-h1">La Escena del Crimen: Cobranza Tardía &amp; Notas de Crédito</h2>
-      <p class="slide-lead">
-        Actualmente las agencias marítimas cobran en el doble o triple del periodo acordado debido a la facturación a ciegas y auditorías reactivas.
-      </p>
 
-      <div class="grid-4" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--rose);">
-          <div class="card-header">
-            <div class="card-icon rose">⚠️</div>
-            <h3 class="card-title">Facturación a Ciegas</h3>
+      <div class="slide-body-grid">
+        <div class="grid-4">
+          <div class="card" style="border-top: 3px solid var(--rose);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon rose">⚠️</div>
+                <h3 class="card-title">Facturación a Ciegas</h3>
+              </div>
+              <p class="card-p">
+                La agencia emite su factura electrónica fiscal SUNAT sin contrastación previa contra la bitácora del buque.
+              </p>
+              <div class="card-metric-box rose">
+                <span>DISCREPANCIA TÍPICA</span>
+                <strong>+12H PERNOCTE</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot rose"></div><span>Bitácora del puente difiere del reporte de muelle.</span></li>
+                <li><div class="card-bullet-dot rose"></div><span>Práctico factura horas de espera no autorizadas.</span></li>
+                <li><div class="card-bullet-dot rose"></div><span>Horas de remolcadores exceden la maniobra real.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>ORIGEN</span>
+              <strong style="color:var(--rose);">EMISIÓN PREMATURA</strong>
+            </div>
           </div>
-          <p class="card-p">
-            La agencia emite su factura fiscal SUNAT antes de validar las horas reales de pernocte, remolcaje o practicaje con la bitácora de la nave.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--amber);">
-          <div class="card-header">
-            <div class="card-icon amber">📉</div>
-            <h3 class="card-title">Rechazo en SAP</h3>
+          <div class="card" style="border-top: 3px solid var(--amber);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon amber">📉</div>
+                <h3 class="card-title">Rechazo en SAP</h3>
+              </div>
+              <p class="card-p">
+                Navitranso detecta discrepancias tarifarias semanas después al ingresar el comprobante en su ERP SAP.
+              </p>
+              <div class="card-metric-box amber">
+                <span>ESTATUS CONTABLE</span>
+                <strong>BLOQUEO EN SAP</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot amber"></div><span>Cuentas por pagar bloquea el pago programado.</span></li>
+                <li><div class="card-bullet-dot amber"></div><span>Descalce de centros de costo por recalada.</span></li>
+                <li><div class="card-bullet-dot amber"></div><span>Auditoría reactiva congela el flujo comercial.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>ERP NAVITRANSO</span>
+              <strong style="color:var(--amber);">PAGO DETENIDO</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Navitranso detecta discrepancias semanas después al ingresar el comprobante en su ERP SAP, congelando el proceso contable.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">🔄</div>
-            <h3 class="card-title">Bucle Notas de Crédito</h3>
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">🔄</div>
+                <h3 class="card-title">Bucle Notas Crédito</h3>
+              </div>
+              <p class="card-p">
+                Anulación forzosa, emisión de notas de crédito SUNAT y refacturación, reiniciando el ciclo de cobranza.
+              </p>
+              <div class="card-metric-box purple">
+                <span>TASA REFACTURACIÓN</span>
+                <strong>~35% DE FACTURAS</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span>Trámites tributarios engorrosos con SUNAT.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Costos administrativos de anulación contable.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Pérdida de antigüedad del comprobante fiscal.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>FISCAL</span>
+              <strong style="color:var(--purple);">REPROCESO SUNAT</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Anulación forzosa, emisión de notas de crédito SUNAT y refacturación, dilatando el pago de 60 a 90 días calendario.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">⏳</div>
-            <h3 class="card-title">Desgaste Operativo</h3>
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">⏳</div>
+                <h3 class="card-title">Desgaste Operativo</h3>
+              </div>
+              <p class="card-p">
+                Cientos de correos cruzados y hojas de cálculo desincronizadas entre liquidadores por cada viaje mensual.
+              </p>
+              <div class="card-metric-box sky">
+                <span>DILATACIÓN DE COBRO</span>
+                <strong>60 A 90 DÍAS DSO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span>18 horas hombre perdidas por cada recalada.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Cobranzas dilatadas hasta en 3 meses.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Deterioro de la relación armador-agencia.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>DSO ACTUAL</span>
+              <strong style="color:var(--rose);">60-90 DÍAS</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Cientos de correos cruzados y hojas de cálculo desincronizadas entre liquidadores por cada recalada mensual.
-          </p>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--rose-dim); border: 1px solid var(--rose-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--rose); font-size: 0.8rem; font-family: var(--font-mono);">IMPACTO FINANCIERO AS-IS:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">DSO actual de 60 a 90 días • ~35% de facturas refacturadas con notas de crédito • 18 horas hombre perdidas por viaje.</span>
+          <span style="font-weight: 800; color: var(--rose); font-size: 0.82rem; font-family: var(--font-mono);">IMPACTO FINANCIERO AS-IS:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">DSO de 60 a 90 días calendario • 35% de facturas refacturadas con notas de crédito • 18 horas hombre desperdiciadas por viaje.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--rose); font-size: 0.95rem;">DSO: 60-90 DÍAS</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--rose); font-size: 1.05rem;">DSO: 60-90 DÍAS</span>
       </div>
     </section>
 
@@ -596,54 +759,103 @@
          SLIDE 03: EL CAMBIO DE PARADIGMA (HANDSHAKE PRE-FACTURA)
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-emerald">02 // VISIÓN TO-BE</span>
-        <span class="slide-subtitle-top">DEL RECHAZO REACTIVO AL CONSENSO PREVIO</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-emerald">02 // VISIÓN TO-BE</span>
+          <span class="slide-subtitle-top">DEL RECHAZO REACTIVO AL CONSENSO PREVIO</span>
+        </div>
+        <h2 class="slide-h1">El Protocolo Handshake: Consenso Pre-Facturación</h2>
+        <p class="slide-lead">
+          Ninguna factura se emite sin un "Handshake" previo: acuerdo digital vinculante entre Petral, Agencia y Navitranso.
+        </p>
       </div>
-      <h2 class="slide-h1">El Protocolo Handshake: Consenso Pre-Facturación</h2>
-      <p class="slide-lead">
-        Ninguna factura se emite sin un "Handshake" previo: acuerdo digital vinculante entre Petral, Agencia y Navitranso.
-      </p>
 
-      <div class="grid-3" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">🤝</div>
-            <h3 class="card-title">1. Conciliación Técnica Previa</h3>
+      <div class="slide-body-grid">
+        <div class="grid-3">
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">🤝</div>
+                <h3 class="card-title">1. Conciliación Técnica Previa</h3>
+              </div>
+              <p class="card-p">
+                La agencia marítima y Petral concilian rubro por rubro antes de generar el comprobante fiscal en SUNAT, cotejando horas y tarifas pactadas.
+              </p>
+              <div class="card-metric-box sky">
+                <span>CONSENSO OPERATIVO</span>
+                <strong>ESPEJO 1:1 EN LÍNEA</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span>Auditoría de horas de pernocte, remolcaje y muellaje.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Validación matemática contra contratos marco vigentes.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Aprobación mutua en línea sin intermediarios.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>FASE 1</span>
+              <strong style="color:var(--sky);">ACUERDO PREVIO</strong>
+            </div>
           </div>
-          <p class="card-p">
-            La agencia marítima y Petral concilian rubro por rubro (muellaje, remolcador, práctico, pernocte) antes de generar el comprobante fiscal en SUNAT, cotejando horas y tarifas pactadas.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--emerald);">
-          <div class="card-header">
-            <div class="card-icon emerald">⚡</div>
-            <h3 class="card-title">2. Token de Aprobación Digital</h3>
+          <div class="card" style="border-top: 3px solid var(--emerald);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon emerald">⚡</div>
+                <h3 class="card-title">2. Token de Aprobación Digital</h3>
+              </div>
+              <p class="card-p">
+                Una vez acordada la proforma digital en PETRAL ONE, el sistema emite un Token de Handshake que sella los montos con auditoría inmutable.
+              </p>
+              <div class="card-metric-box emerald">
+                <span>INTEGRIDAD DIGITAL</span>
+                <strong>TOKEN CRIPTOGRÁFICO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot emerald"></div><span>Monto final sellado y respaldado digitalmente.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Emisión de factura por el importe exacto convenido.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Cero discrepancias al llegar a cuentas por pagar.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>SEGURIDAD</span>
+              <strong style="color:var(--emerald);">TOKEN SELLADO</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Una vez acordada la proforma digital en PETRAL ONE, el sistema emite un Token de Handshake que sella los montos convenidos con respaldo de auditoría inmutable.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">💰</div>
-            <h3 class="card-title">3. Pago Rápido en 15 Días</h3>
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">💰</div>
+                <h3 class="card-title">3. Pago Rápido en 15 Días</h3>
+              </div>
+              <p class="card-p">
+                Al coincidir la factura 1:1 con el Handshake ya aprobado, Navitranso procesa el pago directo en SAP sin observaciones ni auditorías secundarias.
+              </p>
+              <div class="card-metric-box purple">
+                <span>CICLO FINANCIERO</span>
+                <strong>DSO: 15 DÍAS MÁXIMO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span>Liquidación asegurada en 15 a 20 días calendario.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>0% de notas de crédito y cero reprocesos contables.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Flujo de caja predecible para la agencia marítima.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>DSO TO-BE</span>
+              <strong style="color:var(--purple);">15 DÍAS NETO</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Al coincidir la factura 1:1 con el Handshake ya aprobado, Navitranso procesa el pago directo en SAP sin observaciones ni auditorías secundarias. Cero notas de crédito.
-          </p>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--emerald-dim); border: 1px solid var(--emerald-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--emerald); font-size: 0.8rem; font-family: var(--font-mono);">REGLA DE ORO HANDSHAKE:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">Si el monto se consensúa digitalmente antes de emitir la factura en SUNAT, la probabilidad de rechazo contable es exactamente CERO.</span>
+          <span style="font-weight: 800; color: var(--emerald); font-size: 0.82rem; font-family: var(--font-mono);">REGLA DE ORO HANDSHAKE:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">Si el monto se consensúa digitalmente antes de emitir la factura en SUNAT, la probabilidad de rechazo contable es exactamente CERO.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--emerald); font-size: 0.95rem;">0% NOTAS DE CRÉDITO</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--emerald); font-size: 1.05rem;">0% NOTAS DE CRÉDITO</span>
       </div>
     </section>
 
@@ -651,64 +863,128 @@
          SLIDE 04: FLUJO OPERATIVO EN 4 TIEMPOS
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-sky">03 // WORKFLOW TRIPARTITO</span>
-        <span class="slide-subtitle-top">PASO A PASO DIGITAL • ESTÁNDAR OPERATIVO</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-sky">03 // WORKFLOW TRIPARTITO</span>
+          <span class="slide-subtitle-top">PASO A PASO DIGITAL • ESTÁNDAR OPERATIVO</span>
+        </div>
+        <h2 class="slide-h1">Flujo Operativo en 4 Tiempos: Del Zarpe al Pago</h2>
+        <p class="slide-lead">
+          Un proceso estructurado, transparente y auditable que reemplaza los correos infinitos por una mesa de trabajo digital unificada.
+        </p>
       </div>
-      <h2 class="slide-h1">Flujo Operativo en 4 Tiempos: Del Zarpe al Pago</h2>
-      <p class="slide-lead">
-        Un proceso estructurado, transparente y auditable que reemplaza los correos infinitos por una mesa de trabajo digital unificada.
-      </p>
 
-      <div class="grid-4" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">1</div>
-            <h3 class="card-title">Zarpe &amp; Cierre SOF</h3>
+      <div class="slide-body-grid">
+        <div class="grid-4">
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">1</div>
+                <h3 class="card-title">Zarpe &amp; Cierre SOF</h3>
+              </div>
+              <p class="card-p">
+                Al terminar las operaciones y zarpar la nave, se consolida el Statement of Facts (SOF) firmado por Capitán y Agencia.
+              </p>
+              <div class="card-metric-box sky">
+                <span>HITO CRÍTICO</span>
+                <strong>BITÁCORA NÁUTICA</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span>Sellado de bitácora náutica y maniobras reales.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Cierre de horas de práctico y remolcadores.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Firma de Capitán in situ con validez jurídica.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>TIEMPO T+0</span>
+              <strong style="color:var(--sky);">DÍA DEL ZARPE</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Al concluir las operaciones de muelle y zarpar la nave, se consolida el Statement of Facts (SOF) con las firmas del Capitán y la Agencia, sellando horas náuticas.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--amber);">
-          <div class="card-header">
-            <div class="card-icon amber">2</div>
-            <h3 class="card-title">Carga de Proforma</h3>
+          <div class="card" style="border-top: 3px solid var(--amber);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon amber">2</div>
+                <h3 class="card-title">Carga Proforma</h3>
+              </div>
+              <p class="card-p">
+                La agencia sube su pre-liquidación digital al portal PETRAL ONE con comprobantes y tickets sin emitir aún factura SUNAT.
+              </p>
+              <div class="card-metric-box amber">
+                <span>CANAL OFICIAL</span>
+                <strong>PORTAL PETRAL ONE</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot amber"></div><span>Carga en línea con plantilla homologada.</span></li>
+                <li><div class="card-bullet-dot amber"></div><span>Adjuntos digitales de remolcadores y recibos.</span></li>
+                <li><div class="card-bullet-dot amber"></div><span>Sin comprobante tributario emitido aún.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>TIEMPO T+24H</span>
+              <strong style="color:var(--amber);">PROFORMA WEB</strong>
+            </div>
           </div>
-          <p class="card-p">
-            La agencia sube su pre-liquidación digital al portal PETRAL ONE con tickets de remolcador y recibos, sin emitir comprobante fiscal tributario todavía.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--emerald);">
-          <div class="card-header">
-            <div class="card-icon emerald">3</div>
-            <h3 class="card-title">Auditoría &amp; Handshake</h3>
+          <div class="card" style="border-top: 3px solid var(--emerald);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon emerald">3</div>
+                <h3 class="card-title">Auditoría &amp; Handshake</h3>
+              </div>
+              <p class="card-p">
+                Petral audita parámetros con reglas automáticas. Si coincide, emite el Handshake Token vinculado a la recalada.
+              </p>
+              <div class="card-metric-box emerald">
+                <span>VALIDACIÓN AUTOMÁTICA</span>
+                <strong>TOKEN CRIPTOGRÁFICO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot emerald"></div><span>Conciliación transparente en menos de 48h.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Aprobación vinculante sellada en sistema.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Acuerdo definitivo de montos a facturar.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>TIEMPO T+48H</span>
+              <strong style="color:var(--emerald);">HANDSHAKE OK</strong>
+            </div>
           </div>
-          <p class="card-p">
-            El equipo de Petral revisa la liquidación con motor de reglas automáticas. Si coincide, emite el Handshake Token vinculante en menos de 48 horas.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">4</div>
-            <h3 class="card-title">Factura &amp; SAP Navitranso</h3>
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">4</div>
+                <h3 class="card-title">Factura &amp; SAP</h3>
+              </div>
+              <p class="card-p">
+                La agencia emite factura SUNAT con código de Handshake; Navitranso liquida directamente en SAP a 15 días.
+              </p>
+              <div class="card-metric-box purple">
+                <span>INGESTA DIRECTA</span>
+                <strong>ZERO RECHAZOS SAP</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span>Registro 1:1 automático en SAP ERP.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Programación de tesorería sin rechazos.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Abono bancario efectivo en 15 días netos.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>TIEMPO T+15D</span>
+              <strong style="color:var(--purple);">PAGO EFECTIVO</strong>
+            </div>
           </div>
-          <p class="card-p">
-            La agencia emite la factura formal asociada al Token. Navitranso recibe el comprobante que calza 1:1 e ingresa limpio al ERP SAP para pago en 15 días.
-          </p>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--sky-dim); border: 1px solid var(--sky-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--sky); font-size: 0.8rem; font-family: var(--font-mono);">CLARIDAD OPERATIVA:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">Cualquier controversia de horas standby o recargos de marea se resuelve en el Paso 3 antes de que intervenga el área contable o SUNAT.</span>
+          <span style="font-weight: 800; color: var(--sky); font-size: 0.82rem; font-family: var(--font-mono);">CLARIDAD OPERATIVA:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">Cualquier controversia de horas standby o recargos de marea se resuelve en el Paso 3 antes de que intervenga contabilidad o SUNAT.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--sky); font-size: 0.95rem;">TIEMPO MÁXIMO: 48 HORAS</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--sky); font-size: 1.05rem;">MÁXIMO: 48 HORAS</span>
       </div>
     </section>
 
@@ -716,54 +992,103 @@
          SLIDE 05: EL ROL CLAVE DE NAVITRANSO
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-purple">04 // GOBERNANZA</span>
-        <span class="slide-subtitle-top">SOCIO ESTRATÉGICO 50% • CONTABILIDAD SAP</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-purple">04 // GOBERNANZA</span>
+          <span class="slide-subtitle-top">SOCIO ESTRATÉGICO 50% • CONTABILIDAD SAP</span>
+        </div>
+        <h2 class="slide-h1">El Rol Clave de Navitranso: Dueño del 50% &amp; Liquidador Formal</h2>
+        <p class="slide-lead">
+          Comprender a Navitranso es fundamental para asegurar el éxito del proceso: ellos no son un tercero ajeno, son socios y el corazón contable del negocio.
+        </p>
       </div>
-      <h2 class="slide-h1">El Rol Clave de Navitranso: Dueño del 50% &amp; Liquidador Formal</h2>
-      <p class="slide-lead">
-        Comprender a Navitranso es fundamental para asegurar el éxito del proceso: ellos no son un tercero ajeno, son socios y el corazón contable del negocio.
-      </p>
 
-      <div class="grid-3" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">🏛️</div>
-            <h3 class="card-title">Coproprietario del Negocio</h3>
+      <div class="slide-body-grid">
+        <div class="grid-3">
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">🏛️</div>
+                <h3 class="card-title">Coproprietario del Negocio (50%)</h3>
+              </div>
+              <p class="card-p">
+                Navitranso es co-propietario de la operación junto a Petral. Cualquier gasto o ineficiencia portuaria impacta directamente en el estado de resultados consolidado.
+              </p>
+              <div class="card-metric-box purple">
+                <span>ESTRUCTURA SOCIETARIA</span>
+                <strong>PARTICIPACIÓN 50/50</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span>Interés directo en la exactitud y auditoría del gasto.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Control pericial de cada recalada y consumo náutico.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Alineamiento total con la rentabilidad compartida.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>ESTRUCTURA</span>
+              <strong style="color:var(--purple);">SOCIO 50/50</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Navitranso es co-propietario de la operación junto a Petral. Cualquier gasto o ineficiencia portuaria impacta directamente en el estado de resultados consolidado de ambas partes.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">💼</div>
-            <h3 class="card-title">Backoffice Contable &amp; Pagador</h3>
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">💼</div>
+                <h3 class="card-title">Backoffice Contable &amp; Pagador</h3>
+              </div>
+              <p class="card-p">
+                El equipo contable y la tesorería residen en Navitranso. Son ellos quienes reciben los comprobantes, gestionan las detracciones y ejecutan las transferencias.
+              </p>
+              <div class="card-metric-box sky">
+                <span>CENTRO DE LIQUIDACIÓN</span>
+                <strong>TESORERÍA NAVITRANSO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span>Entorno de control rígido y estricto cumplimiento tributario.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Políticas de pago automáticas para facturas con Handshake.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Eliminación de llamadas y reclamos administrativos.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>FINANZAS</span>
+              <strong style="color:var(--sky);">TESORERÍA CENTRAL</strong>
+            </div>
           </div>
-          <p class="card-p">
-            El equipo contable y la tesorería residen en Navitranso. Son ellos quienes reciben los comprobantes, gestionan las detracciones y ejecutan las transferencias bancarias de las agencias.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--emerald);">
-          <div class="card-header">
-            <div class="card-icon emerald">⚙️</div>
-            <h3 class="card-title">El Ecosistema ERP SAP</h3>
+          <div class="card" style="border-top: 3px solid var(--emerald);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon emerald">⚙️</div>
+                <h3 class="card-title">El Ecosistema ERP SAP</h3>
+              </div>
+              <p class="card-p">
+                Navitranso opera bajo SAP ERP. El Handshake genera la estructura de datos requerida para una contabilización limpia sin notas de crédito ni observaciones.
+              </p>
+              <div class="card-metric-box emerald">
+                <span>CONECTIVIDAD DIRECTA</span>
+                <strong>DATAPIPELINE SAP</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot emerald"></div><span>Centro de costos asignado por viaje y buque.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Conciliación inmediata de órdenes de compra vs facturas.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Trazabilidad para auditorías externas y SUNAT.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>SISTEMA</span>
+              <strong style="color:var(--emerald);">SAP R/3 &amp; S/4</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Navitranso opera bajo SAP ERP. El Handshake genera la estructura de datos requerida para una contabilización limpia sin notas de crédito ni descalces en auditorías externas.
-          </p>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--purple-dim); border: 1px solid var(--purple-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--purple); font-size: 0.8rem; font-family: var(--font-mono);">CANAL INTEGRADO:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">PETRAL ONE actúa como el puente digital que conecta la realidad náutica del muelle con el rigor contable de SAP Navitranso.</span>
+          <span style="font-weight: 800; color: var(--purple); font-size: 0.82rem; font-family: var(--font-mono);">CANAL INTEGRADO:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">PETRAL ONE actúa como el puente digital que conecta la realidad náutica del muelle con el rigor contable de SAP Navitranso.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--purple); font-size: 0.95rem;">ALIANZA 50/50</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--purple); font-size: 1.05rem;">ALIANZA ESTRATÉGICA</span>
       </div>
     </section>
 
@@ -771,66 +1096,70 @@
          SLIDE 06: MATRIZ COMPARATIVA AS-IS VS TO-BE
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-emerald">05 // IMPACTO CUANTIFICADO</span>
-        <span class="slide-subtitle-top">BENCHMARK AS-IS VS PROTOCOLO HANDSHAKE</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-emerald">05 // IMPACTO CUANTIFICADO</span>
+          <span class="slide-subtitle-top">BENCHMARK AS-IS VS PROTOCOLO HANDSHAKE</span>
+        </div>
+        <h2 class="slide-h1">Matriz Comparativa: Proceso Tradicional vs Handshake</h2>
+        <p class="slide-lead">
+          Resultados medibles y garantizados al migrar hacia una liquidación digital coordinada y vinculante.
+        </p>
       </div>
-      <h2 class="slide-h1">Matriz Comparativa: Proceso Tradicional vs Handshake</h2>
-      <p class="slide-lead">
-        Resultados medibles y garantizados al migrar hacia una liquidación digital coordinada y vinculante.
-      </p>
 
-      <div class="matrix-wrapper">
-        <table class="matrix-table">
-          <thead>
-            <tr>
-              <th style="width: 25%;">Dimensión Operativa</th>
-              <th style="width: 37.5%; color: var(--rose);">Proceso Tradicional (As-Is)</th>
-              <th style="width: 37.5%; color: var(--emerald);">Protocolo Handshake (To-Be)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Punto de Facturación</strong></td>
-              <td style="color: var(--rose);">Factura emitida a ciegas al concluir la recalada.</td>
-              <td style="color: var(--emerald); font-weight:700;">Factura emitida ÚNICAMENTE tras el Handshake digital aprobado.</td>
-            </tr>
-            <tr>
-              <td><strong>Manejo de Discrepancias</strong></td>
-              <td>Por correos electrónicos tras semanas de espera, con tensión entre áreas contables.</td>
-              <td style="color: var(--emerald); font-weight:700;">Conciliación en plataforma en menos de 48 horas tras el zarpe.</td>
-            </tr>
-            <tr>
-              <td><strong>Notas de Crédito SUNAT</strong></td>
-              <td style="color: var(--rose); font-weight:700;">Alta incidencia (~35%), generando multas y descalces fiscales.</td>
-              <td style="color: var(--emerald); font-weight:700;">0% notas de crédito: el comprobante coincide al centavo con el acuerdo.</td>
-            </tr>
-            <tr>
-              <td><strong>Tiempo de Cobranza (DSO)</strong></td>
-              <td style="font-family:var(--font-mono); font-weight:800; color:var(--rose);">60 a 90 días calendario</td>
-              <td style="font-family:var(--font-mono); font-weight:800; color:var(--emerald);">15 a 20 días calendario (-70% de reducción)</td>
-            </tr>
-            <tr>
-              <td><strong>Integración SAP Navitranso</strong></td>
-              <td>Manual, digitación propensa a errores y reprocesos constantes.</td>
-              <td>Validación automatizada por viaje y buque con Token de auditoría.</td>
-            </tr>
-            <tr>
-              <td><strong>Relación Comercial</strong></td>
-              <td>Fricción recurrente por reclamos de tarifas o servicios discutidos.</td>
-              <td>Alianza estratégica basada en reglas claras, transparentes y compartidas.</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="slide-body-grid">
+        <div class="matrix-wrapper">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Dimensión Operativa</th>
+                <th style="width: 37.5%; color: var(--rose);">Proceso Tradicional (As-Is)</th>
+                <th style="width: 37.5%; color: var(--emerald);">Protocolo Handshake (To-Be)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Punto de Facturación</strong></td>
+                <td style="color: var(--rose);">Factura emitida a ciegas al concluir la recalada.</td>
+                <td style="color: var(--emerald); font-weight:700;">Factura emitida ÚNICAMENTE tras el Handshake digital aprobado.</td>
+              </tr>
+              <tr>
+                <td><strong>Manejo de Discrepancias</strong></td>
+                <td>Por correos electrónicos tras semanas de espera, con tensión entre áreas contables.</td>
+                <td style="color: var(--emerald); font-weight:700;">Conciliación en plataforma en menos de 48 horas tras el zarpe.</td>
+              </tr>
+              <tr>
+                <td><strong>Notas de Crédito SUNAT</strong></td>
+                <td style="color: var(--rose); font-weight:700;">Alta incidencia (~35%), generando multas y descalces fiscales.</td>
+                <td style="color: var(--emerald); font-weight:700;">0% notas de crédito: el comprobante coincide al centavo con el acuerdo.</td>
+              </tr>
+              <tr>
+                <td><strong>Tiempo de Cobranza (DSO)</strong></td>
+                <td style="font-family:var(--font-mono); font-weight:800; color:var(--rose);">60 a 90 días calendario</td>
+                <td style="font-family:var(--font-mono); font-weight:800; color:var(--emerald);">15 a 20 días calendario (-70% de reducción)</td>
+              </tr>
+              <tr>
+                <td><strong>Integración SAP Navitranso</strong></td>
+                <td>Manual, digitación propensa a errores y reprocesos constantes.</td>
+                <td>Validación automatizada por viaje y buque con Token de auditoría.</td>
+              </tr>
+              <tr>
+                <td><strong>Relación Comercial</strong></td>
+                <td>Fricción recurrente por reclamos de tarifas o servicios discutidos.</td>
+                <td>Alianza estratégica basada en reglas claras, transparentes y compartidas.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--emerald-dim); border: 1px solid var(--emerald-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--emerald); font-size: 0.8rem; font-family: var(--font-mono);">BALANCE OPERATIVO:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">Cero notas de crédito tributarias y aceleración del ciclo de cobro a menos de 20 días calendario garantizados.</span>
+          <span style="font-weight: 800; color: var(--emerald); font-size: 0.82rem; font-family: var(--font-mono);">BALANCE OPERATIVO:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">Cero notas de crédito tributarias y aceleración del ciclo de cobro a menos de 20 días calendario garantizados.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--emerald); font-size: 0.95rem;">-70% EN DSO</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--emerald); font-size: 1.05rem;">-70% EN DSO</span>
       </div>
     </section>
 
@@ -838,54 +1167,103 @@
          SLIDE 07: EL MÓDULO EN PETRAL ONE
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-sky">06 // ARQUITECTURA TECNOLÓGICA</span>
-        <span class="slide-subtitle-top">PLATAFORMA INTEGRADA • ROLES MULTI-EMPRESA</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-sky">06 // ARQUITECTURA TECNOLÓGICA</span>
+          <span class="slide-subtitle-top">PLATAFORMA INTEGRADA • ROLES MULTI-EMPRESA</span>
+        </div>
+        <h2 class="slide-h1">El Módulo Handshake en PETRAL ONE</h2>
+        <p class="slide-lead">
+          Una suite web corporativa de alto rendimiento desarrollada por Geeksoft, con control de accesos granular para cada actor de la cadena.
+        </p>
       </div>
-      <h2 class="slide-h1">El Módulo Handshake en PETRAL ONE</h2>
-      <p class="slide-lead">
-        Una suite web corporativa de alto rendimiento desarrollada por Geeksoft, con control de accesos granular para cada actor de la cadena.
-      </p>
 
-      <div class="grid-3" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">⚓</div>
-            <h3 class="card-title">Portal Agencias Marítimas</h3>
+      <div class="slide-body-grid">
+        <div class="grid-3">
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">⚓</div>
+                <h3 class="card-title">Portal Agencias Marítimas</h3>
+              </div>
+              <p class="card-p">
+                Acceso seguro para registrar proformas, subir comprobantes de remolque/practicaje y consultar el estatus en tiempo real de cada recalada.
+              </p>
+              <div class="card-metric-box sky">
+                <span>INTERFAZ OPERATIVA</span>
+                <strong>PORTAL DE AGENCIA</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span>Dashboard de liquidaciones pendientes y aprobadas.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Carga masiva de rubros con plantillas estandarizadas.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Notificaciones instantáneas de observaciones de Petral.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>ROL</span>
+              <strong style="color:var(--sky);">AGENCIA EXTERNA</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Acceso seguro para registrar proformas, subir comprobantes de remolque/practicaje y consultar el estatus en tiempo real de cada recalada y factura en trámite.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--emerald);">
-          <div class="card-header">
-            <div class="card-icon emerald">🔍</div>
-            <h3 class="card-title">Consola de Auditoría Petral</h3>
+          <div class="card" style="border-top: 3px solid var(--emerald);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon emerald">🔍</div>
+                <h3 class="card-title">Consola Auditoría Petral</h3>
+              </div>
+              <p class="card-p">
+                Panel táctico para los liquidadores de Petral. Compara automáticamente la proforma de la agencia contra los acuerdos marco y emite el Handshake Token.
+              </p>
+              <div class="card-metric-box emerald">
+                <span>MOTOR PERICIAL</span>
+                <strong>PxQ AUTOMATIZADO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot emerald"></div><span>Motor de cálculo tarifario PxQ por puerto.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Ajustes interactivos y chat de conciliación por ítem.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Emisión con un clic del Handshake Token sellado.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>ROL</span>
+              <strong style="color:var(--emerald);">AUDITOR PERICIAL</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Panel táctico para los liquidadores de Petral. Compara automáticamente la proforma de la agencia contra los acuerdos marco y emite el Handshake Token con un clic.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">📊</div>
-            <h3 class="card-title">Módulo Financiero Navitranso</h3>
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">📊</div>
+                <h3 class="card-title">Módulo Financiero Navitranso</h3>
+              </div>
+              <p class="card-p">
+                Vista ejecutiva y contable para Navitranso. Consulta el acumulado de gastos portuarios por viaje, buque y periodo para alimentación directa en SAP.
+              </p>
+              <div class="card-metric-box purple">
+                <span>INTEGRACIÓN ERP</span>
+                <strong>INGESTA A SAP DIRECTA</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span>Reporte de liquidaciones aprobadas listas para pago.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Exportación de datos estructurados para ERP SAP.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Trazabilidad histórica completa de aprobaciones.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>ROL</span>
+              <strong style="color:var(--purple);">FINANZAS SAP</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Vista ejecutiva y contable para Navitranso. Consulta el acumulado de gastos portuarios por viaje, buque y periodo para alimentación directa en SAP.
-          </p>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--sky-dim); border: 1px solid var(--sky-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--sky); font-size: 0.8rem; font-family: var(--font-mono);">SEGURIDAD &amp; AISLAMIENTO:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">Cada agencia marítima tiene acceso estricto y aislado únicamente a sus propias operaciones bajo gobernanza blindada.</span>
+          <span style="font-weight: 800; color: var(--sky); font-size: 0.82rem; font-family: var(--font-mono);">SEGURIDAD &amp; AISLAMIENTO:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">Cada agencia marítima tiene acceso estricto y aislado únicamente a sus propias operaciones bajo gobernanza blindada.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--sky); font-size: 0.95rem;">ACCESO MULTI-EMPRESA</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--sky); font-size: 1.05rem;">ACCESO MULTI-EMPRESA</span>
       </div>
     </section>
 
@@ -893,54 +1271,80 @@
          SLIDE 08: HOJA DE RUTA DE MADUREZ (FASE 1 VS FASE 2)
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-amber">07 // ROADMAP MODULAR</span>
-        <span class="slide-subtitle-top">DESPLIEGUE CONTROLADO POR HITOS</span>
-      </div>
-      <h2 class="slide-h1">Hoja de Ruta: De la Mesa Digital al Puente de Mando</h2>
-      <p class="slide-lead">
-        Implementamos valor inmediato en el corto plazo sin bloquear la operación, sentando las bases para la automatización total con telemetría marítima.
-      </p>
-
-      <div class="grid-2" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">🚀</div>
-            <h3 class="card-title">Fase 1: Protocolo Handshake Asistido (En Curso)</h3>
-          </div>
-          <p class="card-p" style="margin-bottom: 8px;">
-            Digitalización del flujo de liquidaciones portuarias con verificación asistida por plataforma.
-          </p>
-          <p class="card-p">
-            • <strong>Mesa de Trabajo Digital:</strong> Agencias cargan proformas; Petral aprueba montos en línea antes de la emisión SUNAT.<br>
-            • <strong>Eliminación de Facturas Fallidas:</strong> Se corta de raíz el 100% de notas de crédito por montos en disputa.<br>
-            • <strong>Cobro Rápido en 20 días:</strong> Agencias ven acelerado su flujo de caja de forma inmediata sin esperar meses.
-          </p>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-amber">07 // ROADMAP MODULAR</span>
+          <span class="slide-subtitle-top">DESPLIEGUE CONTROLADO POR HITOS</span>
         </div>
+        <h2 class="slide-h1">Hoja de Ruta: De la Mesa Digital al Puente de Mando</h2>
+        <p class="slide-lead">
+          Implementamos valor inmediato en el corto plazo sin bloquear la operación, sentando las bases para la automatización total con telemetría marítima.
+        </p>
+      </div>
 
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">🛰️</div>
-            <h3 class="card-title">Fase 2: Liquidación Automática Puente de Mando</h3>
+      <div class="slide-body-grid">
+        <div class="grid-2">
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">🚀</div>
+                <h3 class="card-title">Fase 1: Protocolo Handshake Asistido (En Curso)</h3>
+              </div>
+              <p class="card-p">
+                Digitalización del flujo de liquidaciones portuarias con verificación asistida por plataforma.
+              </p>
+              <div class="card-metric-box sky">
+                <span>ESTADO DEL DESPLIEGUE</span>
+                <strong>FASE EN VIVO • PILOTO ACTIVO</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span><strong>Mesa de Trabajo Digital:</strong> Agencias cargan proformas; Petral aprueba montos en línea antes de la emisión SUNAT.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span><strong>Eliminación de Facturas Fallidas:</strong> Se corta de raíz el 100% de notas de crédito por montos en disputa.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span><strong>Cobro Rápido en 20 días:</strong> Agencias ven acelerado su flujo de caja de forma inmediata sin esperar meses.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span><strong>Base de Datos Normalizada:</strong> Registro estructurado de tarifas reales por puerto y servicio.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>DESPLIEGUE</span>
+              <strong style="color:var(--sky);">PRODUCCIÓN INMEDIATA</strong>
+            </div>
           </div>
-          <p class="card-p" style="margin-bottom: 8px;">
-            Integración con sensores del buque, bitácora electrónica y telemetría náutica para precálculo instantáneo.
-          </p>
-          <p class="card-p">
-            • <strong>Lectura de Datos del Puente:</strong> Extracción de horas de fondeo, atraque y remolque desde los sistemas de a bordo.<br>
-            • <strong>Cálculo Automático PxQ:</strong> Cruce algorítmico entre bitácora náutica y tarifarios oficiales portuarios.<br>
-            • <strong>Auto-Handshake Inteligente:</strong> Aprobación y contabilización sin intervención humana directa en SAP.
-          </p>
+
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">🛰️</div>
+                <h3 class="card-title">Fase 2: Liquidación Automática Puente de Mando</h3>
+              </div>
+              <p class="card-p">
+                Integración con sensores del buque, bitácora electrónica y telemetría náutica para precálculo instantáneo.
+              </p>
+              <div class="card-metric-box purple">
+                <span>VISIÓN TECNOLÓGICA</span>
+                <strong>AUTOPILOT VINCULANTE</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span><strong>Lectura de Datos del Puente:</strong> Extracción de horas de fondeo, atraque y remolque desde los sistemas de a bordo.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span><strong>Cálculo Automático PxQ:</strong> Cruce algorítmico entre bitácora náutica y tarifarios oficiales portuarios.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span><strong>Auto-Handshake Inteligente:</strong> Aprobación y contabilización sin intervención humana directa en SAP.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span><strong>API Bidireccional con SAP:</strong> Asignación directa a centros de costo contables.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>SIGUIENTE NIVEL</span>
+              <strong style="color:var(--purple);">TELEMETRÍA &amp; AIS</strong>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--amber-dim); border: 1px solid var(--amber-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--amber); font-size: 0.8rem; font-family: var(--font-mono);">ESTRATEGIA PRAGMÁTICA:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">La Fase 1 resuelve la crisis de cobranza hoy mismo, mientras se recolecta la data histórica para la Fase 2.</span>
+          <span style="font-weight: 800; color: var(--amber); font-size: 0.82rem; font-family: var(--font-mono);">ESTRATEGIA PRAGMÁTICA:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">La Fase 1 resuelve la crisis de cobranza hoy mismo, mientras se recolecta la data histórica para alimentar el motor de la Fase 2.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--amber); font-size: 0.95rem;">FASE 1 ACTIVA</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--amber); font-size: 1.05rem;">FASE 1 ACTIVA</span>
       </div>
     </section>
 
@@ -948,54 +1352,103 @@
          SLIDE 09: CONCLUSIÓN Y ALIANZA GANAR-GANAR
          ======================================================== -->
     <section class="slide">
-      <div class="slide-eyebrow">
-        <span class="badge-tag badge-emerald">08 // ALIANZA TRIPARTITA</span>
-        <span class="slide-subtitle-top">VALOR COMPARTIDO GANAR - GANAR</span>
+      <div class="slide-header-block">
+        <div class="slide-eyebrow">
+          <span class="badge-tag badge-emerald">08 // ALIANZA TRIPARTITA</span>
+          <span class="slide-subtitle-top">VALOR COMPARTIDO GANAR - GANAR</span>
+        </div>
+        <h2 class="slide-h1">Conclusión: Una Alianza Tripartita Sostenible</h2>
+        <p class="slide-lead">
+          El Protocolo Handshake transforma una relación contractual tradicional y tensa en una sociedad tecnológica de alta eficiencia.
+        </p>
       </div>
-      <h2 class="slide-h1">Conclusión: Una Alianza Tripartita Sostenible</h2>
-      <p class="slide-lead">
-        El Protocolo Handshake transforma una relación contractual tradicional y tensa en una sociedad tecnológica de alta eficiencia.
-      </p>
 
-      <div class="grid-3" style="flex: 1; align-content: start;">
-        <div class="card" style="border-top: 3px solid var(--sky);">
-          <div class="card-header">
-            <div class="card-icon sky">🚢</div>
-            <h3 class="card-title">Agencias Marítimas</h3>
+      <div class="slide-body-grid">
+        <div class="grid-3">
+          <div class="card" style="border-top: 3px solid var(--sky);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon sky">🚢</div>
+                <h3 class="card-title">Agencias Marítimas</h3>
+              </div>
+              <p class="card-p">
+                Cobro acelerado de 90 a 15-20 días promedio. Cero notas de crédito ni sanciones tributarias ante SUNAT. Trazabilidad total de cada factura en trámite y relación comercial sana.
+              </p>
+              <div class="card-metric-box sky">
+                <span>IMPACTO COMERCIAL</span>
+                <strong>DSO: DE 90 A 15 DÍAS</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot sky"></div><span>Flujo de caja garantizado y predecible.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Reducción del 80% en horas de cobranza.</span></li>
+                <li><div class="card-bullet-dot sky"></div><span>Certidumbre contable y operativa.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>BENEFICIO</span>
+              <strong style="color:var(--sky);">COBRO VELOZ</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Cobro acelerado de 90 a 15-20 días promedio. Cero notas de crédito ni sanciones tributarias ante SUNAT. Trazabilidad total de cada factura en trámite y relación comercial sana.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--emerald);">
-          <div class="card-header">
-            <div class="card-icon emerald">🛡️</div>
-            <h3 class="card-title">PETRAL ONE</h3>
+          <div class="card" style="border-top: 3px solid var(--emerald);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon emerald">🛡️</div>
+                <h3 class="card-title">PETRAL ONE</h3>
+              </div>
+              <p class="card-p">
+                Control pericial de costos portuarios sin sobrecostos indebidos. Cierre contable de viaje inmediato al momento del zarpe y ahorro masivo de horas hombre en conciliaciones.
+              </p>
+              <div class="card-metric-box emerald">
+                <span>IMPACTO OPERATIVO</span>
+                <strong>0% SOBRECOSTOS INDEBIDOS</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot emerald"></div><span>P&amp;L del viaje cerrado al momento del zarpe.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Auditoría de remolcadores y muellaje al centavo.</span></li>
+                <li><div class="card-bullet-dot emerald"></div><span>Liderazgo tecnológico en el transporte marítimo.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>BENEFICIO</span>
+              <strong style="color:var(--emerald);">CONTROL DE COSTOS</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Control pericial de costos portuarios sin sobrecostos indebidos. Cierre contable de viaje inmediato al momento del zarpe y ahorro masivo de horas hombre en conciliaciones.
-          </p>
-        </div>
 
-        <div class="card" style="border-top: 3px solid var(--purple);">
-          <div class="card-header">
-            <div class="card-icon purple">📈</div>
-            <h3 class="card-title">NAVITRANSO (SAP)</h3>
+          <div class="card" style="border-top: 3px solid var(--purple);">
+            <div class="card-top">
+              <div class="card-header">
+                <div class="card-icon purple">📈</div>
+                <h3 class="card-title">NAVITRANSO (SAP)</h3>
+              </div>
+              <p class="card-p">
+                Facturas limpias directo a SAP ERP sin reprocesos ni bloqueos. Cumplimiento fiscal y corporativo impecable, protegiendo la rentabilidad de la sociedad paritaria.
+              </p>
+              <div class="card-metric-box purple">
+                <span>IMPACTO FINANCIERO</span>
+                <strong>0 NOTAS DE CRÉDITO SUNAT</strong>
+              </div>
+              <ul class="card-bullets">
+                <li><div class="card-bullet-dot purple"></div><span>Entrada directa a cuentas por pagar SAP.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Protección del 50% del resultado operativo.</span></li>
+                <li><div class="card-bullet-dot purple"></div><span>Auditorías tributarias y financieras blindadas.</span></li>
+              </ul>
+            </div>
+            <div class="card-bottom-pill">
+              <span>BENEFICIO</span>
+              <strong style="color:var(--purple);">INTEGRACIÓN LIMPIA</strong>
+            </div>
           </div>
-          <p class="card-p">
-            Facturas limpias directo a SAP ERP sin reprocesos ni bloqueos. Cumplimiento fiscal y corporativo impecable, protegiendo la rentabilidad de la sociedad paritaria.
-          </p>
         </div>
       </div>
 
       <!-- Franja Inferior LPA -->
       <div class="lpa-bottom-banner" style="background: var(--emerald-dim); border: 1px solid var(--emerald-brd);">
         <div>
-          <span style="font-weight: 800; color: var(--emerald); font-size: 0.8rem; font-family: var(--font-mono);">SIGUIENTE PASO:</span>
-          <span style="color: var(--navy-mid); font-size: 0.82rem; margin-left: 8px;">Activación de la Mesa de Trabajo Digital para la próxima recalada de nave en puerto.</span>
+          <span style="font-weight: 800; color: var(--emerald); font-size: 0.82rem; font-family: var(--font-mono);">SIGUIENTE PASO:</span>
+          <span style="color: var(--navy-mid); font-size: 0.85rem; margin-left: 8px;">Activación de la Mesa de Trabajo Digital para la próxima recalada de nave en puerto.</span>
         </div>
-        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--emerald); font-size: 0.95rem;">PILOTO ACTIVO</span>
+        <span style="font-family: var(--font-mono); font-weight: 900; color: var(--emerald); font-size: 1.05rem;">PILOTO ACTIVO</span>
       </div>
     </section>
 
