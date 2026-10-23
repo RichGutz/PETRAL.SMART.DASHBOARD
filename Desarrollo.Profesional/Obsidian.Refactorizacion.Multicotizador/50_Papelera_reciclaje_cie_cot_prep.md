@@ -5,7 +5,8 @@
 > **Módulos Afectados:** Maestros Comerciales (Cierres / COA, Cotizaciones / Spot, Presupuestos / PPTOS, Matrices Comerciales)  
 > **Servidor Oficial de Producción:** VPS Contabo (`169.58.168.107` / `petral-backend` / PostgreSQL `petral_db`)  
 > **Fecha de Emisión:** 15 de Octubre de 2026  
-> **Estado:** 📋 Plan Estructurado para Aprobación y Ejecución  
+> **Última Actualización & Blindaje Forense:** 23 de Octubre de 2026  
+> **Estado:** ✅ **100% IMPLEMENTADO, BLINDADO Y DESPLEGADO EN PRODUCCIÓN (VPS CONTABO)**  
 
 ---
 
@@ -168,7 +169,80 @@ sequenceDiagram
 ---
 
 ## 6. ✅ Criterios de Aceptación (QC Gate)
-- [ ] Todo borrado en Cierres, Cotis, Pptos o Matrices almacena el snapshot completo en `commercial_trash_bin`.
-- [ ] Ningún dato se pierde por error humano u operativo.
-- [ ] Cualquier operador puede restaurar un documento a su maestro de origen con un solo clic.
-- [ ] Los 3 cierres eliminados por Jorge Neyra quedan 100% restablecidos en la plataforma.
+- [x] Todo borrado en Cierres, Cotis, Pptos o Matrices almacena el snapshot completo en `commercial_trash_bin`.
+- [x] Ningún dato se pierde por error humano u operativo.
+- [x] Cualquier operador puede restaurar un documento a su maestro de origen con un solo clic.
+- [x] Los 3 cierres eliminados por Jorge Neyra quedan 100% restablecidos en la plataforma.
+- [x] Blindaje frente a nombres complejos (espacios, barras, símbolos y signos +).
+- [x] Notificaciones amigables en interfaz confirmando el traslado a la Papelera de Reciclaje.
+
+---
+
+## 7. 🕵️‍♂️ Protocolo Pericial Benoit Blanc: Resolución Forense del Error al Borrar Cotizaciones (23 de Octubre de 2026)
+
+### 7.1 Síntoma Inicial y Escena del Crimen (LEG)
+Al intentar eliminar una cotización comercial desde el Maestro de Cotizaciones / Rutas en `https://petral.one.geeksoft.tech`, la interfaz arrojaba la alerta modal:
+> `petral.one.geeksoft.tech dice: Ocurrió un error al intentar borrar la cotización.`
+
+La evidencia visual fue resguardada de inmediato bajo el protocolo pericial en:
+* `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\error_borrar_cotizacion_20261023.png`
+* `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\error_borrar_cotizacion_20261023.png`
+
+### 7.2 Diagnóstico Pericial de Causas Raíz (DIFF)
+La auditoría directa en los contenedores Docker en Contabo VPS (`169.58.168.107`) reveló una cadena de 4 fallas estructurales:
+
+| # | Causa Raíz Identificada | Mecánica del Fallo | Impacto en el Sistema |
+|---|---|---|---|
+| **1** | **`NameError: name 'logger' is not defined`** | En `backend/api/routers/forecast.py`, las capturas de error invocaban `logger.warning(...)` y `logger.error(...)`, pero `logger` nunca fue importado ni definido en el módulo. | Toda excepción previa provocaba un colapso total no capturado con respuesta `HTTP 500: Internal Server Error`. |
+| **2** | **Consultas a Columnas Ficticias en Base de Datos** | La función `delete_spot_route` consultaba `routes_clients` con `route_id` (`route_id.eq...,name.eq...`) y `contracts` con `name` / `contract_id`. | La tabla `routes_clients` **no tiene columna `route_id`** (su PK única es `name`) y `contracts` tampoco tiene `name`. PostgreSQL abortaba con `psycopg2.errors.UndefinedColumn: column "route_id" does not exist`. |
+| **3** | **Truncamiento de URLs por Nombres con Espacios y Símbolos** | Nombres de cotizaciones con espacios (`MARCOBRE Y QUILLA`), signos `+` (`MOQUEGUA + RELET`) o barras no eran codificados con `encodeURIComponent` en el frontend, y el router FastAPI estaba definido como `@router.delete("/spot/delete/{spot_id}")` sin soporte `:path`. | NGINX y FastAPI rechazaban la ruta por descalce de segmentos URL. |
+| **4** | **Serialización de Fechas en Papelera (`json.dumps`)** | En `trash_service.py`, `json.dumps(payload)` fallaba cuando el registro contenía campos de fecha (`datetime.datetime` en `created_at`). | Python lanzaba `TypeError: Object of type datetime is not JSON serializable`, impidiendo el guardado del snapshot en `commercial_trash_bin`. |
+
+### 7.3 Cirugía de Código Aplicada (Surgical Fix)
+
+1. **Blindaje de Backend (`backend/api/routers/forecast.py`):**
+   * Inicialización formal de `logger = logging.getLogger("forecast_router")` e importación de `urllib.parse`.
+   * Endpoint robusto con parámetro path: `@router.delete("/spot/delete/{spot_id:path}")`.
+   * Decodificación defensiva `urllib.parse.unquote(spot_id).strip()`.
+   * Búsqueda precisa por `name` (exacta y fallback `ILIKE`) tanto en `routes_quotes` como en `routes_clients`, erradicando el uso de columnas ficticias.
+   * Respaldo atómico en `commercial_trash_bin` antes de ejecutar el borrado físico (`DELETE WHERE name = %s`).
+2. **Serialización Robusta (`backend/services/trash_service.py`):**
+   * Actualizado a `json.dumps(payload, default=str)` para manejar `datetime`, `UUID` y tipos nativos de PostgreSQL.
+3. **Codificación en Frontend (`src/services/api.ts`):**
+   * Aplicado `encodeURIComponent(spotId)` en `ForecastService.deleteSpot` y `deleteSpotVoyage`.
+4. **Claridad Operativa en UI (`RouteMaster_V2.tsx`, `ContractsMaster_V2.tsx`, `BudgetsMaster_V2.tsx`):**
+   * Modales de confirmación notificando explícitamente: *(Se guardará un respaldo en la Papelera de Reciclaje)*.
+   * Mensajes de éxito informando que el documento fue enviado a la Papelera de Reciclaje.
+   * Captura y visualización del mensaje real devuelto por la API en caso de anomalía.
+
+### 7.4 Verificación Empírica Gate QC en Producción en Vivo (169.58.168.107)
+
+Prueba ejecutada mediante script terminal `scratch/verify_production_delete.py` contra `https://petral.one.geeksoft.tech`:
+
+```text
+1. Creación de documento de prueba:
+   POST /api/v1/forecast/spot/save
+   Payload: {"name": "TEST.NEXA.ILO.CALLAO.2026 BORRADO SEGURO PAPELERA", "client_id": "NEXA", ...}
+   Resultado: HTTP 200 OK {"status":"success","action":"created"}
+   Conteo en Papelera ANTES: 8
+
+2. Ejecución de Borrado Seguro:
+   DELETE /api/v1/forecast/spot/delete/TEST.NEXA.ILO.CALLAO.2026%20BORRADO%20SEGURO%20PAPELERA
+   Resultado: HTTP 200 OK {'status': 'success', 'deleted_id': 'TEST.NEXA.ILO.CALLAO.2026 BORRADO SEGURO PAPELERA', 'deleted_count': 1}
+
+3. Verificación de Respaldo en commercial_trash_bin:
+   Conteo en Papelera DESPUÉS: 9 (+1 elemento)
+   Snapshot confirmado: ID=94c4b654-2e16-4f88-9710-5c48d9f92126 | Tipo=COTIZACION | Cliente=NEXA
+
+4. Purga del registro de prueba:
+   DELETE /api/v1/trash/94c4b654-2e16-4f88-9710-5c48d9f92126/purge -> HTTP 200 OK
+   Estado de Papelera: 100% íntegra y sincronizada.
+```
+
+---
+
+## 8. 📄 Registro de Commits & Trazabilidad
+* **Commit de Corrección:** `4ed32fe` (*fix(trash-delete): correccion pericial servicio borrado seguro de cotizaciones, blindaje :path, serializacion JSON y encoding URL*)
+* **Commit de Documentación:** `727078d` (*docs: registrar Vuelta 5.46 auditoria pericial resolucion borrado seguro a papelera*)
+* **URL Oficial en Producción:** `https://petral.one.geeksoft.tech/commercial-trash`
+
