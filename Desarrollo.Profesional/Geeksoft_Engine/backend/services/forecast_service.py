@@ -493,15 +493,29 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     
     vessels_data = masters["vessels"]
     vessels_db = {}
+    NUMERIC_VESSEL_COLS = [
+        "tce_required", "vessel_speed", "dwt", "dwcc", "vessel_max_load_intake_limit",
+        "vessel_pump_discharge_rate", "consumption_sea_ifo", "consumption_port_ifo",
+        "max_capacity_ifo", "max_capacity_mdo", "consumption_idle_ifo", "consumption_load_ifo",
+        "consumption_disch_ifo", "consumption_sea_mdo", "consumption_idle_mdo",
+        "consumption_load_mdo", "consumption_disch_mdo", "length", "beam", "grt"
+    ]
     for v in vessels_data:
-        v_id = (v.get("vessel_id") or "").strip().upper()
-        v_name = (v.get("vessel_name") or "").strip().upper()
+        v_clean = dict(v)
+        for col in NUMERIC_VESSEL_COLS:
+            if col in v_clean and v_clean[col] is not None:
+                try:
+                    v_clean[col] = float(v_clean[col])
+                except Exception:
+                    v_clean[col] = 0.0
+        v_id = (v_clean.get("vessel_id") or "").strip().upper()
+        v_name = (v_clean.get("vessel_name") or "").strip().upper()
         if v_id:
-            vessels_db[v_id] = v
-            vessels_db[v_id.replace("_", " ")] = v
+            vessels_db[v_id] = v_clean
+            vessels_db[v_id.replace("_", " ")] = v_clean
         if v_name:
-            vessels_db[v_name] = v
-            vessels_db[v_name.replace("_", " ")] = v
+            vessels_db[v_name] = v_clean
+            vessels_db[v_name.replace("_", " ")] = v_clean
     
     routes_data = masters.get("distances") or []
     routes_db = {}
@@ -686,7 +700,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             legs_data = spot_route.get("legs_data") or {}
             
             import copy
-            tce_req = v_data.get("tce_required", 0)
+            tce_req = float(v_data.get("tce_required") or 0.0)
             total_laden_qty = 0.0      # Se calcula en bloque multicotizador; 0 en SpotRouter tradicional
             total_laden_revenue = 0.0  # Ídem
             
@@ -894,7 +908,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     port_days_val = float(fin_summary.get("totalPortDays", consolidated.get("total_port_days", 0)))
                     pnl_after_comm = float(net_revenue - tot_port_costs - tot_bunker_costs)
                     tce_real = (net_revenue - tot_port_costs - tot_bunker_costs) / total_days if total_days > 0 else 0
-                    tce_req = float(fin_summary.get("tceReq", tce_req))
+                    tce_req = float(fin_summary.get("tceReq") or tce_req or 0.0)
                 else:
                     # Recálculo para Buque Comodín u Override de Precios sin snapshot
                     tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
@@ -1240,7 +1254,30 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     masters = get_cached_masters(supabase)
     
     vessels_data = masters["vessels"]
-    vessels_db = {v["vessel_id"]: v for v in vessels_data}
+    vessels_db = {}
+    NUMERIC_VESSEL_COLS = [
+        "tce_required", "vessel_speed", "dwt", "dwcc", "vessel_max_load_intake_limit",
+        "vessel_pump_discharge_rate", "consumption_sea_ifo", "consumption_port_ifo",
+        "max_capacity_ifo", "max_capacity_mdo", "consumption_idle_ifo", "consumption_load_ifo",
+        "consumption_disch_ifo", "consumption_sea_mdo", "consumption_idle_mdo",
+        "consumption_load_mdo", "consumption_disch_mdo", "length", "beam", "grt"
+    ]
+    for v in vessels_data:
+        v_clean = dict(v)
+        for col in NUMERIC_VESSEL_COLS:
+            if col in v_clean and v_clean[col] is not None:
+                try:
+                    v_clean[col] = float(v_clean[col])
+                except Exception:
+                    v_clean[col] = 0.0
+        v_id = (v_clean.get("vessel_id") or "").strip().upper()
+        v_name = (v_clean.get("vessel_name") or "").strip().upper()
+        if v_id:
+            vessels_db[v_id] = v_clean
+            vessels_db[v_id.replace("_", " ")] = v_clean
+        if v_name:
+            vessels_db[v_name] = v_clean
+            vessels_db[v_name.replace("_", " ")] = v_clean
     
     routes_data = masters.get("distances") or []
     routes_db = {}
@@ -1403,7 +1440,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             legs_data = spot_route.get("legs_data", {})
             
             import copy
-            tce_req = v_data.get("tce_required", 0)
+            tce_req = float(v_data.get("tce_required") or 0.0)
             total_laden_qty = 0.0
             total_laden_revenue = 0.0
             
@@ -1517,7 +1554,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                     port_days_val = float(fin_summary.get("totalPortDays", consolidated.get("total_port_days", 0)))
                     pnl_after_comm = float(net_revenue - tot_port_costs - tot_bunker_costs)
                     tce_real = (net_revenue - tot_port_costs - tot_bunker_costs) / total_days if total_days > 0 else 0
-                    tce_req = float(fin_summary.get("tceReq", tce_req))
+                    tce_req = float(fin_summary.get("tceReq") or tce_req or 0.0)
                 else:
                     tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
                     tot_refact_muell = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or consolidated.get("refacturacion_muellaje", 0))

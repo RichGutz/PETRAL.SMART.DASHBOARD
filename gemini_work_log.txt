@@ -1,4 +1,23 @@
 ================================================================================
+GEMINI WORK LOG: 2026-10-26 (Presentación Ejecutiva V5 • Protocolo Handshake Navitranso - Petral - Agencias)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Requerimiento Comercial y Operativo:
+  * Reestructurar radicalmente la presentación ejecutiva para Navitranso y Agencias Marítimas en 'index.handshake.petral_V5.html'.
+  * Convertir Slide 1 en 2 slides con triángulos geométricos reales visibles:
+    - Slide 02 (AS-IS): Cuello de botella actual (facturas a ciegas, rechazos por mail, notas de crédito, pago en SAP congelado 60-90 días).
+    - Slide 03 (TO-BE): Triángulo sincronizado con Handshake Token, auditoría en <48h y pago a 15 días.
+  * Eliminar slides superfluas (Slide 3 anterior, Slide 7, 8, 10 y 11 anteriores).
+  * Slide 04: Workflow lineal TO-BE simplificado para humanos en 4 etapas claras.
+  * Slide 05: Mockup operativo corregido cotejando 'Propuesta de la Agencia Marítima' vs 'Cálculo Petral One (SOF)', con deltas y Acta Oficial PDF interactiva.
+  * Slide 06: La plataforma PETRAL ONE demostrando los 3 accesos independientes (Agencia, Petral, Navitranso) sobre el mismo acuerdo.
+- Verificación Empírica (JEV Gate):
+  * Archivo generado y probado: 'Desarrollo.Profesional/HANDSHAKE.PETRAL.AG.MARIT.NAVITRANSO/index.handshake.petral_V5.html' (80,512 bytes).
+  * 6 slides discretas validadas por regex y visualización sin solapamientos.
+  * Exit Code 0 en todas las comprobaciones por terminal.
+================================================================================
+
+================================================================================
 GEMINI WORK LOG: 2026-10-23 (Resolución Forense Servicio Borrado Seguro de Cotizaciones a Papelera de Reciclaje)
 ================================================================================
 CONCURRENCY & QC SUMMARY:
@@ -1311,3 +1330,110 @@ CONCURRENCY & QC SUMMARY:
 - Hero Slide (01): Réplica idéntica pixel por pixel del Login de petral.one.geeksoft.tech con imagen panorámica PORTADA.ANCHA.jpg, tarjeta flotante glassmorphism en esquina inferior izquierda, formulario con Correo Corporativo, Contraseña, Iniciar Sesión y footer Geeksoft SIN 2FA.
 - Slides 02 al 09: Adopción rigurosa del sistema de diseño, tokens, tipografía (Inter y JetBrains Mono), grillas, tarjetas (.card, .card-header, .card-icon, .card-title, .card-p), tablas (.matrix-table), flujo de pasos (.step-flow) y controles de navegación de index.lpa.geeksoft.tech.html.
 
+[2026-10-23 15:50:32]
+- Despliegue Oficial al VPS Contabo de Producción (169.58.168.107).
+- URL en vivo: https://petral.one.geeksoft.tech/handshake/ (y alias /handshake y /handshake.html).
+- Características:
+  * Hero (Slide 01): Réplica idéntica y pixel-perfect de petral.one.geeksoft.tech con PORTADA.ANCHA.jpg, tarjeta flotante glassmorphism en esquina inferior izquierda, formulario con Correo Corporativo, Contraseña, botón Iniciar Sesión y footer Geeksoft.
+  * SIN 2FA: Cero bloqueos, sin OTP.
+  * Flujo fluido idéntico a LPA: Navegación instantánea mediante [ESPACIO], [Enter], [➔], [◀], rueda del ratón y modo pantalla completa [F].
+  * Slides 02 al 09: Diseño, tipografías, tokens, componentes y matrices de LPA adaptados a la narrativa tripartita Petral • Agencias Marítimas • Navitranso SAP.
+  * Verificación empírica con curl: HTTP 200 OK verificado en producción para HTML y todos los assets gráficos.
+
+[2026-10-23 15:56:02]
+- Rediseño y Despliegue Oficial en Producción de https://petral.one.geeksoft.tech/handshake/
+- Hero (Slide 01): Eliminación total de inputs de login, contraseñas y 2FA. Portada editorial ejecutiva pura con fondo PORTADA.ANCHA.jpg, tipografía gigante de 3.8rem, chips de alianza y botón directo INICIAR PRESENTACIÓN ➔.
+- Slides 02 al 09: Corrección del vacío del 40% del viewport. Incremento de escala tipográfica (h1 a 2.35rem, lead a 1.12rem, párrafos a 1.05rem, números a 2.2rem mono), tarjetas con flex: 1 que llenan el 100% del alto vertical con respiro y espaciado proporcional elegante.
+- Respaldada la captura media_1792788667839.png en Obsidian y Exceles.Petral.
+- Verificación empírica con curl: Despliegue 100% completado en Contabo VPS.
+
+[2026-10-23 16:09:17]
+- Refactorización Fiel al Estilo LPA y Despliegue Oficial en VPS Contabo.
+- Hero Slide (01):
+  * Eliminada por completo la ventanita/caja de la derecha.
+  * Eliminadas las burbujas inferiores y pills de Petral One.
+  * Mantenido estrictamente a 2 líneas al ras inferior sobre la imagen panorámica PORTADA.ANCHA.jpg: Título (Protocolo Handshake) y Subtítulo (Consenso digital vinculante...).
+  * Avance instantáneo al hacer clic en pantalla o con [ESPACIO] / [ENTER] / [➔].
+- Slides 02 al 09:
+  * Adopción al pie de la letra de la estructura de LPA: grid-4 y grid-3 con tarjetas estilizadas (border-top de 3px), iconos y texto balanceado.
+  * Franja inferior LPA (lpa-bottom-banner) con padding de 12px 18px en cada slide para balance y respiro completo del lienzo.
+- Respaldada captura media_1792789074220.png en Obsidian y Exceles.Petral.
+- Verificación live: https://petral.one.geeksoft.tech/handshake/ desplegado con HTTP 200 OK.
+
+[2026-10-23] Despliegue en vivo en Contabo de Handshake con tarjetas expandidas al 100% de la altura, metric boxes, bullets y Hero minimalista 2 lineas estilo LPA en https://petral.one.geeksoft.tech/handshake/
+[2026-10-23] Escala tipografica ejecutiva ampliada en produccion para Handshake en Contabo VPS
+[2026-10-23 18:04] Cierre de sesion de PETRAL. Proyecto Protocolo Handshake desplegado en produccion (https://petral.one.geeksoft.tech/handshake/) con diseno estilo LPA, 100% altura vertical, tipografia grande ejecutiva, Hero minimalista 2 lineas sin 2FA. Reanudacion pactada para el lunes.
+
+[2026-10-26 15:06]
+- Creación de Versión Versionada: `index.handshake.petral_V2.html` (100 KB, 10 Slides).
+- Incorporación de Slide 05 Interactiva: "04 // MOCKUP OPERATIVO • LIQUIDADOR DINÁMICO SOF".
+  * Panel 1: Ingesta en tiempo real de Timestamps del Estado de Hechos (SOF) náutico (Buque B/T Moquegua, Callao, horas de muelle interactivas con slider de 12 a 60 hrs, maniobra diurna vs nocturna).
+  * Panel 2: Liquidador Determinístico P×Q (Secciones A, B y C) recalculado al vuelo, con comparador dinámico vs tarifa estática presupuestada en SAP y varianza pericial auditada.
+  * Panel 3: Protocolo Pre-Billing con emisión de Handshake Token criptográfico y vinculación previa a factura SUNAT.
+  * Modal A4 Landscape: Visor integrado del Acta Oficial de Liquidación Portuaria con membrete de Petral, desglose náutico, veredicto pericial y sellos de firma tripartita (Petral, Agencia, Navitranso SAP).
+- JEV Gate local: 10 slides verificadas en terminal con PowerShell (Exit Code 0).
+
+[2026-10-26 15:18]
+- Creación de Versión Versionada: `index.handshake.petral_V3.html` (112 KB, 11 Slides).
+- Incorporación de Slide 02 de Apertura: "01 // EL TRIÁNGULO OPERATIVO Y FINANCIERO (AS-IS VS TO-BE)".
+  * Modelado exacto de la relación societaria y de backoffice: Navitranso es dueño del 50% de Petral y corre su backoffice en SAP, con orden de no pagar a agencias de Perú/Chile hasta recibir el "OK" de Petral.
+  * Triángulo As-Is: La agencia factura a ciegas ante SUNAT/SII; Petral audita anexos manualmente por mail y rechaza; se entra en bucle de Notas de Crédito; Navitranso mantiene el pago congelado en SAP por 60-90 días.
+  * Triángulo To-Be: La agencia sube proforma a PETRAL ONE; Petral concilia con el SOF en <48h y sella el Handshake; Navitranso recibe el OK digital automático y programa el pago en 15-20 días sin notas de crédito.
+- Armonización de la narrativa: 11 slides ordenadas progresivamente con sectionTitles y dots sincronizados.
+- JEV Gate local: 11 slides verificadas en terminal con PowerShell (Exit Code 0).
+
+[2026-10-26 15:23]
+- Respaldada captura del usuario `media_1793045967493.png` en `Obsidian.Maestro.Costos.Portuarios\PNGs\` y `Exceles.Petral\PORT.COSTS.PATRICIA\` cumpliendo estrictamente la regla `png_local_storage`.
+- Creación de Versión Versionada: `index.handshake.petral_V4.html` (117 KB, 11 Slides).
+- Diagnóstico: En pantallas Thinkpad/laptop con barras de navegador y escalado de Windows, el viewport vertical efectivo al 100% de zoom ronda los 620-680px, causando que elementos fijos se monten si no se ajusta la escala de altura.
+- Solución Integrada:
+  * Media queries adaptativas `@media screen and (max-height: 920px)` y `(max-height: 760px)`.
+  * Reducción proporcional y armónica de márgenes, paddings de tarjetas, tamaño tipográfico de encabezados (h1 a 1.80rem, leads a 0.92rem) y franjas inferiores.
+  * Al 100% de zoom del navegador, la PPT ahora respira y luce exactamente igual de espaciosa y perfecta que como se visualizaba al 80%.
+- JEV Gate local: 11 slides verificadas en terminal con PowerShell (Exit Code 0).
+
+
+
+
+================================================================================
+[2026-10-26 16:37:14]
+- Despliegue Oficial en Produccion de Presentacion Handshake V8 en VPS Contabo (169.58.168.107).
+- URLs Publicas Directas (SIN 2FA / Cero bloqueos / Cero OTP):
+  * https://petral.one.geeksoft.tech/presentacion_handshake.html
+  * https://petral.one.geeksoft.tech/handshake/
+  * https://petral.one.geeksoft.tech/handshake.html
+- Mejoras aplicadas en V8:
+  1. Hero Panoramico Diurno Full-Bleed 100% de esquina a esquina sin cortes laterales.
+  2. Hero optimizado a exactamente 2 lineas continuas (Linea 1: Titulo principal / Linea 2: Subtitulo).
+  3. Nodo NAVITRANSO ampliado a radio 52px en Slides 02 y 03 con holgura tipografica.
+  4. Slide 04: Terminal en linea integrado con PETRAL ONE WEB para el SOF.
+  5. Slide 05: Tabla deterministica de 5 conceptos portuarios, varianzas y Token Handshake vinculante.
+  6. Slide 06: Portales colaborativos Petral, Agencias y Navitranso.
+  7. Escala visual de diapositivas al 90% (zoom: 0.90) para respiro vertical sin solapamiento de cards.
+- Verificacion empirica con HTTP 200 OK y CSS validado en caliente.
+================================================================================
+
+================================================================================
+[2026-10-26 17:00:53]
+- Reparacion Pericial Benoit Blanc / ABIDE / Open JEV en Produccion Contabo VPS (169.58.168.107).
+- Caso: Error al actualizar usuario (column 'analisis_grafico' of relation 'user_permissions' does not exist).
+- Acciones Ejecutadas:
+  1. Respaldo de captura media_1793050696863.png en Obsidian.Maestro.Costos.Portuarios/PNGs y Exceles.Petral/PORT.COSTS.PATRICIA.
+  2. Creacion de Tag de Seguridad: TAG.PRE.REFACTOR.PERMISOS.PROD y clon LEG UsersPermissions_LEG_V1.tsx.
+  3. DDL Atomico en PostgreSQL Contabo petral_db:
+     ALTER TABLE user_permissions ADD COLUMN IF NOT EXISTS de las 10 columnas faltantes (analisis_grafico, spaghetti_map, analisis_liquidaciones, maestro_cotizaciones, maestro_presupuestos, maestro_matrices, maestro_tarifas_portuarias, maestro_demoras, maestro_bunker, maestro_originacion) con default 'Visor'.
+  4. Blindaje Defensivo en auth.py: upsert_user_permissions ahora inspecciona information_schema.columns antes de armar la consulta SQL.
+  5. UI Frontend UsersPermissions.tsx: Implementacion de 2 Pisos de PADS interactivos (Fila 1: Todos, Herramientas, Fisicos, Comerciales; Fila 2: Costos, Mercado & Bunker, Documentacion) con filtrado dinamico de columnas de matriz de permisos.
+  6. Build Vite y Despliegue Oficial con deploy_petral_one_contabo.py (Frontend & Backend).
+  7. Verificacion empirica con script de prueba ejecutado dentro de petral-backend: UPSERT y FETCH exitosos sin error 500.
+================================================================================
+
+================================================================================
+[2026-10-26 17:11:15]
+- Cierre de Sesion: Documentacion pericial en 53_Correccion_errores_tablas.UPSERT.md.
+- Seccion 7: APENDICE PERICIAL (26/10/2026): AUDITORIA DDL & REFACTORIZACION ERGONOMICA DE user_permissions.
+- Contenido Documentado:
+  * 7.1 Escena del Crimen y Diagnostico Forense (Descalce DDL de 10 columnas en PostgreSQL).
+  * 7.2 Cirugia Forense en 3 Capas (DDL Contabo, Blindaje Backend auth.py, 2 Filas de PADS en UsersPermissions.tsx).
+  * 7.3 Certificacion de Calidad en Vivo (QC Gate HTTP 200, UPSERT y FETCH exitosos en produccion).
+================================================================================

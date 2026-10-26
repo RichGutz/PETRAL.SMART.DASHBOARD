@@ -102,6 +102,9 @@ def save_forecast(request: ForecastSaveRequest):
             return {"status": "success", "id": res.data[0]["id"]}
         else:
             # Insert new
+            if "id" not in payload or not payload["id"]:
+                import uuid
+                payload["id"] = str(uuid.uuid4())
             res = sb.table("commercial_forecasts").insert(payload).execute()
             if not res.data:
                 raise Exception("Failed to save forecast.")
