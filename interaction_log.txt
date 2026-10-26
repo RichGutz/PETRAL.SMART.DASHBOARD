@@ -8,10 +8,16 @@ TAREAS Y MODIFICACIONES REALIZADAS:
    - Generación de transcripción fidedigna en 'audio_transcrip/QC.SWARM.COPIA.LOCAL.ogg_whisper.txt'.
    - Instrucción clave: Crear un clon del sistema y base de datos en local (sin alterar tablas maestras), orquestando un enjambre de agentes que rehaga y estrese todo el trabajo de los usuarios en Multicotizador y Matriz Financiera antes de autorizar cualquier deploy a producción.
 
-2. Benchmark & Transferencia de Conocimiento de Arquitectura Swarm:
+2. Branch & Tag de Seguridad Oficial en Git:
+   - Commit: fcf1043 ('docs(qc-swarm): plan maestro de arquitectura de QC SWARM en LOCAL, transcripcion whisper y test de produccion').
+   - Tag Anotado: 'TAG.PRE.QC.SWARM.LOCAL.26.10.26'.
+   - Branch Dedicado: 'feature/qc-swarm-local'.
+   - Sincronización Remota: 'main', 'feature/qc-swarm-local' y tag subidos a origin GitHub (100% OK).
+
+3. Benchmark & Transferencia de Conocimiento de Arquitectura Swarm:
    - Análisis pericial del patrón canónico probado en 'AI.TOOLS.FOR.GEEKSOFT/29 - CASH.PIT/12 - APP.Modularizada/10 - Agents.SWARM' (6 Agentes de negocio + 1 Agente Sentinel Looper full-stack).
 
-3. Especificación Maestra y Plan de Implementación en Obsidian:
+4. Especificación Maestra y Plan de Implementación en Obsidian:
    - Creación integral de 'Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/55_El_QC_SWARM_en_LOCAL.md'.
    - Diseño del Gemelo Digital Local (Digital Twin) con Maestros Inmutables (vessels, ports, distances, tariffs).
    - Ficha técnica de los 7 Agentes: SPCC Charterer, Nexa Acid Operator, Wildcard Allocator (Camino B), Bunker Stresstest, Matrix Scenario Builder, Historical Replayer y QC Sentinel & Looper (Benoit Blanc).

@@ -6,6 +6,11 @@ CONCURRENCY & QC SUMMARY:
   * Transcripción de audio gerencial 'QC.SWARM.COPIA.LOCAL.ogg' vía Whisper.
   * Diseñar un clon del estado actual del sistema en local (Digital Twin) preservando las tablas maestras como verdades inmutables (read-only).
   * Crear un enjambre de agentes autónomos que repliquen y estresen todo el trabajo de los usuarios en Multicotizador y Matriz Financiera antes de cualquier despliegue a producción.
+- Resguardo Canónico en Git:
+  * Commit: fcf1043.
+  * Tag Anotado: 'TAG.PRE.QC.SWARM.LOCAL.26.10.26'.
+  * Branch Dedicado: 'feature/qc-swarm-local'.
+  * Sincronización Remota: 'main', 'feature/qc-swarm-local' y tag subidos a origin GitHub.
 - Benchmark Swarm Integrado:
   * Adopción del estándar multi-agente probado en 'CASH.PIT (10 - Agents.SWARM)'.
 - Documentación Pericial en Obsidian:
