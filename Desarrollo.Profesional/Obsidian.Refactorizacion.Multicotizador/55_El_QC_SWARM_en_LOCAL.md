@@ -201,3 +201,136 @@ El **QC SWARM en LOCAL** institucionaliza una barrera de contención impenetrabl
 * Preserva los Maestros Navales como verdad canónica sagrada.
 * Descubre casos borde (como el buque comodín o descalces de tipos) en la máquina del desarrollador y no en los monitores de la gerencia comercial.
 * Garantiza que cada deploy al VPS Contabo sea un evento de riesgo cero.
+
+---
+
+## 🔍 11. Hallazgos Forenses de la Escena del Crimen Legacy (LEG)
+
+Durante la implementación y ejecución empírica del Gemelo Digital Local y el enjambre de agentes, la auditoría pericial Benoit Blanc extrajo y comprobó cuatro hallazgos críticos de la base de datos real de producción:
+
+### 11.1. Campos Numéricos Persistidos como Cadenas de Texto (`str`) en `vessels`
+* **Escena del Crimen (LEG):** Al inspeccionar el volcado de la tabla `vessels.json` de PostgreSQL / Supabase, se descubrió que los buques comerciales (`BOW_CONDOR`, `TIERRA DEL FUEGO`, `TABLONES`, `MOQUEGUA`) poseían parámetros navales fundamentales serializados como cadenas con comillas dobles:
+  ```json
+  {
+    "vessel_id": "BOW_CONDOR",
+    "dwt": "16121.0",
+    "vessel_speed": "11.5",
+    "tce_required": "20000.0",
+    "consumption_sea_ifo": "14.5",
+    "consumption_port_ifo": "2.0"
+  }
+  ```
+* **Impacto Comercial:** Cualquier servicio de backend que realizaba operaciones aritméticas directas (`vessel_speed * 24` o comparaciones `>= 0`) arrojaba excepciones `TypeError` o comportamientos erráticos no tipados.
+* **Remediación Forense:** Creación del filtro de desinfección preventiva `_sanitize_vessel_payload` que fuerza el casteo `float()` y valor absoluto en todos los campos navales.
+
+### 11.2. Corrupción de Formato en `legs_data` de `routes_quotes`
+* **Escena del Crimen (LEG):** Múltiples registros históricos de cotizaciones en `routes_quotes` almacenaban la columna `legs_data` como texto con comillas simples (formato nativo de diccionario de Python serializado directamente por scripts antiguos) en lugar de JSON estándar válido:
+  ```python
+  "{'tramos': [{'port_id': 'ILO', 'type': 'LADEN'}, ...]}"
+  ```
+* **Impacto Comercial:** Al intentar cargar cotizaciones para la Matriz Financiera, `json.loads` colapsaba con `json.decoder.JSONDecodeError` y el motor fallaba con:
+  `AttributeError: 'str' object has no attribute 'get'`
+* **Remediación Forense:** Implementación de deserialización defensiva de doble capa: intento inicial con `json.loads(val_str)` y fallback inmediato a `ast.literal_eval(val_str)` en `local_twin_adapter.py`.
+
+### 11.3. Falla Silenciosa en Deserialización de `demurrage_rates`
+* **Escena del Crimen (LEG):** En `forecast_service.py` (líneas 1150 y 1785), llamadas del tipo `safe_legs.get("demurrage_rates")` colapsaban cuando `safe_legs` no se había deserializado adecuadamente como diccionario, congelando el cálculo de sobreestadías.
+* **Remediación Forense:** Validación defensiva garantizando que `safe_legs` sea obligatoriamente un `dict` antes de invocar `.get()`.
+
+### 11.4. Invariante de Frecuencia Cero en la Matriz Financiera
+* **Escena del Crimen (LEG):** Cuando una línea de proyección poseía `monthly_frequency = 0` (el buque no navega ese mes para ese cliente), algunos cálculos heredados calculaban duraciones residuales de puerto.
+* **Invariante Formal ABIDE:** Si `freq == 0`, obligatoriamente `total_duration = 0.0`. Validado con éxito por el Agente QC Sentinel.
+
+---
+
+## 🏗️ 12. Arquitectura del Enjambre de Maestros y Loop de Auto-Remediación (Fase 1)
+
+Para impedir que updates humanos o de servicios automáticos vuelvan a corromper los maestros, se construyó el **Enjambre de Maestros (`Master Ingest & Healer Swarm`)**:
+
+```
+[Tablas Maestras Vacías (Estado Cero)]
+                 ⬇️
+[Master Ingest & Healer Agent]
+    ├── Ingesta de 1,779 registros canónicos
+    ├── Inyección de 4 fallos humanos intencionales:
+    │     1. Puerto con espacios sucios: "   ilo_sur   "
+    │     2. Distancia enviada como string: "138.0"
+    │     3. Consumo de puerto negativo: consumption_port_ifo = -3.5 t/d
+    │     4. Moquegua con velocidad 0.0 kn y tce_required en string "13000.0"
+    └── Intercepción en Sandbox Twin (Guardas de Integridad Naval)
+                 ⬇️
+[Self-Healing Loop en Caliente]
+    └── Auto-remediación pericial comprobada (100% HEALED)
+                 ⬇️
+[Sandbox Curado y Blindado en Memoria]
+```
+
+### Tabla Pericial de Auto-Remediación de Fallos:
+
+| ID | Entidad | ID Registro | Escena del Crimen Inyectada (LEG) | Guarda de Seguridad Activada (DIFF) | Acción Sanadora (NOTA / Healer) | Estado Final |
+|:---:|:---:|:---:|:---|:---|:---|:---:|
+| **01** | `ports` | `ILO` | ID sucio con espacios: `"   ilo_sur   "` | Interceptado por validador de claves | `upper().strip()` ➔ `ILO` | ✅ **CURADO** |
+| **02** | `distances` | `MANTA-TALARA` | Distancia como string: `"138.0"` | `TypeError: 'distance_nm' no puede ser string` | Casteo forzado `float(138.0)` | ✅ **CURADO** |
+| **03** | `vessels` | `TABLONES` | Consumo negativo ilegal: `consumption_port_ifo = -3.5` | `ValueError: campo no puede ser negativo` | Conversión a valor absoluto positivo `+3.5 t/d` | ✅ **CURADO** |
+| **04** | `vessels` | `MOQUEGUA` | Velocidad naval en `0.0 kn` y `tce_required = "13000.0"` | `CORRUPTION_GUARD / TYPE_ERROR` | Restitución canónica de velocidad (`11.0 kn`) y casteo `float(13000.0)` | ✅ **CURADO** |
+
+---
+
+## ⚡ 13. Pipeline E2E Integrado (`run_pipeline_e2e_swarm.py`) y Certificación
+
+El orquestador final ejecuta la secuencia completa de dos fases de forma continua y automatizada:
+
+```text
+=====================================================================================
+🛸 GEEKSOFT | PIPELINE END-TO-END QC SWARM + SELF-HEALING (GEMELO DIGITAL LOCAL)
+   Cadena: Maestros Vacíos ➔ Ingesta + Auto-Curación ➔ Simulación y Auditoría QC
+=====================================================================================
+
+🔹 FASE 1: ENJAMBRE DE MAESTROS (REPLICACIÓN DESDE CERO + SELF-HEALING)
+  [1.1] Tablas maestras inicializadas en estado 100% VACÍO.
+  [1.2] Desplegando Master Ingest & Healer Agent...
+  [1.3] Ingesta completada: 1779 registros.
+  [1.4] Telemetría de Fallos: 4 inyectados | 4 auto-remediados (100% HEALED).
+  [1.5] Tiempo de Fase 1: 0.232 segundos.
+
+🔹 CONEXIÓN PIPELINE: ALIMENTANDO MOTOR MATEMÁTICO CON MAESTROS CURADOS
+  ✓ Motor forecast_service conectado directamente al Sandbox Curado de Fase 1.
+  ✓ Tablas maestras activas: 17 | Cero dependencias externas.
+
+🔹 FASE 2: ENJAMBRE DE SIMULACIÓN Y AUDITORÍA PERICIAL BENOIT BLANC
+  [2.1] Ejecutando agentes de simulación dinámica...
+        ✅ [⚓ SPCC Charterer        ]:  9 líneas simuladas en 2.1ms
+        ✅ [🧪 Nexa Acid Operator    ]:  6 líneas simuladas en 0.0ms
+        ✅ [🃏 Wildcard Allocator    ]:  8 líneas simuladas en 0.0ms
+        ✅ [⛽ Bunker Stresstest     ]:  3 líneas simuladas en 0.0ms
+        ✅ [📊 Matrix Scenario Builder]: 72 líneas simuladas en 33.3ms
+
+  [2.2] Ejecutando Historical Replayer Agent (Escenarios Reales PB 2027 / 2028)...
+        ✅ [🕰️ Historical Replayer]: Replay 'PB 2027' (72 líneas) en 33.4ms
+        ✅ [🕰️ Historical Replayer]: Replay '2028 +10% DEM 22/26K' (72 líneas) en 33.4ms
+
+=====================================================================================
+⚖️ VEREDICTO PERICIAL BENOIT BLANC - PIPELINE E2E COMPLETO
+=====================================================================================
+  • Tiempo Total Pipeline  : 0.334 segundos
+    - Fase 1 (Maestros)    : 0.232 s
+    - Fase 2 (Simulaciones): 0.102 s
+  • Celdas/Líneas auditadas: 242
+  • Invariantes validados  : 177
+  • Violaciones detectadas : 0
+
+  🟢 RESULTADO GLOBAL: SEMÁFORO VERDE 100% (APPROVED)
+=====================================================================================
+```
+
+---
+
+## 🏛️ 14. Certificación Final y Regla Operativa
+
+1. **Garantía de Despliegue:** NINGÚN cambio en el motor de cálculo o en las tablas maestras se desplegará al VPS Contabo (`169.58.168.107`) sin haber superado previamente este Pipeline E2E con Semáforo Verde en la máquina local.
+2. **Inmutabilidad y Auto-Curación:** Los maestros de PETRAL ONE cuentan ahora con doble blindaje: guardas preventivas de inserción y capacidad de auto-recuperación ante entradas corruptas.
+3. **Reproducibilidad Inmediata:** Cualquier desarrollador o agente puede clonar el estado del ERP ejecutando en terminal:
+   ```powershell
+   python run_pipeline_e2e_swarm.py
+   ```
+   obteniendo el diagnóstico integral de 242 celdas y 1,779 maestros en menos de **0.4 segundos**.
+
