@@ -64,6 +64,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [vessels, setVessels] = useState<any[]>([]);
     const [ports, setPorts] = useState<any[]>([]);
     const [routes, setRoutes] = useState<any[]>([]);
+    const [distanceMatrix, setDistanceMatrix] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
     const [clients, setClients] = useState<string[]>([]);
 
@@ -204,6 +205,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             }
         }).catch(e => console.error("Error cargando rutas spot:", e));
 
+        ForecastService.getRoutes().then(distData => {
+            if (isMounted && distData && Array.isArray(distData)) {
+                RouteDistancesService.setDistanceMatrix(distData);
+                setDistanceMatrix(distData);
+            }
+        }).catch(e => console.error("Error cargando maestro de distancias en MultiCotizador:", e));
+
         // 3. Detección y Carga Automática de Cotización enviada desde Maestros (sessionStorage)
         try {
             const rawStored = sessionStorage.getItem('petral_load_quote');
@@ -222,6 +230,30 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             isMounted = false;
         };
     }, []);
+
+    // Enriquecimiento reactivo automático cuando el Maestro de Distancias termina de cargar
+    useEffect(() => {
+        if (distanceMatrix && distanceMatrix.length > 0) {
+            setTramos(prev => {
+                let changed = false;
+                const updated = prev.map(tr => {
+                    if (tr.origin_port_id && tr.destination_port_id && (!tr.route_distance || Number(tr.route_distance) <= 0)) {
+                        const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type, routes, distanceMatrix);
+                        if (Number(auto.route_distance) > 0) {
+                            changed = true;
+                            return {
+                                ...tr,
+                                route_distance: auto.route_distance,
+                                weather_factor: auto.weather_factor || tr.weather_factor || 3.0
+                            };
+                        }
+                    }
+                    return tr;
+                });
+                return changed ? updated : prev;
+            });
+        }
+    }, [distanceMatrix]);
 
     // Ejecución Reactiva de Búsqueda de Búnker según Fuente y Parámetros
     useEffect(() => {
@@ -334,7 +366,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[index].route_distance = 0.0;
                     list[index].weather_factor = 0.0;
                 } else {
-                    const auto = RouteDistancesService.resolveAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes);
+                    const auto = RouteDistancesService.resolveAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes, distanceMatrix);
                     if (Number(auto.route_distance) > 0) {
                         list[index].route_distance = auto.route_distance;
                     }
@@ -355,7 +387,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[index + 1].route_distance = 0.0;
                     list[index + 1].weather_factor = 0.0;
                 } else {
-                    const autoNext = RouteDistancesService.resolveAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes);
+                    const autoNext = RouteDistancesService.resolveAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes, distanceMatrix);
                     if (Number(autoNext.route_distance) > 0) {
                         list[index + 1].route_distance = autoNext.route_distance;
                     }
@@ -474,15 +506,22 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             const qtyTramo = carga_a_bordo;
             const typeTramo: 'LADEN' | 'BALLAST' = (is_laden || isDescargaDest || qtyTramo > 0) ? 'LADEN' : 'BALLAST';
 
-            // Resolver auto weather_factor según tipo (LADEN vs BALLAST)
+            // Resolver auto weather_factor y auto route_distance si está en 0 o no asignado
             let wf = tr.weather_factor !== undefined && tr.weather_factor !== null ? tr.weather_factor : 3.0;
+            let autoDist = tr.route_distance;
             const isSamePort = tr.origin_port_id && tr.destination_port_id && tr.origin_port_id.trim().toUpperCase() === tr.destination_port_id.trim().toUpperCase();
             if (isSamePort) {
                 wf = 0.0;
-            } else if (routes && routes.length > 0) {
-                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, typeTramo, routes);
+                autoDist = 0.0;
+            } else if ((routes && routes.length > 0) || (distanceMatrix && distanceMatrix.length > 0)) {
+                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, typeTramo, routes, distanceMatrix);
                 if (auto.weather_factor !== undefined && auto.weather_factor !== null && Number(auto.weather_factor) > 0) {
                     wf = auto.weather_factor;
+                }
+                if (!autoDist || Number(autoDist) <= 0) {
+                    if (Number(auto.route_distance) > 0) {
+                        autoDist = auto.route_distance;
+                    }
                 }
             }
 
@@ -499,6 +538,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
             return {
                 ...tr,
+                route_distance: autoDist !== undefined ? autoDist : tr.route_distance,
                 type: typeTramo,
                 quantity: qtyTramo,
                 freight_rate: fleteTramo,
@@ -751,12 +791,17 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             });
             setLoadedRouteName(finalName);
             setShowSaveModal(false);
-            const [freshQuotes, freshRoutes] = await Promise.all([
+            const [freshQuotes, freshRoutes, freshDistances] = await Promise.all([
                 MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
-                ForecastService.getRoutesMaster()
+                ForecastService.getRoutesMaster(),
+                ForecastService.getRoutes()
             ]);
             if (freshQuotes && Array.isArray(freshQuotes)) setSavedRoutes(freshQuotes);
             if (freshRoutes && Array.isArray(freshRoutes)) setRoutes(freshRoutes);
+            if (freshDistances && Array.isArray(freshDistances)) {
+                RouteDistancesService.setDistanceMatrix(freshDistances);
+                setDistanceMatrix(freshDistances);
+            }
 
             const recordTypeDesc = category === 'PRESUPUESTO'
                 ? 'Presupuesto (PPTOS)'
@@ -980,7 +1025,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
         if (unpacked.tramos && unpacked.tramos.length > 0) {
             const enrichedTramos = unpacked.tramos.map((tr: any) => {
-                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type, routes);
+                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type, routes, distanceMatrix);
                 return {
                     ...tr,
                     route_distance: (Number(tr.route_distance) > 0) ? tr.route_distance : (auto.route_distance || 0),

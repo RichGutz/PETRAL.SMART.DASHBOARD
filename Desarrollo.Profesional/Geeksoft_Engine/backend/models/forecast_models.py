@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 from typing import List, Dict, Any, Optional, Union
+from datetime import datetime, date
 
 class ProjectionLine(BaseModel):
     month_index: str = Field(..., description="Mes de la proyección, ej. '2026-07'")
@@ -36,11 +37,19 @@ class ForecastSaveRequest(BaseModel):
 class ForecastListResponse(BaseModel):
     id: str
     name: str
-    user_id: str
-    start_date: str
-    end_date: str
-    created_at: str
-    updated_at: str
+    user_id: Optional[str] = "Usuario Comercial"
+    start_date: Optional[Union[str, date, Any]] = ""
+    end_date: Optional[Union[str, date, Any]] = ""
+    created_at: Optional[Union[str, datetime, Any]] = ""
+    updated_at: Optional[Union[str, datetime, Any]] = ""
+
+    @field_serializer('created_at', 'updated_at', 'start_date', 'end_date', when_used='always')
+    def serialize_dates(self, v: Any) -> str:
+        return "" if v is None else str(v)
+
+    @field_serializer('user_id', when_used='always')
+    def serialize_user(self, v: Any) -> str:
+        return str(v) if v else "Usuario Comercial"
 
 class SpotSaveRequest(BaseModel):
     route_id: Optional[str] = None

@@ -120,7 +120,25 @@ def list_forecasts():
         sb = get_supabase()
         
         res = sb.table("commercial_forecasts").select("id, name, user_id, start_date, end_date, created_at, updated_at").order("updated_at", desc=True).execute()
-        return res.data
+        
+        formatted = []
+        for row in (res.data or []):
+            if not isinstance(row, dict):
+                continue
+            c_at = row.get("created_at")
+            u_at = row.get("updated_at")
+            s_date = row.get("start_date")
+            e_date = row.get("end_date")
+            formatted.append({
+                "id": str(row.get("id") or ""),
+                "name": str(row.get("name") or "Sin Nombre"),
+                "user_id": str(row.get("user_id") or "Usuario Comercial"),
+                "start_date": str(s_date) if s_date is not None else "",
+                "end_date": str(e_date) if e_date is not None else "",
+                "created_at": str(c_at) if c_at is not None else "",
+                "updated_at": str(u_at) if u_at is not None else ""
+            })
+        return formatted
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -605,10 +605,13 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         try {
             setActionLoading('loadList');
             const list = await ForecastService.listForecasts();
-            setSavedForecasts(list);
+            const validList = Array.isArray(list) ? list : (list && Array.isArray((list as any).data) ? (list as any).data : []);
+            setSavedForecasts(validList);
             setShowLoadModal(true);
-        } catch(e) {
-            alert("Error al cargar la lista de forecasts");
+        } catch(e: any) {
+            console.error("Error al cargar la lista de forecasts:", e);
+            const detailMsg = e?.response?.data?.detail || e?.message || "Error al conectar con el servidor";
+            alert(`Error al cargar la lista de forecasts: ${detailMsg}`);
         } finally {
             setActionLoading('none');
         }

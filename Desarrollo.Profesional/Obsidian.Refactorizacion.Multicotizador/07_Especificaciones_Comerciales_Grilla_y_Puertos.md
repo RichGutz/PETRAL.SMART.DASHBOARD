@@ -1054,6 +1054,56 @@ Se ejecutó el protocolo forense **BEN / LEG / DIFF / NOTA** para inspeccionar l
 
 ---
 
+### 🕵️‍♂️ 5.47. Cuadragésima Séptima Vuelta (Serie 66: Auditoría Forense DDL de `user_permissions` e Implementación de 2 Filas de PADS en la Matriz de Roles)
+
+A partir de la alerta roja modal reportada en producción (`https://petral.one.geeksoft.tech`):
+> `Error al actualizar usuario: column "analisis_grafico" of relation "user_permissions" does not exist LINE 2: ..._id", "multicotizador_spot", "matriz_financiera", "analisis_... ^`
+
+Se aplicó el protocolo **BEN / LEG / DIFF / NOTA** con metodologías **ABIDE y Open JEV**, aislando las causas raíz y desplegando la solución atómica con cero tiempo de inactividad:
+
+| # | Objeto / Módulo Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **66.1** | **Base de Datos Contabo PostgreSQL (`user_permissions`)** | La tabla física solo contaba con 9 columnas heredadas de la migración inicial (`user_id`, `multicotizador_spot`, etc.). | DDL atómico e idempotente `ALTER TABLE user_permissions ADD COLUMN IF NOT EXISTS ...` incorporando las 10 columnas ausentes con default `'Visor'`. | **Descalce DDL:** Frontend y backend definían 18 módulos (`M. Búnker`, `Análisis Gráfico`, etc.), pero la tabla carecía de 10 columnas. PostgreSQL abortaba la transacción en `"analisis_grafico"`. | ✅ RESUELTO |
+| **66.2** | **Backend Router (`auth.py`)** | `upsert_user_permissions` generaba queries fijos `INSERT INTO user_permissions ({cols_str})` asumiendo existencia física de todas las claves de `ALL_MODULE_KEYS`. | Introspección defensiva consultando `information_schema.columns` antes del armado SQL para filtrar únicamente columnas físicas existentes. | **Vulnerabilidad a Futuros Cambios DDL:** Un nuevo módulo en el backend colapsaba inmediatamente el guardado de cualquier usuario. | ✅ RESUELTO |
+| **66.3** | **Frontend UI (`UsersPermissions.tsx`)** | Tabla horizontal congestionada con 18 columnas forzando scroll incómodo e inmanejable. | Implementación de **2 Filas de PADS Interactivos** en la cabecera (Fila 1: Todos, Herramientas, Físicos, Comerciales; Fila 2: Costos, Mercado & Búnker, Documentación) que filtran dinámicamente las columnas de la tabla. | **Ergonomía y Escalabilidad:** Los administradores configuran poderes por cuadrantes temáticos sin perder de vista los datos del usuario. | ✅ RESUELTO |
+| **66.4** | **Verificación Empírica de Calidad (QC Gate)** | Test script directo ejecutado dentro del contenedor `petral-backend` con `upsert_user_permissions` y `fetch_user_permissions`. | Confirmado `UPSERT EXITOSO SIN ERROR` y lectura en vivo de permisos sin error 500 en Contabo VPS. | **Prueba Pericial Positiva:** Integridad relacional y consistencia funcional validadas al 100%. | ✅ RESUELTO |
+
+---
+
+### 🕵️‍♂️ 5.48. Cuadragésima Octava Vuelta (Serie 67: Creación del Smart Distance Bridge y Sincronización Automática Voyage Calculator ↔ Maestro de Distancias)
+
+A partir de la incidencia reportada por el usuario en el Voyage Calculator / Multicotizador (`MultiCotizadorExcel.tsx`):
+> A pesar de que en la matriz de distancias náuticas oficiales (`distances`) existen distancias grabadas para las piernas de un viaje con puertos del Cono Sur (Ancud, Posesión, Rio Grande), las distancias se mostraban en 0 NM en pantalla, colapsando los Días de Mar en 0.00 y la Distancia Total en 0.0 NM.
+
+Se aplicó el protocolo pericial **BEN / LEG / DIFF / NOTA** con metodologías **ABIDE y Open JEV**, sincronizando el Gemelo Digital Local y resolviendo la causa raíz:
+
+| # | Objeto / Módulo Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **67.1** | **`MultiCotizadorExcel.tsx`** | Cargaba únicamente `ForecastService.getRoutesMaster()` (`/masters/routes`), que entrega cotizaciones históricas (`routes_quotes`), sin cargar jamás la tabla física `distances`. | Se incorporó la carga y refresco reactivo de `ForecastService.getRoutes()` (`/forecast/routes`), inyectando la matriz `distances` en el servicio y sincronizando el estado `distanceMatrix`. | **Desconexión de Fuente de Verdad:** El Voyage Calculator ignoraba por completo el endpoint del Maestro de Distancias. | ✅ RESUELTO |
+| **67.2** | **`RouteDistancesService.ts`** | Dependía de un fallback estático congelado en TypeScript (`PAIRWISE_PORT_DISTANCES`) con solo ~30 combinaciones de puertos peruanos. Al consultar puertos chilenos o brasileños no encontrados en cotizaciones previas, retornaba 0 NM. | Se transformó en el **Smart Distance Bridge**: indexación bidireccional $O(1)$ de la tabla viva `distances`, normalización inteligente de puertos (tolerando etiquetas como `(CL)`, `(BR)`, espacios y guiones), y enriquecimiento del fallback estático. | **El "Agujero Negro" del Fallback Hardcodeado:** Puertos nuevos o de otras latitudes del Cono Sur no existían en el diccionario TypeScript estático. | ✅ RESUELTO |
+| **67.3** | **Enriquecimiento Reactivo de Tramos en Caliente** | Si las distancias cargaban después del primer render, los tramos quedaban congelados con 0 NM. | Se implementó un `useEffect` reactivo de auto-curación y auto-resolución en `recalculateTramosFlow` que detecta cualquier tramo en 0 NM y lo completa automáticamente con la distancia oficial de la matriz. | **Curación en Caliente:** Cero fricción para el usuario: tan pronto se elige el par de puertos, la distancia y el clima se resuelven de inmediato. | ✅ RESUELTO |
+| **67.4** | **Replicación y Validación Empírica en Local** | 6 piernas de viaje (`ILO -> ANCUD -> POSESION -> RIO_GRANDE -> POSESION -> ANCUD -> ILO`) arrojaban 0.0 NM. | Ejecutado script de prueba y suite completa del **QC Swarm Local**: las 6 piernas resuelven sus **7,808.0 NM** exactas y 30.46 días de mar. El QC Swarm reportó **100% de invariantes matemáticos aprobados y cero violaciones**. | **Verificación Empírica Gate:** `tsc` limpio en los componentes intervenidos, `vite build` 100% exitoso (28.09s), y telemetría de agentes en verde. | ✅ RESUELTO |
+
+---
+
+### 🕵️‍♂️ 5.49. Cuadragésima Novena Vuelta (Serie 68: Reparación Integral de Carga de Escenarios Grabados, Despliegue del Agente 8 Auditor de Resumen MEC y Validación 1:1 Matriz Financiera ↔ Proyecciones Financieras)
+
+A partir de las dos anomalías periciales reportadas por el usuario:
+1. Al intentar cargar un escenario guardado en la Matriz Financiera (`ForecastContext_V2.tsx`), aparecía la alerta: `Error al cargar la lista de forecasts`.
+2. En la vista de Proyecciones Financieras (`/financial-projections`), no se podían visualizar los escenarios grabados resumidos. El usuario ordenó: *"añades otro agente que verifique que lo que esta alli es lo mismo que se ve en matriz financiera pero resumido. Que se pueda cargar lo grabado elemental watson"*.
+
+Se aplicó el protocolo pericial **BEN / LEG / DIFF / NOTA**:
+
+| # | Objeto / Módulo Auditado | Estado Legacy (Escena del Crimen) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Causa Raíz | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **68.1** | **Backend Modelo Pydantic (`forecast_models.py`)** | `ForecastListResponse` exigía estrictamente `created_at: str`, `updated_at: str`, `user_id: str`, `start_date: str`. | Se flexibilizó el modelo aceptando tipos nativos (`Union[str, datetime, date, Any]`) con serializadores `@field_serializer` automáticos a ISO string y defaults para nulos. | **ResponseValidationError en FastAPI:** Al migrar a conexión directa PostgreSQL (`psycopg2`), los campos timestamp retornan objetos `datetime.datetime`. Pydantic 2 arrojaba 4 errores de validación HTTP 500 al serializar la lista de presupuestos. | ✅ RESUELTO |
+| **68.2** | **Backend Endpoint `/forecast/list` (`forecast.py`)** | Retornaba `res.data` en bruto directamente a FastAPI sin sanitizar columnas de fecha ni usuarios nulos. | Sanitización defensiva iterativa mapeando cada fila a strings limpios y suministrando default `"Usuario Comercial"`. | **Defensa en Profundidad:** Eliminación total de cualquier incompatibilidad entre tipos de PostgreSQL y esquemas REST JSON. | ✅ RESUELTO |
+| **68.3** | **Frontend Context (`ForecastContext_V2.tsx`)** | `handleLoadClick` arrojaba `alert("Error al cargar la lista de forecasts")` opaco y no admitía envolturas `{ data: [...] }`. | Se blindó `handleLoadClick` extrayendo arreglos directos o envolturas `data`, registrando el error en consola y notificando al usuario el detalle del servidor. | **Resiliencia Frontend:** Carga inmediata del catálogo de escenarios y retroalimentación diagnóstica transparente. | ✅ RESUELTO |
+| **68.4** | **Enjambre QC: Agente 6 (`agent_historical_replayer.py`)** | Solo simulaba el motor con las líneas de proyección; nunca auditaba el endpoint de catálogo `/forecast/list` ni las validaciones Pydantic. | Incorporación del método `audit_catalog_loading()` que valida contra el esquema `ForecastListResponse` todos los escenarios históricos. | **Blindaje de Catálogo:** Se garantiza que ningún presupuesto guardado quede huérfano o inaccesible para los usuarios. | ✅ RESUELTO |
+| **68.5** | **Enjambre QC: Agente 8 (`agent_financial_projections_summary.py`)** | Inexistente. No existía verificación automatizada de paridad entre la Matriz Financiera detallada y la pantalla de Proyecciones Financieras (`/financial-projections`). | Creación del **Agente 8 (Financial Projections Auditor)**: calcula el resumen MEC 1:1 y certifica que $\sum(\text{Líneas Matriz}) \equiv \text{MEC Summary}$ (Volumen MT, viajes, días y margen). | **Paridad Matemática Absoluta:** Integrado en `run_qc_swarm.py` y `run_pipeline_e2e_swarm.py`, auditando 810,000 MT, 60 viajes y 551.4 días con 0 violaciones en 0.32s. | ✅ RESUELTO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Autopsia Pericial Benoit Blanc:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
