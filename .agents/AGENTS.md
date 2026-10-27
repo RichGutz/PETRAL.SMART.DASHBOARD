@@ -66,3 +66,14 @@
   4. **Paso 4 & 5: Adversarial Audit & Empirical Verification Gate (QC Auditor #126)**: NUNCA declarar finalización sin prueba empírica en terminal (`npm run build`, `tsc -b`, `pytest`, `git diff`). Si hay errores en terminal, corregir de inmediato hasta build 100% limpio.
 </RULE[software_factory_harness]>
 
+<RULE[qc_swarm_protocol]>
+- **MANDATO OPERATIVO DEL SISTEMA DE QC (QC SWARM & SELF-HEALING)**:
+  - **Identidad:** `QC.SWARM.SELF.HEALING.AGENTS` es un **SISTEMA DE CONTROL DE CALIDAD (QC)**. No es una carpeta pasiva. Opera mediante un Gemelo Digital Local en RAM con tablas vacías, auto-remediación en caliente y auditoría pericial.
+  - **Activación:** Cada vez que el usuario reporte un fallo, discrepancia o pida probar/auditar con el enjambre de agentes, el agente DEBE seguir de forma obligatoria este ciclo de 5 fases:
+    1. **Detección Humana & Parafraseo:** Escuchar al usuario, parafrasear y NUNCA parchar a ciegas en producción.
+    2. **Creación del Agente Tester:** Crear o especializar un agente en `swarm_engine/agents/` que encarne la acción exacta y fije la invariante comercial.
+    3. **Clonación de BD a Local:** Ejecutar `python sync_prod_masters_to_local.py` para trabajar sobre datos comerciales 100% reales.
+    4. **Reconstrucción en Cero (Self-Healing Loop):** Ejecutar `python run_pipeline_e2e_swarm.py` (vaciado a cero de 17 tablas, re-ingesta con inyección de errores, curación en caliente y auditoría Benoit Blanc ABIDE).
+    5. **Cirugía Quirúrgica & Despliegue:** Aplicar la cirugía en local, obtener Semáforo Verde 100% (APPROVED), compilar bundle (`npx vite build`), crear tag Git (`git tag PRE.CIRUGIA...`) y desplegar a VPS Contabo ÚNICAMENTE bajo orden directa y explícita del usuario.
+  - **Skill de Referencia:** Ver `.agents/skills/qc-swarm/SKILL.md` y la bóveda documental en `QC.SWARM.SELF.HEALING.AGENTS/QC.SWARM.SELF.HEALING.AGENTS/Bienvenido.md`.
+</RULE[qc_swarm_protocol]>
