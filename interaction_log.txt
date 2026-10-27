@@ -1,4 +1,21 @@
 ================================================================================
+REGISTRO DE SESIÓN: 2026-10-26 (Bóveda Obsidian Dedicada • Suite Documental de los Dos Swarms)
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Creación de la Suite Documental en la Bóveda Obsidian ('QC.SWARM.SELF.HEALING.AGENTS/.obsidian'):
+   - '00_Indice_Maestro_QC_Swarm_Architecture.md': Índice navegable con diagramas ASCII y tabla consolidada de KPIs.
+   - '01_Enjambre_Fase_1_Master_Ingest_y_Self_Healing.md': Explicación a fondo del estado cero, las guardas del Sandbox Twin, los 4 fallos inyectados y el Self-Healing Loop.
+   - '02_Enjambre_Fase_2_Simulacion_Operativa_y_Auditoria_Benoit_Blanc.md': Detalle de los 7 agentes (SPCC, Nexa, Wildcard, Búnker, Matriz, Replay y Benoit Blanc) y la Rúbrica ABIDE.
+   - '03_Pipeline_E2E_Orquestacion_y_Guia_de_Ejecucion.md': Paso de estafeta in-memory, guía de comandos PowerShell y protocolo ante fallos.
+   - '04_Catalogo_Forense_Escena_del_Crimen_Legacy_y_Patrones_de_Cura.md': Catálogo forense de las 4 escenas del crimen legacy y patrones de cura defensiva.
+
+2. Commits y Sincronización Remota:
+   - Worktree 'feature/qc-swarm-local': Commit 83710b5 pusheado a GitHub origin.
+   - Repositorio 'main': Bitácoras actualizadas y listas para commit final.
+================================================================================
+
+================================================================================
 REGISTRO DE SESIÓN: 2026-10-26 (Pipeline E2E QC Swarm • Master Ingest & Self-Healing Swarm)
 ================================================================================
 TAREAS Y MODIFICACIONES REALIZADAS:
