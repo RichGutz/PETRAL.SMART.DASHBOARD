@@ -47,6 +47,7 @@ Cada vez que ocurre una anomalía o se requiere una nueva validación de negocio
 
 ## 🧭 Documentos Clave de la Bóveda
 
+* 🛠️ **[[SKILL_QC_SWARM_OPERATIVO]]:** Guía rápida (Skill) y cheat sheet de comandos para operar el QC Swarm.
 * 📜 **[[00_MANIFIESTO_Y_CICLO_OPERATIVO_QC_SWARM]]:** Manifiesto detallado de las 6 fases del sistema de QC, casos forenses resueltos y reglas inmutables.
 * 🗺️ **[[00_Indice_Maestro_QC_Swarm_Architecture]]:** Índice maestro y arquitectura técnica de los dos enjambres (Fase 1 y Fase 2).
 * 🏗️ **[[01_Enjambre_Fase_1_Master_Ingest_y_Self_Healing]]:** Fase 1: Sandbox de tablas vacías y auto-remediación en caliente.
