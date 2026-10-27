@@ -56,6 +56,11 @@ El sistema funciona como un **Gemelo Digital Local (Digital Twin)** que opera 10
 
 La suite documental está estructurada en los siguientes tomos hiper-detallados:
 
+0. **[[00_MANIFIESTO_Y_CICLO_OPERATIVO_QC_SWARM]]**:
+   * **El Manifiesto Operativo del Sistema:** Qué es este sistema de QC y su razón de ser.
+   * **El Ciclo Virtuoso de 6 Fases:** Detección humana ➔ Creación del Agente Tester ➔ Clonación de BD real a local ➔ Reconstrucción en Cero (Self-Healing) ➔ Corrida de los 8 Agentes + Benoit Blanc ➔ Cirugía y Despliegue seguro a producción.
+   * Reglas inmutables de operación y casos reales resueltos.
+
 1. **[[01_Enjambre_Fase_1_Master_Ingest_y_Self_Healing]]**:
    * Arquitectura del **Sandbox de Tablas Vacías** (`MasterSandboxTwin`).
    * Cómo opera el **Master Ingest & Healer Agent** simulando a un usuario humano.

@@ -13,7 +13,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 ROOT_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD"
 LOCAL_DB_DIR = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "Local_Database")
 JSON_DIR = os.path.join(LOCAL_DB_DIR, "json_tables")
+QC_JSON_DIR = os.path.join(ROOT_DIR, "Desarrollo.Profesional", "QC.SWARM.SELF.HEALING.AGENTS", "Local_Database", "json_tables")
 os.makedirs(JSON_DIR, exist_ok=True)
+os.makedirs(QC_JSON_DIR, exist_ok=True)
 
 CONTABO_IP = "169.58.168.107"
 CONTABO_USER = "root"
@@ -21,7 +23,8 @@ CONTABO_PASS = "VivaLaVida2026$"
 
 print("=" * 70)
 print("🚀 FASE 1: CLONACIÓN DE PRODUCCIÓN CONTABO A ENTORNO LOCAL")
-print(f"Destino local: {LOCAL_DB_DIR}")
+print(f"Destino local 1: {JSON_DIR}")
+print(f"Destino local 2 (QC Swarm): {QC_JSON_DIR}")
 print("=" * 70)
 
 # 1. Conexión SSH / SFTP
@@ -30,8 +33,14 @@ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(CONTABO_IP, port=22, username=CONTABO_USER, password=CONTABO_PASS, timeout=30)
 sftp = ssh.open_sftp()
 
-# 2. Descargar el último dump .sql.gz generado hoy
-remote_dump = "/opt/backups_guardados/backup_petral_one_20261027_005758.sql.gz"
+# 2. Descargar el último dump .sql.gz generado dinámicamente
+try:
+    backups = sftp.listdir("/opt/backups_guardados")
+    sql_gz_files = sorted([f for f in backups if f.endswith(".sql.gz")])
+    remote_dump = f"/opt/backups_guardados/{sql_gz_files[-1]}" if sql_gz_files else "/opt/backups_guardados/backup_petral_one_20261027_005758.sql.gz"
+except Exception:
+    remote_dump = "/opt/backups_guardados/backup_petral_one_20261027_005758.sql.gz"
+
 local_dump = os.path.join(LOCAL_DB_DIR, "backup_petral_one_latest.sql.gz")
 
 print(f"\n[1/3] Descargando volcado de BD ({remote_dump}) vía SFTP...")
@@ -47,10 +56,11 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 conn = psycopg2.connect("postgresql://postgres:X1OnKpQoSSsFK7JOGLnsx4YjD83zA7wx@10.0.1.16:5432/petral_db")
+conn.autocommit = True
 cur = conn.cursor(cursor_factory=RealDictCursor)
 
 tables = [
-    "vessels", "ports", "terminals", "distances", "routes",
+    "vessels", "ports", "terminals", "distances",
     "port_cost_tariffs", "port_cost_rules", "clients",
     "bunker_invoices", "bunker_bunkering_events", "bunker_prices",
     "routes_quotes", "routes_clients", "contracts", "commercial_forecasts",
@@ -98,14 +108,17 @@ except Exception as e:
         print("  Stderr:", err)
 
 # 4. Descargar los JSONs a local
-print(f"\n[3/3] Transfiriendo tablas JSON a {JSON_DIR}...")
+print(f"\n[3/3] Transfiriendo tablas JSON a local...")
 for t in ["vessels", "ports", "terminals", "distances", "routes", "port_cost_tariffs", "port_cost_rules", "clients", "bunker_invoices", "bunker_bunkering_events", "bunker_prices", "routes_quotes", "routes_clients", "contracts", "commercial_forecasts", "user_permissions", "users"]:
     try:
         remote_json = f"/tmp/{t}.json"
         local_json = os.path.join(JSON_DIR, f"{t}.json")
+        qc_local_json = os.path.join(QC_JSON_DIR, f"{t}.json")
         # Copiar desde el contenedor al host primero si es necesario
         ssh.exec_command(f"docker cp petral-backend:{remote_json} {remote_json} 2>/dev/null || true")
         sftp.get(remote_json, local_json)
+        import shutil
+        shutil.copyfile(local_json, qc_local_json)
     except Exception as ex:
         pass
 

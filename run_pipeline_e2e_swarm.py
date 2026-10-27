@@ -31,6 +31,7 @@ from agents.agent_wildcard_fleet import WildcardFleetAgent
 from agents.agent_bunker_stresstest import BunkerStresstestAgent
 from agents.agent_matrix_builder import MatrixScenarioBuilderAgent
 from agents.agent_historical_replayer import HistoricalReplayerAgent
+from agents.agent_financial_projections_summary import FinancialProjectionsSummaryAgent
 from agents.agent_qc_sentinel import QcSentinelAgent
 
 import backend.services.forecast_service as fs
@@ -97,6 +98,7 @@ def main():
     agent_bunker = BunkerStresstestAgent(canonical_twin)
     agent_matrix = MatrixScenarioBuilderAgent(canonical_twin)
     agent_historical = HistoricalReplayerAgent(canonical_twin)
+    agent_summary = FinancialProjectionsSummaryAgent(canonical_twin)
     sentinel = QcSentinelAgent()
 
     agents_list = [agent_spcc, agent_nexa, agent_wildcard, agent_bunker, agent_matrix]
@@ -118,8 +120,15 @@ def main():
         status_emoji = "✅" if ok else "❌"
         print(f"        {status_emoji} [{a.name:24}]: {len(projs):2d} líneas simuladas en {el_sim*1000:.1f}ms")
 
-    # Replay Histórico de Escenarios (Agente 6)
+    # Replay Histórico de Escenarios y Validación de Catálogo (Agente 6)
     print("\n  [2.2] Ejecutando Historical Replayer Agent (Escenarios Reales PB 2027 / 2028)...")
+    try:
+        validated_catalog = agent_historical.audit_catalog_loading()
+        print(f"        ✓ [{agent_historical.name}]: Catálogo de {len(validated_catalog)} escenarios validado para carga (0 errores Pydantic).")
+    except Exception as cat_e:
+        print(f"        ❌ [{agent_historical.name}]: Error al validar catálogo de forecasts: {cat_e}")
+        sentinel.violations.append({"agent": agent_historical.name, "rule": "CATALOG_VALIDATION_ERROR", "detail": str(cat_e)})
+
     hist_scenarios = agent_historical.get_historical_scenarios()
     hist_count = 0
     t_hist = time.time()
@@ -152,6 +161,22 @@ def main():
         except Exception as e:
             print(f"        ❌ [{agent_historical.name}]: Falló replay de '{s_name}': {e}")
             sentinel.violations.append({"agent": agent_historical.name, "rule": "CRITICAL_CRASH", "detail": str(e)})
+
+    # Auditoría de Consistencia Resumida: Matriz Financiera vs Proyecciones Financieras (Agente 8)
+    print("\n  [2.3] Ejecutando Financial Projections Auditor (Consistencia Matriz vs Resumen MEC)...")
+    try:
+        summary_results = agent_summary.audit_projections_vs_financial_matrix()
+        for res in summary_results:
+            s_name = res["forecast_name"]
+            if res["is_consistent"]:
+                print(f"        ✓ [{agent_summary.name}]: '{s_name}' Resumen MEC 1:1 ({res['matrix_volume_mt']:,.0f} MT, {res['matrix_trips']} viajes, {res['mec_total_days']} días)")
+            else:
+                err_msg = f"Discrepancia detectada en '{s_name}': VolDiff={res['volume_diff']}, TripsDiff={res['trips_diff']}"
+                print(f"        ❌ [{agent_summary.name}]: {err_msg}")
+                sentinel.violations.append({"agent": agent_summary.name, "rule": "SUMMARY_DISCREPANCY", "detail": err_msg})
+    except Exception as sum_e:
+        print(f"        ❌ [{agent_summary.name}]: Falló auditoría de resumen: {sum_e}")
+        sentinel.violations.append({"agent": agent_summary.name, "rule": "SUMMARY_AUDIT_ERROR", "detail": str(sum_e)})
 
     el_hist = time.time() - t_hist
     elapsed_phase2 = time.time() - t0_phase2
