@@ -88,8 +88,15 @@ La suite documental está estructurada en los siguientes tomos hiper-detallados:
    * Dictamen pericial y certificación de Semáforo Verde 100%.
 
 6. **[[06_Cirugias_Quirurgicas_Produccion_Convergencia_Curada]]**:
-   * Especificación quirúrgica precisa (diffs línea por línea) para aplicar en `forecast_service.py`, `forecast.py` y PostgreSQL Contabo.
+   * Especificación quirúrgica precisa (diffs línea por línea) aplicados en `forecast_service.py`, `forecast.py` y PostgreSQL Contabo.
    * Cierre definitivo de fallas por comillas en `legs_data`, colapsos de `.get()` en sobreestadías y reseteos accidentales a 0.0 en fichas navales.
+
+7. **[[07_Acta_Despliegue_Produccion_VPS_y_Guia_QC_Manual_Llagas]]**:
+   * Acta oficial del despliegue exitoso al VPS Contabo (`169.58.168.107` / `https://petral.one.geeksoft.tech`).
+   * Guía pericial paso a paso de las 4 Llagas para el QC manual en vivo.
+
+8. **[[08_Compendio_Final_Lecciones_Aprendidas_y_Roadmap_QC_Swarm]]**:
+   * Crónica histórica completa de la sesión, lecciones de arquitectura y hoja de ruta para la evolución del enjambre.
 
 ---
 
