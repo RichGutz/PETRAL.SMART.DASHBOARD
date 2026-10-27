@@ -14,7 +14,17 @@ CONCURRENCY & QC SUMMARY:
 - Backup Worker Automatizado a Google Drive:
   * Ejecución exitosa de 'auto_backup_contabo.sh' y 'upload_backup_gdrive.py' en Contabo VPS (169.58.168.107).
   * Archivo 'backup_petral_one_20261027_005758.sql.gz' (1.54 MB) subido con éxito a Google Drive Petral ('1Ji-gFyKyKgDqrshzean3t6ocQ8CSHE-G') con ID '13QdSYRp6YWPoO-hS5XYFpGdNgFmrpPyX'.
-  * Inandes, Coolify y Evolution también respaldados; notificación enviada a Telegram.
+  * Permiso explícito asignado a 'rgutil@gmail.com'.
+- Creación de Git Worktree Independiente & Replicabilidad:
+  * Directorio: 'Desarrollo.Profesional/QC.SWARM.SELF.HEALING.AGENTS' (branch feature/qc-swarm-local).
+  * Activación de 'core.longpaths = true' en Git.
+  * Migración del volcado SQL y 31 tablas JSON extraídas directamente de PostgreSQL Contabo ('Local_Database/').
+- Implementación y Certificación del QC Swarm en Local (Fases 1, 2 y 3):
+  * 'local_twin_adapter.py': Carga offline y saneamiento ast.literal_eval.
+  * 7 Agentes autónomos: SPCC Charterer, Nexa Acid, Wildcard Fleet, Bunker Stresstest, Matrix Builder, Historical Replayer y QC Sentinel.
+  * Detección y parche de 2 excepciones por serialización string en 'legs_data' y 'safe_legs.get("demurrage_rates")'.
+  * Resultado Empírico: 177 celdas y 423 invariantes matemáticos validados en 0.49 segundos con VEREDICTO APPROVED (SEMÁFORO VERDE 100%).
+  * Commit 2ffba5d en worktree pusheado a origin feature/qc-swarm-local.
 - Benchmark Swarm Integrado:
   * Adopción del estándar multi-agente probado en 'CASH.PIT (10 - Agents.SWARM)'.
 - Documentación Pericial en Obsidian:
