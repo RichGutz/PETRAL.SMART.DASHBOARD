@@ -698,6 +698,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data") or {}
+            if isinstance(legs_data, str):
+                import json, ast
+                try:
+                    legs_data = json.loads(legs_data)
+                except Exception:
+                    try:
+                        legs_data = ast.literal_eval(legs_data)
+                    except Exception:
+                        legs_data = {}
             
             import copy
             tce_req = float(v_data.get("tce_required") or 0.0)
@@ -1142,6 +1151,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         # RESOLUCIÓN MANDATORIA DE DEMURRAGE DESDE COTIZACIÓN / RUTA / LEGS_DATA / CONTRATO
         safe_legs = (spot_route.get("legs_data") or {}) if spot_route else {}
+        if isinstance(safe_legs, str):
+            import json, ast
+            try:
+                safe_legs = json.loads(safe_legs)
+            except Exception:
+                try:
+                    safe_legs = ast.literal_eval(safe_legs)
+                except Exception:
+                    safe_legs = {}
         demurrage_rate_val = get_demurrage_from_dict(safe_legs.get("demurrage_rates") if safe_legs else None, vessel)
         if demurrage_rate_val <= 0 and spot_route:
             demurrage_rate_val = get_demurrage_from_dict(spot_route.get("demurrage_rates"), vessel)
@@ -1437,7 +1455,13 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                     spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
-            legs_data = spot_route.get("legs_data", {})
+            legs_data = spot_route.get("legs_data") or {}
+            if isinstance(legs_data, str):
+                import json
+                try:
+                    legs_data = json.loads(legs_data)
+                except Exception:
+                    legs_data = {}
             
             import copy
             tce_req = float(v_data.get("tce_required") or 0.0)
@@ -1766,6 +1790,12 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         
         # RESOLUCIÓN MANDATORIA DE DEMURRAGE DESDE COTIZACIÓN / RUTA / LEGS_DATA / CONTRATO
         safe_legs = (spot_route.get("legs_data") or {}) if spot_route else {}
+        if isinstance(safe_legs, str):
+            import json
+            try:
+                safe_legs = json.loads(safe_legs)
+            except Exception:
+                safe_legs = {}
         demurrage_rate_val = get_demurrage_from_dict(safe_legs.get("demurrage_rates") if safe_legs else None, vessel)
         if demurrage_rate_val <= 0 and spot_route:
             demurrage_rate_val = get_demurrage_from_dict(spot_route.get("demurrage_rates"), vessel)
