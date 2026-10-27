@@ -7,9 +7,16 @@
 
 ---
 
-## 🎯 1. Propósito de la Bóveda
+## 🎯 1. Propósito de la Bóveda: El Sistema de Control de Calidad (QC System)
 
-Esta bóveda documental contiene la especificación exhaustiva, matemática y operacional del sistema de **Dos Enjambres Multi-Agente Autónomos** diseñado para blindar a PETRAL ONE frente a regresiones, errores humanos de carga y corrupciones en tablas maestras.
+> 💡 **IDENTIDAD DEL SISTEMA:**  
+> Este espacio es un **SISTEMA DE CONTROL DE CALIDAD (QC) Y AUTO-CURACIÓN CONTINUA**.  
+> **El Ciclo Operativo:**
+> 1. **Detección Humana:** El usuario detecta una anomalía en producción y nos la comunica.
+> 2. **Creación del Agente Tester:** Se crea o especializa un agente que reproduce la prueba exacta.
+> 3. **Clonación de BD a Local:** Se copia la base de datos de producción a local (`sync_prod_masters_to_local.py`).
+> 4. **Reconstrucción en Cero:** Se rehacen las tablas desde cero (RAM vacía), se inyectan fallos humanos y se auto-curan con el ciclo completo de agentes.
+> 5. **Cirugía y Corrección:** Se corrige quirúrgicamente el código en local, se obtiene Semáforo Verde (APPROVED) con Benoit Blanc y se despliega con seguridad atómica a producción.
 
 El sistema funciona como un **Gemelo Digital Local (Digital Twin)** que opera 100% offline en la memoria de la máquina de desarrollo, procesando miles de registros y auditando cientos de escenarios financieros en fracciones de segundo (tiempo total: **0.334 segundos**).
 

@@ -410,5 +410,16 @@ El Backend en producción corre en el contenedor Docker `petral-backend` mapeado
 * **Branch & Tag de Resguardo:** `PRE.CIRUGIA.ANCUD.FORECAST.FALLADO` preservado tanto en local como en GitHub origin.
 * **Documentación:** ✅ Registrado en Obsidian (`07_Especificaciones_Comerciales_Grilla_y_Puertos.md` Series 67 y 68) y en este protocolo pericial oficial (`09_Cirugia_Matriz_Dist_Desconectada.md`).
 
+---
+
+## 🛡️ Síntesis del Paradigma de Control de Calidad (QC System)
+
+Este operativo demuestra el ciclo inquebrantable de la suite `QC.SWARM.SELF.HEALING.AGENTS`:
+1. **Detección del Usuario:** El usuario detecta la falla en producción (ej. distancias en 0 o error al cargar forecasts) y nos lo reporta.
+2. **Creación del Agente Tester:** Creamos y especializamos al agente de prueba (Smart Distance Bridge, Agente 6 de catálogo y Agente 8 de Proyecciones Financieras MEC).
+3. **Copia de BD de Producción a Local:** Se extraen los datos reales vivos (`sync_prod_masters_to_local.py`) sin tocar la base de datos de producción.
+4. **Reconstrucción en Cero (Self-Healing Loop):** Se reconstruye la memoria en blanco, se reingestan las 17 tablas, se inyectan fallos de estrés y se ejecuta el enjambre completo de agentes.
+5. **Cirugía Quirúrgica y Despliegue:** Se repara la causa raíz en local, se obtiene Semáforo Verde 100% (APPROVED), y únicamente tras la orden explícita del usuario, se despliega a producción con verificación UAT.
+
 
 
