@@ -82,6 +82,11 @@ La suite documental está estructurada en los siguientes tomos hiper-detallados:
      - Invariante de duración cero cuando la frecuencia mensual es nula.
    * Patrones de codificación defensiva y reglas para no volver a romper las tablas maestras.
 
+5. **[[05_Acta_Oficial_Corrida_Serial_E2E_Swarm]]**:
+   * Acta oficial pericial de la **corrida serial completa** de ambos grupos de agentes desde cero.
+   * Registro literal de la terminal, tiempos de cómputo por agente y telemetría de 2,021 operaciones en 0.533 segundos.
+   * Dictamen pericial y certificación de Semáforo Verde 100%.
+
 ---
 
 ## ⏱️ 3. Ficha Técnica Consolidada
