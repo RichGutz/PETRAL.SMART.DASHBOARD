@@ -1117,14 +1117,27 @@ def save_vessel(request: dict):
                          "max_capacity_mdo", "consumption_sea_mdo", "consumption_idle_mdo", "consumption_load_mdo", "consumption_disch_mdo",
                          "draft_m"]
         
+        # Curación Defensiva Benoit Blanc: Corruption Guards en campos navales
+        critical_naval_fields = {"vessel_speed", "dwt", "tce_required", "dwcc", "grt"}
         for field in numeric_fields:
             if field not in request or request[field] is None or request[field] == "":
-                request[field] = 0.0
+                # Si el campo es crítico naval, no sobreescribir con 0.0 si ya existe
+                if field in critical_naval_fields:
+                    request.pop(field, None)
+                else:
+                    request[field] = 0.0
             else:
                 try:
-                    request[field] = float(request[field])
+                    val_float = abs(float(request[field]))
+                    if field in ["vessel_speed", "dwt"] and val_float <= 0:
+                        request.pop(field, None)
+                    else:
+                        request[field] = val_float
                 except (ValueError, TypeError):
-                    request[field] = 0.0
+                    if field in critical_naval_fields:
+                        request.pop(field, None)
+                    else:
+                        request[field] = 0.0
 
         # Integer fields in Postgres (int4)
         int_fields = ["built", "display_order"]

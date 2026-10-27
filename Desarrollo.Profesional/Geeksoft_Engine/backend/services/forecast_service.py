@@ -57,7 +57,30 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
                     new_cache[t] = future.result()
                 except Exception as e:
                     print(f"Warning: Error al cargar tabla {t} en paralelo: {e}")
-                    new_cache[t] = []
+        # Curación Defensiva Benoit Blanc: Sanitizar tipos numéricos en buques (vessels)
+        if "vessels" in new_cache and isinstance(new_cache["vessels"], list):
+            cleaned_vessels = []
+            numeric_vessel_fields = [
+                "tce_required", "vessel_speed", "dwt", "dwcc", "grt", "length", "beam",
+                "consumption_sea_ifo", "consumption_port_ifo", "consumption_idle_ifo",
+                "consumption_load_ifo", "consumption_disch_ifo", "consumption_sea_mdo",
+                "consumption_idle_mdo", "consumption_load_mdo", "consumption_disch_mdo",
+                "max_capacity_ifo", "max_capacity_mdo"
+            ]
+            for v in new_cache["vessels"]:
+                if isinstance(v, dict):
+                    v_clean = dict(v)
+                    for f in numeric_vessel_fields:
+                        if f in v_clean and v_clean[f] is not None:
+                            try:
+                                v_clean[f] = abs(float(v_clean[f]))
+                            except Exception:
+                                pass
+                    cleaned_vessels.append(v_clean)
+                else:
+                    cleaned_vessels.append(v)
+            new_cache["vessels"] = cleaned_vessels
+
         _masters_cache = new_cache
         _cache_time = now
     return _masters_cache
@@ -1160,7 +1183,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     safe_legs = ast.literal_eval(safe_legs)
                 except Exception:
                     safe_legs = {}
-        demurrage_rate_val = get_demurrage_from_dict(safe_legs.get("demurrage_rates") if safe_legs else None, vessel)
+        safe_dict = safe_legs if isinstance(safe_legs, dict) else {}
+        demurrage_rate_val = get_demurrage_from_dict(safe_dict.get("demurrage_rates"), vessel)
         if demurrage_rate_val <= 0 and spot_route:
             demurrage_rate_val = get_demurrage_from_dict(spot_route.get("demurrage_rates"), vessel)
         if demurrage_rate_val <= 0 and 'vparams' in locals() and isinstance(vparams, dict):
@@ -1791,12 +1815,16 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         # RESOLUCIÓN MANDATORIA DE DEMURRAGE DESDE COTIZACIÓN / RUTA / LEGS_DATA / CONTRATO
         safe_legs = (spot_route.get("legs_data") or {}) if spot_route else {}
         if isinstance(safe_legs, str):
-            import json
+            import json, ast
             try:
                 safe_legs = json.loads(safe_legs)
             except Exception:
-                safe_legs = {}
-        demurrage_rate_val = get_demurrage_from_dict(safe_legs.get("demurrage_rates") if safe_legs else None, vessel)
+                try:
+                    safe_legs = ast.literal_eval(safe_legs)
+                except Exception:
+                    safe_legs = {}
+        safe_dict = safe_legs if isinstance(safe_legs, dict) else {}
+        demurrage_rate_val = get_demurrage_from_dict(safe_dict.get("demurrage_rates"), vessel)
         if demurrage_rate_val <= 0 and spot_route:
             demurrage_rate_val = get_demurrage_from_dict(spot_route.get("demurrage_rates"), vessel)
         if demurrage_rate_val <= 0 and 'vparams' in locals() and isinstance(vparams, dict):
