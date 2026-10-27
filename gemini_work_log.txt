@@ -1530,3 +1530,27 @@ CONCURRENCY & QC SUMMARY:
   * 7.2 Cirugia Forense en 3 Capas (DDL Contabo, Blindaje Backend auth.py, 2 Filas de PADS en UsersPermissions.tsx).
   * 7.3 Certificacion de Calidad en Vivo (QC Gate HTTP 200, UPSERT y FETCH exitosos en produccion).
 ================================================================================
+
+================================================================================
+[2026-10-27 12:08:00]
+- Diagnostico, Cirugia Forense y Despliegue Oficial en Produccion Contabo VPS (169.58.168.107).
+- Caso 1: Smart Distance Bridge en Voyage Calculator (/multicotizador).
+  * Resolucion bidireccional O(1) con 74 distancias oficiales canónicas.
+  * Rutas Cono Sur: Ancud, Posesión, Río Grande resueltas con 7,808.0 NM y 30.46 días mar.
+- Caso 2: Carga de Catalogo de Forecasts y Resumen de Proyecciones Financieras (/financial-projections).
+  * Reparado ResponseValidationError de Pydantic 2 en backend/models/forecast_models.py (ForecastListResponse con Union[str, datetime, date, Any] y @field_serializer).
+  * Sanitizacion de campos en backend/api/routers/forecast.py y defensiva en ForecastContext_V2.tsx.
+- QC Swarm & Self-Healing:
+  * Creado Agente 8 (agent_financial_projections_summary.py) validando paridad 1:1 de resumen MEC con matriz financiera.
+  * Agente 6 (Historical Replayer) reforzado con auditoría de esquemas de catálogo.
+  * Corrida limpia de pipeline E2E: 242 lineas, 177 invariantes, 0 violaciones, Semáforo Verde 100% (APPROVED).
+- Despliegue y UAT:
+  * Tag Git: PRE.CIRUGIA.ANCUD.FORECAST.FALLADO.
+  * Build Vite: npx vite build (0 errores).
+  * Despliegue SSH/SFTP exitoso con deploy_petral_one_contabo.py. HTTP 200 verificado en vivo.
+- Institucionalizacion de QC:
+  * Manifiesto 00_MANIFIESTO_Y_CICLO_OPERATIVO_QC_SWARM.md y SKILL_QC_SWARM_OPERATIVO.md creados en Obsidian.
+  * Regla <RULE[qc_swarm_protocol]> en .agents/AGENTS.md y Skill ejecutable .agents/skills/qc-swarm/SKILL.md.
+  * Sesion cerrada exitosamente con estado 100% operativo y en sincronia.
+================================================================================
+

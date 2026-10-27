@@ -1674,3 +1674,24 @@ CONCURRENCY & QC SUMMARY:
   * 7.2 Cirugia Forense en 3 Capas (DDL Contabo, Blindaje Backend auth.py, 2 Filas de PADS en UsersPermissions.tsx).
   * 7.3 Certificacion de Calidad en Vivo (QC Gate HTTP 200, UPSERT y FETCH exitosos en produccion).
 ================================================================================
+
+================================================================================
+[2026-10-27 12:08:00] RESOLUCION DE ANOMALIAS DE PRODUCCION & FORMALIZACION QC SWARM
+1. DIAGNOSTICO Y CIRUGIAS QUIRURGICAS:
+   - Caso 1 (Voyage Calculator / Multicotizador): Piernas de puertos chilenos y sudamericanos (Ancud, Posesión, Río Grande) figuraban en 0 NM. Se implementó el Smart Distance Bridge con resolución bidireccional O(1) de 74 rutas oficiales (7,808.0 NM y 30.46 días mar resueltos).
+   - Caso 2 (Matriz Financiera & Proyecciones): Error 500 al cargar el catálogo de forecasts ('Error al cargar la lista de forecasts'). Causa: Descalce Pydantic 2 al serializar objetos datetime devueltos por Postgres como strings estrictos en ForecastListResponse. Solución: Tipado tolerante y serializador en forecast_models.py, sanitización en forecast.py y parsing defensivo en ForecastContext_V2.tsx.
+2. EXPANSION DEL SISTEMA DE QC MULTI-AGENTE:
+   - Agente 6 (Historical Replayer): Incorporada validación estricta de carga de esquemas de catálogo.
+   - Agente 8 (Financial Projections Auditor): Creado para auditar paridad matemática 1:1 entre líneas de la Matriz y resumen ejecutivo MEC en /financial-projections.
+   - Corrida de Pipeline E2E Swarm: 242 celdas auditadas, 177 invariantes validadas, 0 violaciones, Semáforo Verde 100% (APPROVED).
+3. DESPLIEGUE OFICIAL AL VPS CONTABO (169.58.168.107):
+   - Tag y branch de seguridad: PRE.CIRUGIA.ANCUD.FORECAST.FALLADO.
+   - Build Vite: npx vite build completado limpiamente (dist/assets/index-CJfMzeNV.js).
+   - Deploy SSH/SFTP ejecutado con deploy_petral_one_contabo.py. Contenedores reiniciados.
+   - UAT en Vivo: GET /forecast/list retorna HTTP 200 con 6 escenarios comerciales y GET /forecast/routes retorna 74 distancias activas.
+4. INSTITUCIONALIZACION DEL SISTEMA DE QC:
+   - Creado 00_MANIFIESTO_Y_CICLO_OPERATIVO_QC_SWARM.md y SKILL_QC_SWARM_OPERATIVO.md en Obsidian.
+   - Registrada regla <RULE[qc_swarm_protocol]> en .agents/AGENTS.md y skill .agents/skills/qc-swarm/SKILL.md.
+   - Ciclo de 5 fases sellado: Detección ➔ Agente Tester ➔ Sincronización BD ➔ Reconstrucción en Cero / Self-Healing ➔ Cirugía con Semáforo Verde y Deploy.
+================================================================================
+
