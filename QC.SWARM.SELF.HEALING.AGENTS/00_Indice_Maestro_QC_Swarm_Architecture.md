@@ -87,6 +87,10 @@ La suite documental está estructurada en los siguientes tomos hiper-detallados:
    * Registro literal de la terminal, tiempos de cómputo por agente y telemetría de 2,021 operaciones en 0.533 segundos.
    * Dictamen pericial y certificación de Semáforo Verde 100%.
 
+6. **[[06_Cirugias_Quirurgicas_Produccion_Convergencia_Curada]]**:
+   * Especificación quirúrgica precisa (diffs línea por línea) para aplicar en `forecast_service.py`, `forecast.py` y PostgreSQL Contabo.
+   * Cierre definitivo de fallas por comillas en `legs_data`, colapsos de `.get()` en sobreestadías y reseteos accidentales a 0.0 en fichas navales.
+
 ---
 
 ## ⏱️ 3. Ficha Técnica Consolidada
